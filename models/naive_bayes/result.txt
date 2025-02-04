@@ -1,0 +1,2250 @@
+Lap: 0
+Max length: 400
+Group: 100_400, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.37      0.49      9579
+         1.0       0.60      0.87      0.71     10421
+
+    accuracy                           0.63     20000
+   macro avg       0.66      0.62      0.60     20000
+weighted avg       0.66      0.63      0.60     20000
+
+Time: 3.9764275550842285
+Group: 100_400, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.58      0.34      0.43     10876
+         1.0       0.47      0.70      0.57      9124
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.53      0.51      0.49     20000
+
+Time: 3.718507766723633
+Group: 100_400, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.67      0.34      0.45     10062
+         1.0       0.55      0.83      0.67      9938
+
+    accuracy                           0.58     20000
+   macro avg       0.61      0.59      0.56     20000
+weighted avg       0.61      0.58      0.56     20000
+
+Time: 3.48749041557312
+Group: 100_400, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.42      0.47     11205
+         1.0       0.40      0.49      0.44      8795
+
+    accuracy                           0.45     20000
+   macro avg       0.46      0.46      0.45     20000
+weighted avg       0.47      0.45      0.46     20000
+
+Time: 3.5347230434417725
+Group: 100_400, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.78      0.53      0.63     11403
+         1.0       0.56      0.80      0.66      8597
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.67      0.65     20000
+weighted avg       0.68      0.65      0.64     20000
+
+Time: 3.4657680988311768
+Max length: 800
+Group: 400_800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.63      0.46      0.53      9448
+         1.0       0.61      0.76      0.67     10552
+
+    accuracy                           0.61     20000
+   macro avg       0.62      0.61      0.60     20000
+weighted avg       0.62      0.61      0.60     20000
+
+Time: 7.4653425216674805
+Group: 400_800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.39      0.46     10858
+         1.0       0.47      0.65      0.55      9142
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.52      0.51      0.50     20000
+
+Time: 7.110180139541626
+Group: 400_800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.71      0.44      0.55     10003
+         1.0       0.59      0.82      0.69      9997
+
+    accuracy                           0.63     20000
+   macro avg       0.65      0.63      0.62     20000
+weighted avg       0.65      0.63      0.62     20000
+
+Time: 7.136050462722778
+Group: 400_800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.43      0.47     11251
+         1.0       0.40      0.49      0.44      8749
+
+    accuracy                           0.46     20000
+   macro avg       0.46      0.46      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 7.071854114532471
+Group: 400_800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.56      0.66     11569
+         1.0       0.57      0.80      0.66      8431
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.68      0.66     20000
+weighted avg       0.70      0.66      0.66     20000
+
+Time: 7.083048105239868
+Max length: 1200
+Group: 800_1200, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.43      0.54      9647
+         1.0       0.61      0.84      0.71     10353
+
+    accuracy                           0.64     20000
+   macro avg       0.67      0.64      0.62     20000
+weighted avg       0.66      0.64      0.63     20000
+
+Time: 10.901435375213623
+Group: 800_1200, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.56      0.41      0.48     10946
+         1.0       0.46      0.61      0.53      9054
+
+    accuracy                           0.50     20000
+   macro avg       0.51      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 11.243719339370728
+Group: 800_1200, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.73      0.50      0.60     10021
+         1.0       0.62      0.82      0.70      9979
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.66      0.65     20000
+weighted avg       0.68      0.66      0.65     20000
+
+Time: 11.083940267562866
+Group: 800_1200, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.54      0.41      0.47     11230
+         1.0       0.42      0.55      0.48      8770
+
+    accuracy                           0.47     20000
+   macro avg       0.48      0.48      0.47     20000
+weighted avg       0.49      0.47      0.47     20000
+
+Time: 10.852239847183228
+Group: 800_1200, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.58      0.67     11422
+         1.0       0.59      0.80      0.68      8578
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.70      0.67      0.67     20000
+
+Time: 11.45174241065979
+Max length: 1800
+Group: 1200_1800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.75      0.42      0.54      9642
+         1.0       0.62      0.87      0.72     10358
+
+    accuracy                           0.65     20000
+   macro avg       0.68      0.64      0.63     20000
+weighted avg       0.68      0.65      0.63     20000
+
+Time: 16.411688327789307
+Group: 1200_1800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.40      0.47     10938
+         1.0       0.47      0.63      0.54      9062
+
+    accuracy                           0.50     20000
+   macro avg       0.52      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 15.829885244369507
+Group: 1200_1800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.48      0.58     10004
+         1.0       0.61      0.81      0.70      9996
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.65      0.64     20000
+weighted avg       0.67      0.65      0.64     20000
+
+Time: 15.3618004322052
+Group: 1200_1800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.53      0.41      0.46     11384
+         1.0       0.40      0.52      0.45      8616
+
+    accuracy                           0.46     20000
+   macro avg       0.47      0.47      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 15.29576849937439
+Group: 1200_1800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.56      0.66     11383
+         1.0       0.59      0.81      0.68      8617
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.71      0.67      0.67     20000
+
+Time: 15.963008165359497
+Lap: 1
+Max length: 400
+Group: 100_400, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.37      0.49      9579
+         1.0       0.60      0.87      0.71     10421
+
+    accuracy                           0.63     20000
+   macro avg       0.66      0.62      0.60     20000
+weighted avg       0.66      0.63      0.60     20000
+
+Time: 3.4923315048217773
+Group: 100_400, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.58      0.34      0.43     10876
+         1.0       0.47      0.70      0.57      9124
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.53      0.51      0.49     20000
+
+Time: 3.4574596881866455
+Group: 100_400, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.67      0.34      0.45     10062
+         1.0       0.55      0.83      0.67      9938
+
+    accuracy                           0.58     20000
+   macro avg       0.61      0.59      0.56     20000
+weighted avg       0.61      0.58      0.56     20000
+
+Time: 3.321833848953247
+Group: 100_400, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.42      0.47     11205
+         1.0       0.40      0.49      0.44      8795
+
+    accuracy                           0.45     20000
+   macro avg       0.46      0.46      0.45     20000
+weighted avg       0.47      0.45      0.46     20000
+
+Time: 3.4375035762786865
+Group: 100_400, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.78      0.53      0.63     11403
+         1.0       0.56      0.80      0.66      8597
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.67      0.65     20000
+weighted avg       0.68      0.65      0.64     20000
+
+Time: 3.7465271949768066
+Max length: 800
+Group: 400_800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.63      0.46      0.53      9448
+         1.0       0.61      0.76      0.67     10552
+
+    accuracy                           0.61     20000
+   macro avg       0.62      0.61      0.60     20000
+weighted avg       0.62      0.61      0.60     20000
+
+Time: 7.14851975440979
+Group: 400_800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.39      0.46     10858
+         1.0       0.47      0.65      0.55      9142
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.52      0.51      0.50     20000
+
+Time: 7.418757438659668
+Group: 400_800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.71      0.44      0.55     10003
+         1.0       0.59      0.82      0.69      9997
+
+    accuracy                           0.63     20000
+   macro avg       0.65      0.63      0.62     20000
+weighted avg       0.65      0.63      0.62     20000
+
+Time: 6.994851589202881
+Group: 400_800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.43      0.47     11251
+         1.0       0.40      0.49      0.44      8749
+
+    accuracy                           0.46     20000
+   macro avg       0.46      0.46      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 7.153081655502319
+Group: 400_800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.56      0.66     11569
+         1.0       0.57      0.80      0.66      8431
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.68      0.66     20000
+weighted avg       0.70      0.66      0.66     20000
+
+Time: 7.1491875648498535
+Max length: 1200
+Group: 800_1200, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.43      0.54      9647
+         1.0       0.61      0.84      0.71     10353
+
+    accuracy                           0.64     20000
+   macro avg       0.67      0.64      0.62     20000
+weighted avg       0.66      0.64      0.63     20000
+
+Time: 14.096138000488281
+Group: 800_1200, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.56      0.41      0.48     10946
+         1.0       0.46      0.61      0.53      9054
+
+    accuracy                           0.50     20000
+   macro avg       0.51      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 11.654772758483887
+Group: 800_1200, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.73      0.50      0.60     10021
+         1.0       0.62      0.82      0.70      9979
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.66      0.65     20000
+weighted avg       0.68      0.66      0.65     20000
+
+Time: 11.361223459243774
+Group: 800_1200, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.54      0.41      0.47     11230
+         1.0       0.42      0.55      0.48      8770
+
+    accuracy                           0.47     20000
+   macro avg       0.48      0.48      0.47     20000
+weighted avg       0.49      0.47      0.47     20000
+
+Time: 10.75486445426941
+Group: 800_1200, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.58      0.67     11422
+         1.0       0.59      0.80      0.68      8578
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.70      0.67      0.67     20000
+
+Time: 10.949052333831787
+Max length: 1800
+Group: 1200_1800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.75      0.42      0.54      9642
+         1.0       0.62      0.87      0.72     10358
+
+    accuracy                           0.65     20000
+   macro avg       0.68      0.64      0.63     20000
+weighted avg       0.68      0.65      0.63     20000
+
+Time: 16.355311393737793
+Group: 1200_1800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.40      0.47     10938
+         1.0       0.47      0.63      0.54      9062
+
+    accuracy                           0.50     20000
+   macro avg       0.52      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 16.172682762145996
+Group: 1200_1800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.48      0.58     10004
+         1.0       0.61      0.81      0.70      9996
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.65      0.64     20000
+weighted avg       0.67      0.65      0.64     20000
+
+Time: 15.772555112838745
+Group: 1200_1800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.53      0.41      0.46     11384
+         1.0       0.40      0.52      0.45      8616
+
+    accuracy                           0.46     20000
+   macro avg       0.47      0.47      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 16.133740425109863
+Group: 1200_1800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.56      0.66     11383
+         1.0       0.59      0.81      0.68      8617
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.71      0.67      0.67     20000
+
+Time: 15.859111070632935
+Lap: 2
+Max length: 400
+Group: 100_400, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.37      0.49      9579
+         1.0       0.60      0.87      0.71     10421
+
+    accuracy                           0.63     20000
+   macro avg       0.66      0.62      0.60     20000
+weighted avg       0.66      0.63      0.60     20000
+
+Time: 3.601224184036255
+Group: 100_400, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.58      0.34      0.43     10876
+         1.0       0.47      0.70      0.57      9124
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.53      0.51      0.49     20000
+
+Time: 3.4607439041137695
+Group: 100_400, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.67      0.34      0.45     10062
+         1.0       0.55      0.83      0.67      9938
+
+    accuracy                           0.58     20000
+   macro avg       0.61      0.59      0.56     20000
+weighted avg       0.61      0.58      0.56     20000
+
+Time: 3.448275566101074
+Group: 100_400, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.42      0.47     11205
+         1.0       0.40      0.49      0.44      8795
+
+    accuracy                           0.45     20000
+   macro avg       0.46      0.46      0.45     20000
+weighted avg       0.47      0.45      0.46     20000
+
+Time: 3.3550968170166016
+Group: 100_400, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.78      0.53      0.63     11403
+         1.0       0.56      0.80      0.66      8597
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.67      0.65     20000
+weighted avg       0.68      0.65      0.64     20000
+
+Time: 3.41947603225708
+Max length: 800
+Group: 400_800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.63      0.46      0.53      9448
+         1.0       0.61      0.76      0.67     10552
+
+    accuracy                           0.61     20000
+   macro avg       0.62      0.61      0.60     20000
+weighted avg       0.62      0.61      0.60     20000
+
+Time: 6.957028865814209
+Group: 400_800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.39      0.46     10858
+         1.0       0.47      0.65      0.55      9142
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.52      0.51      0.50     20000
+
+Time: 6.828747272491455
+Group: 400_800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.71      0.44      0.55     10003
+         1.0       0.59      0.82      0.69      9997
+
+    accuracy                           0.63     20000
+   macro avg       0.65      0.63      0.62     20000
+weighted avg       0.65      0.63      0.62     20000
+
+Time: 6.947651624679565
+Group: 400_800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.43      0.47     11251
+         1.0       0.40      0.49      0.44      8749
+
+    accuracy                           0.46     20000
+   macro avg       0.46      0.46      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 6.915736436843872
+Group: 400_800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.56      0.66     11569
+         1.0       0.57      0.80      0.66      8431
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.68      0.66     20000
+weighted avg       0.70      0.66      0.66     20000
+
+Time: 6.907040357589722
+Max length: 1200
+Group: 800_1200, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.43      0.54      9647
+         1.0       0.61      0.84      0.71     10353
+
+    accuracy                           0.64     20000
+   macro avg       0.67      0.64      0.62     20000
+weighted avg       0.66      0.64      0.63     20000
+
+Time: 10.229007720947266
+Group: 800_1200, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.56      0.41      0.48     10946
+         1.0       0.46      0.61      0.53      9054
+
+    accuracy                           0.50     20000
+   macro avg       0.51      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 10.2647545337677
+Group: 800_1200, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.73      0.50      0.60     10021
+         1.0       0.62      0.82      0.70      9979
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.66      0.65     20000
+weighted avg       0.68      0.66      0.65     20000
+
+Time: 10.323696374893188
+Group: 800_1200, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.54      0.41      0.47     11230
+         1.0       0.42      0.55      0.48      8770
+
+    accuracy                           0.47     20000
+   macro avg       0.48      0.48      0.47     20000
+weighted avg       0.49      0.47      0.47     20000
+
+Time: 10.510107040405273
+Group: 800_1200, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.58      0.67     11422
+         1.0       0.59      0.80      0.68      8578
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.70      0.67      0.67     20000
+
+Time: 10.2274329662323
+Max length: 1800
+Group: 1200_1800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.75      0.42      0.54      9642
+         1.0       0.62      0.87      0.72     10358
+
+    accuracy                           0.65     20000
+   macro avg       0.68      0.64      0.63     20000
+weighted avg       0.68      0.65      0.63     20000
+
+Time: 15.497064113616943
+Group: 1200_1800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.40      0.47     10938
+         1.0       0.47      0.63      0.54      9062
+
+    accuracy                           0.50     20000
+   macro avg       0.52      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 15.26901364326477
+Group: 1200_1800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.48      0.58     10004
+         1.0       0.61      0.81      0.70      9996
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.65      0.64     20000
+weighted avg       0.67      0.65      0.64     20000
+
+Time: 15.44797420501709
+Group: 1200_1800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.53      0.41      0.46     11384
+         1.0       0.40      0.52      0.45      8616
+
+    accuracy                           0.46     20000
+   macro avg       0.47      0.47      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 15.582990884780884
+Group: 1200_1800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.56      0.66     11383
+         1.0       0.59      0.81      0.68      8617
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.71      0.67      0.67     20000
+
+Time: 15.475992441177368
+Lap: 3
+Max length: 400
+Group: 100_400, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.37      0.49      9579
+         1.0       0.60      0.87      0.71     10421
+
+    accuracy                           0.63     20000
+   macro avg       0.66      0.62      0.60     20000
+weighted avg       0.66      0.63      0.60     20000
+
+Time: 3.5154685974121094
+Group: 100_400, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.58      0.34      0.43     10876
+         1.0       0.47      0.70      0.57      9124
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.53      0.51      0.49     20000
+
+Time: 3.3989813327789307
+Group: 100_400, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.67      0.34      0.45     10062
+         1.0       0.55      0.83      0.67      9938
+
+    accuracy                           0.58     20000
+   macro avg       0.61      0.59      0.56     20000
+weighted avg       0.61      0.58      0.56     20000
+
+Time: 3.4685754776000977
+Group: 100_400, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.42      0.47     11205
+         1.0       0.40      0.49      0.44      8795
+
+    accuracy                           0.45     20000
+   macro avg       0.46      0.46      0.45     20000
+weighted avg       0.47      0.45      0.46     20000
+
+Time: 3.3106582164764404
+Group: 100_400, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.78      0.53      0.63     11403
+         1.0       0.56      0.80      0.66      8597
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.67      0.65     20000
+weighted avg       0.68      0.65      0.64     20000
+
+Time: 3.3878893852233887
+Max length: 800
+Group: 400_800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.63      0.46      0.53      9448
+         1.0       0.61      0.76      0.67     10552
+
+    accuracy                           0.61     20000
+   macro avg       0.62      0.61      0.60     20000
+weighted avg       0.62      0.61      0.60     20000
+
+Time: 7.183458566665649
+Group: 400_800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.39      0.46     10858
+         1.0       0.47      0.65      0.55      9142
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.52      0.51      0.50     20000
+
+Time: 7.058775901794434
+Group: 400_800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.71      0.44      0.55     10003
+         1.0       0.59      0.82      0.69      9997
+
+    accuracy                           0.63     20000
+   macro avg       0.65      0.63      0.62     20000
+weighted avg       0.65      0.63      0.62     20000
+
+Time: 6.902982950210571
+Group: 400_800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.43      0.47     11251
+         1.0       0.40      0.49      0.44      8749
+
+    accuracy                           0.46     20000
+   macro avg       0.46      0.46      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 7.083966255187988
+Group: 400_800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.56      0.66     11569
+         1.0       0.57      0.80      0.66      8431
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.68      0.66     20000
+weighted avg       0.70      0.66      0.66     20000
+
+Time: 7.065977334976196
+Max length: 1200
+Group: 800_1200, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.43      0.54      9647
+         1.0       0.61      0.84      0.71     10353
+
+    accuracy                           0.64     20000
+   macro avg       0.67      0.64      0.62     20000
+weighted avg       0.66      0.64      0.63     20000
+
+Time: 10.72282338142395
+Group: 800_1200, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.56      0.41      0.48     10946
+         1.0       0.46      0.61      0.53      9054
+
+    accuracy                           0.50     20000
+   macro avg       0.51      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 10.569955348968506
+Group: 800_1200, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.73      0.50      0.60     10021
+         1.0       0.62      0.82      0.70      9979
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.66      0.65     20000
+weighted avg       0.68      0.66      0.65     20000
+
+Time: 10.582042694091797
+Group: 800_1200, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.54      0.41      0.47     11230
+         1.0       0.42      0.55      0.48      8770
+
+    accuracy                           0.47     20000
+   macro avg       0.48      0.48      0.47     20000
+weighted avg       0.49      0.47      0.47     20000
+
+Time: 10.845445156097412
+Group: 800_1200, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.58      0.67     11422
+         1.0       0.59      0.80      0.68      8578
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.70      0.67      0.67     20000
+
+Time: 10.697590589523315
+Max length: 1800
+Group: 1200_1800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.75      0.42      0.54      9642
+         1.0       0.62      0.87      0.72     10358
+
+    accuracy                           0.65     20000
+   macro avg       0.68      0.64      0.63     20000
+weighted avg       0.68      0.65      0.63     20000
+
+Time: 16.155219793319702
+Group: 1200_1800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.40      0.47     10938
+         1.0       0.47      0.63      0.54      9062
+
+    accuracy                           0.50     20000
+   macro avg       0.52      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 16.06573462486267
+Group: 1200_1800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.48      0.58     10004
+         1.0       0.61      0.81      0.70      9996
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.65      0.64     20000
+weighted avg       0.67      0.65      0.64     20000
+
+Time: 15.927695512771606
+Group: 1200_1800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.53      0.41      0.46     11384
+         1.0       0.40      0.52      0.45      8616
+
+    accuracy                           0.46     20000
+   macro avg       0.47      0.47      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 15.492396831512451
+Group: 1200_1800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.56      0.66     11383
+         1.0       0.59      0.81      0.68      8617
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.71      0.67      0.67     20000
+
+Time: 17.145567417144775
+Lap: 4
+Max length: 400
+Group: 100_400, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.37      0.49      9579
+         1.0       0.60      0.87      0.71     10421
+
+    accuracy                           0.63     20000
+   macro avg       0.66      0.62      0.60     20000
+weighted avg       0.66      0.63      0.60     20000
+
+Time: 3.5072455406188965
+Group: 100_400, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.58      0.34      0.43     10876
+         1.0       0.47      0.70      0.57      9124
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.53      0.51      0.49     20000
+
+Time: 3.488177537918091
+Group: 100_400, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.67      0.34      0.45     10062
+         1.0       0.55      0.83      0.67      9938
+
+    accuracy                           0.58     20000
+   macro avg       0.61      0.59      0.56     20000
+weighted avg       0.61      0.58      0.56     20000
+
+Time: 3.418316125869751
+Group: 100_400, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.42      0.47     11205
+         1.0       0.40      0.49      0.44      8795
+
+    accuracy                           0.45     20000
+   macro avg       0.46      0.46      0.45     20000
+weighted avg       0.47      0.45      0.46     20000
+
+Time: 3.4377429485321045
+Group: 100_400, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.78      0.53      0.63     11403
+         1.0       0.56      0.80      0.66      8597
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.67      0.65     20000
+weighted avg       0.68      0.65      0.64     20000
+
+Time: 3.3839540481567383
+Max length: 800
+Group: 400_800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.63      0.46      0.53      9448
+         1.0       0.61      0.76      0.67     10552
+
+    accuracy                           0.61     20000
+   macro avg       0.62      0.61      0.60     20000
+weighted avg       0.62      0.61      0.60     20000
+
+Time: 7.283857822418213
+Group: 400_800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.39      0.46     10858
+         1.0       0.47      0.65      0.55      9142
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.52      0.51      0.50     20000
+
+Time: 7.154640436172485
+Group: 400_800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.71      0.44      0.55     10003
+         1.0       0.59      0.82      0.69      9997
+
+    accuracy                           0.63     20000
+   macro avg       0.65      0.63      0.62     20000
+weighted avg       0.65      0.63      0.62     20000
+
+Time: 6.922747850418091
+Group: 400_800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.43      0.47     11251
+         1.0       0.40      0.49      0.44      8749
+
+    accuracy                           0.46     20000
+   macro avg       0.46      0.46      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 6.734964847564697
+Group: 400_800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.56      0.66     11569
+         1.0       0.57      0.80      0.66      8431
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.68      0.66     20000
+weighted avg       0.70      0.66      0.66     20000
+
+Time: 6.795588731765747
+Max length: 1200
+Group: 800_1200, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.43      0.54      9647
+         1.0       0.61      0.84      0.71     10353
+
+    accuracy                           0.64     20000
+   macro avg       0.67      0.64      0.62     20000
+weighted avg       0.66      0.64      0.63     20000
+
+Time: 10.60689926147461
+Group: 800_1200, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.56      0.41      0.48     10946
+         1.0       0.46      0.61      0.53      9054
+
+    accuracy                           0.50     20000
+   macro avg       0.51      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 10.724836587905884
+Group: 800_1200, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.73      0.50      0.60     10021
+         1.0       0.62      0.82      0.70      9979
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.66      0.65     20000
+weighted avg       0.68      0.66      0.65     20000
+
+Time: 11.32341718673706
+Group: 800_1200, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.54      0.41      0.47     11230
+         1.0       0.42      0.55      0.48      8770
+
+    accuracy                           0.47     20000
+   macro avg       0.48      0.48      0.47     20000
+weighted avg       0.49      0.47      0.47     20000
+
+Time: 10.432990789413452
+Group: 800_1200, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.58      0.67     11422
+         1.0       0.59      0.80      0.68      8578
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.70      0.67      0.67     20000
+
+Time: 10.336921453475952
+Max length: 1800
+Group: 1200_1800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.75      0.42      0.54      9642
+         1.0       0.62      0.87      0.72     10358
+
+    accuracy                           0.65     20000
+   macro avg       0.68      0.64      0.63     20000
+weighted avg       0.68      0.65      0.63     20000
+
+Time: 15.73501968383789
+Group: 1200_1800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.40      0.47     10938
+         1.0       0.47      0.63      0.54      9062
+
+    accuracy                           0.50     20000
+   macro avg       0.52      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 15.67775297164917
+Group: 1200_1800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.48      0.58     10004
+         1.0       0.61      0.81      0.70      9996
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.65      0.64     20000
+weighted avg       0.67      0.65      0.64     20000
+
+Time: 15.397443532943726
+Group: 1200_1800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.53      0.41      0.46     11384
+         1.0       0.40      0.52      0.45      8616
+
+    accuracy                           0.46     20000
+   macro avg       0.47      0.47      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 15.178007364273071
+Group: 1200_1800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.56      0.66     11383
+         1.0       0.59      0.81      0.68      8617
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.71      0.67      0.67     20000
+
+Time: 15.634932279586792
+Lap: 5
+Max length: 400
+Group: 100_400, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.37      0.49      9579
+         1.0       0.60      0.87      0.71     10421
+
+    accuracy                           0.63     20000
+   macro avg       0.66      0.62      0.60     20000
+weighted avg       0.66      0.63      0.60     20000
+
+Time: 3.469186544418335
+Group: 100_400, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.58      0.34      0.43     10876
+         1.0       0.47      0.70      0.57      9124
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.53      0.51      0.49     20000
+
+Time: 3.3397629261016846
+Group: 100_400, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.67      0.34      0.45     10062
+         1.0       0.55      0.83      0.67      9938
+
+    accuracy                           0.58     20000
+   macro avg       0.61      0.59      0.56     20000
+weighted avg       0.61      0.58      0.56     20000
+
+Time: 3.20061993598938
+Group: 100_400, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.42      0.47     11205
+         1.0       0.40      0.49      0.44      8795
+
+    accuracy                           0.45     20000
+   macro avg       0.46      0.46      0.45     20000
+weighted avg       0.47      0.45      0.46     20000
+
+Time: 3.4010891914367676
+Group: 100_400, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.78      0.53      0.63     11403
+         1.0       0.56      0.80      0.66      8597
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.67      0.65     20000
+weighted avg       0.68      0.65      0.64     20000
+
+Time: 3.411271572113037
+Max length: 800
+Group: 400_800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.63      0.46      0.53      9448
+         1.0       0.61      0.76      0.67     10552
+
+    accuracy                           0.61     20000
+   macro avg       0.62      0.61      0.60     20000
+weighted avg       0.62      0.61      0.60     20000
+
+Time: 6.799262046813965
+Group: 400_800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.39      0.46     10858
+         1.0       0.47      0.65      0.55      9142
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.52      0.51      0.50     20000
+
+Time: 6.810633182525635
+Group: 400_800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.71      0.44      0.55     10003
+         1.0       0.59      0.82      0.69      9997
+
+    accuracy                           0.63     20000
+   macro avg       0.65      0.63      0.62     20000
+weighted avg       0.65      0.63      0.62     20000
+
+Time: 7.014121770858765
+Group: 400_800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.43      0.47     11251
+         1.0       0.40      0.49      0.44      8749
+
+    accuracy                           0.46     20000
+   macro avg       0.46      0.46      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 6.88198447227478
+Group: 400_800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.56      0.66     11569
+         1.0       0.57      0.80      0.66      8431
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.68      0.66     20000
+weighted avg       0.70      0.66      0.66     20000
+
+Time: 7.017892360687256
+Max length: 1200
+Group: 800_1200, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.43      0.54      9647
+         1.0       0.61      0.84      0.71     10353
+
+    accuracy                           0.64     20000
+   macro avg       0.67      0.64      0.62     20000
+weighted avg       0.66      0.64      0.63     20000
+
+Time: 10.218641519546509
+Group: 800_1200, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.56      0.41      0.48     10946
+         1.0       0.46      0.61      0.53      9054
+
+    accuracy                           0.50     20000
+   macro avg       0.51      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 10.4883394241333
+Group: 800_1200, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.73      0.50      0.60     10021
+         1.0       0.62      0.82      0.70      9979
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.66      0.65     20000
+weighted avg       0.68      0.66      0.65     20000
+
+Time: 10.819058656692505
+Group: 800_1200, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.54      0.41      0.47     11230
+         1.0       0.42      0.55      0.48      8770
+
+    accuracy                           0.47     20000
+   macro avg       0.48      0.48      0.47     20000
+weighted avg       0.49      0.47      0.47     20000
+
+Time: 10.66963267326355
+Group: 800_1200, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.58      0.67     11422
+         1.0       0.59      0.80      0.68      8578
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.70      0.67      0.67     20000
+
+Time: 10.900405406951904
+Max length: 1800
+Group: 1200_1800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.75      0.42      0.54      9642
+         1.0       0.62      0.87      0.72     10358
+
+    accuracy                           0.65     20000
+   macro avg       0.68      0.64      0.63     20000
+weighted avg       0.68      0.65      0.63     20000
+
+Time: 15.717175722122192
+Group: 1200_1800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.40      0.47     10938
+         1.0       0.47      0.63      0.54      9062
+
+    accuracy                           0.50     20000
+   macro avg       0.52      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 15.837584733963013
+Group: 1200_1800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.48      0.58     10004
+         1.0       0.61      0.81      0.70      9996
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.65      0.64     20000
+weighted avg       0.67      0.65      0.64     20000
+
+Time: 15.66453742980957
+Group: 1200_1800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.53      0.41      0.46     11384
+         1.0       0.40      0.52      0.45      8616
+
+    accuracy                           0.46     20000
+   macro avg       0.47      0.47      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 16.081490993499756
+Group: 1200_1800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.56      0.66     11383
+         1.0       0.59      0.81      0.68      8617
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.71      0.67      0.67     20000
+
+Time: 15.81771469116211
+Lap: 6
+Max length: 400
+Group: 100_400, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.37      0.49      9579
+         1.0       0.60      0.87      0.71     10421
+
+    accuracy                           0.63     20000
+   macro avg       0.66      0.62      0.60     20000
+weighted avg       0.66      0.63      0.60     20000
+
+Time: 3.4403653144836426
+Group: 100_400, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.58      0.34      0.43     10876
+         1.0       0.47      0.70      0.57      9124
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.53      0.51      0.49     20000
+
+Time: 3.3987762928009033
+Group: 100_400, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.67      0.34      0.45     10062
+         1.0       0.55      0.83      0.67      9938
+
+    accuracy                           0.58     20000
+   macro avg       0.61      0.59      0.56     20000
+weighted avg       0.61      0.58      0.56     20000
+
+Time: 3.373709201812744
+Group: 100_400, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.42      0.47     11205
+         1.0       0.40      0.49      0.44      8795
+
+    accuracy                           0.45     20000
+   macro avg       0.46      0.46      0.45     20000
+weighted avg       0.47      0.45      0.46     20000
+
+Time: 3.294199228286743
+Group: 100_400, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.78      0.53      0.63     11403
+         1.0       0.56      0.80      0.66      8597
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.67      0.65     20000
+weighted avg       0.68      0.65      0.64     20000
+
+Time: 3.489903211593628
+Max length: 800
+Group: 400_800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.63      0.46      0.53      9448
+         1.0       0.61      0.76      0.67     10552
+
+    accuracy                           0.61     20000
+   macro avg       0.62      0.61      0.60     20000
+weighted avg       0.62      0.61      0.60     20000
+
+Time: 7.036214828491211
+Group: 400_800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.39      0.46     10858
+         1.0       0.47      0.65      0.55      9142
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.52      0.51      0.50     20000
+
+Time: 7.4799957275390625
+Group: 400_800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.71      0.44      0.55     10003
+         1.0       0.59      0.82      0.69      9997
+
+    accuracy                           0.63     20000
+   macro avg       0.65      0.63      0.62     20000
+weighted avg       0.65      0.63      0.62     20000
+
+Time: 6.978844404220581
+Group: 400_800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.43      0.47     11251
+         1.0       0.40      0.49      0.44      8749
+
+    accuracy                           0.46     20000
+   macro avg       0.46      0.46      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 6.9394471645355225
+Group: 400_800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.56      0.66     11569
+         1.0       0.57      0.80      0.66      8431
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.68      0.66     20000
+weighted avg       0.70      0.66      0.66     20000
+
+Time: 6.826884984970093
+Max length: 1200
+Group: 800_1200, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.43      0.54      9647
+         1.0       0.61      0.84      0.71     10353
+
+    accuracy                           0.64     20000
+   macro avg       0.67      0.64      0.62     20000
+weighted avg       0.66      0.64      0.63     20000
+
+Time: 10.366804599761963
+Group: 800_1200, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.56      0.41      0.48     10946
+         1.0       0.46      0.61      0.53      9054
+
+    accuracy                           0.50     20000
+   macro avg       0.51      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 10.607656478881836
+Group: 800_1200, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.73      0.50      0.60     10021
+         1.0       0.62      0.82      0.70      9979
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.66      0.65     20000
+weighted avg       0.68      0.66      0.65     20000
+
+Time: 10.264700889587402
+Group: 800_1200, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.54      0.41      0.47     11230
+         1.0       0.42      0.55      0.48      8770
+
+    accuracy                           0.47     20000
+   macro avg       0.48      0.48      0.47     20000
+weighted avg       0.49      0.47      0.47     20000
+
+Time: 10.506938934326172
+Group: 800_1200, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.58      0.67     11422
+         1.0       0.59      0.80      0.68      8578
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.70      0.67      0.67     20000
+
+Time: 10.382712602615356
+Max length: 1800
+Group: 1200_1800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.75      0.42      0.54      9642
+         1.0       0.62      0.87      0.72     10358
+
+    accuracy                           0.65     20000
+   macro avg       0.68      0.64      0.63     20000
+weighted avg       0.68      0.65      0.63     20000
+
+Time: 15.368647575378418
+Group: 1200_1800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.40      0.47     10938
+         1.0       0.47      0.63      0.54      9062
+
+    accuracy                           0.50     20000
+   macro avg       0.52      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 15.647625923156738
+Group: 1200_1800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.48      0.58     10004
+         1.0       0.61      0.81      0.70      9996
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.65      0.64     20000
+weighted avg       0.67      0.65      0.64     20000
+
+Time: 15.47171425819397
+Group: 1200_1800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.53      0.41      0.46     11384
+         1.0       0.40      0.52      0.45      8616
+
+    accuracy                           0.46     20000
+   macro avg       0.47      0.47      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 15.582712888717651
+Group: 1200_1800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.56      0.66     11383
+         1.0       0.59      0.81      0.68      8617
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.71      0.67      0.67     20000
+
+Time: 15.66000247001648
+Lap: 7
+Max length: 400
+Group: 100_400, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.37      0.49      9579
+         1.0       0.60      0.87      0.71     10421
+
+    accuracy                           0.63     20000
+   macro avg       0.66      0.62      0.60     20000
+weighted avg       0.66      0.63      0.60     20000
+
+Time: 3.7103800773620605
+Group: 100_400, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.58      0.34      0.43     10876
+         1.0       0.47      0.70      0.57      9124
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.53      0.51      0.49     20000
+
+Time: 3.5123445987701416
+Group: 100_400, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.67      0.34      0.45     10062
+         1.0       0.55      0.83      0.67      9938
+
+    accuracy                           0.58     20000
+   macro avg       0.61      0.59      0.56     20000
+weighted avg       0.61      0.58      0.56     20000
+
+Time: 3.3513684272766113
+Group: 100_400, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.42      0.47     11205
+         1.0       0.40      0.49      0.44      8795
+
+    accuracy                           0.45     20000
+   macro avg       0.46      0.46      0.45     20000
+weighted avg       0.47      0.45      0.46     20000
+
+Time: 4.224504232406616
+Group: 100_400, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.78      0.53      0.63     11403
+         1.0       0.56      0.80      0.66      8597
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.67      0.65     20000
+weighted avg       0.68      0.65      0.64     20000
+
+Time: 4.9897801876068115
+Max length: 800
+Group: 400_800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.63      0.46      0.53      9448
+         1.0       0.61      0.76      0.67     10552
+
+    accuracy                           0.61     20000
+   macro avg       0.62      0.61      0.60     20000
+weighted avg       0.62      0.61      0.60     20000
+
+Time: 10.11119270324707
+Group: 400_800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.39      0.46     10858
+         1.0       0.47      0.65      0.55      9142
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.52      0.51      0.50     20000
+
+Time: 10.279142618179321
+Group: 400_800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.71      0.44      0.55     10003
+         1.0       0.59      0.82      0.69      9997
+
+    accuracy                           0.63     20000
+   macro avg       0.65      0.63      0.62     20000
+weighted avg       0.65      0.63      0.62     20000
+
+Time: 9.914186000823975
+Group: 400_800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.43      0.47     11251
+         1.0       0.40      0.49      0.44      8749
+
+    accuracy                           0.46     20000
+   macro avg       0.46      0.46      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 10.002937078475952
+Group: 400_800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.56      0.66     11569
+         1.0       0.57      0.80      0.66      8431
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.68      0.66     20000
+weighted avg       0.70      0.66      0.66     20000
+
+Time: 10.116349697113037
+Max length: 1200
+Group: 800_1200, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.43      0.54      9647
+         1.0       0.61      0.84      0.71     10353
+
+    accuracy                           0.64     20000
+   macro avg       0.67      0.64      0.62     20000
+weighted avg       0.66      0.64      0.63     20000
+
+Time: 15.582193374633789
+Group: 800_1200, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.56      0.41      0.48     10946
+         1.0       0.46      0.61      0.53      9054
+
+    accuracy                           0.50     20000
+   macro avg       0.51      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 15.473829507827759
+Group: 800_1200, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.73      0.50      0.60     10021
+         1.0       0.62      0.82      0.70      9979
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.66      0.65     20000
+weighted avg       0.68      0.66      0.65     20000
+
+Time: 15.084107398986816
+Group: 800_1200, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.54      0.41      0.47     11230
+         1.0       0.42      0.55      0.48      8770
+
+    accuracy                           0.47     20000
+   macro avg       0.48      0.48      0.47     20000
+weighted avg       0.49      0.47      0.47     20000
+
+Time: 15.562955379486084
+Group: 800_1200, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.58      0.67     11422
+         1.0       0.59      0.80      0.68      8578
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.70      0.67      0.67     20000
+
+Time: 15.239095449447632
+Max length: 1800
+Group: 1200_1800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.75      0.42      0.54      9642
+         1.0       0.62      0.87      0.72     10358
+
+    accuracy                           0.65     20000
+   macro avg       0.68      0.64      0.63     20000
+weighted avg       0.68      0.65      0.63     20000
+
+Time: 22.52164101600647
+Group: 1200_1800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.40      0.47     10938
+         1.0       0.47      0.63      0.54      9062
+
+    accuracy                           0.50     20000
+   macro avg       0.52      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 22.774817943572998
+Group: 1200_1800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.48      0.58     10004
+         1.0       0.61      0.81      0.70      9996
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.65      0.64     20000
+weighted avg       0.67      0.65      0.64     20000
+
+Time: 22.79524517059326
+Group: 1200_1800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.53      0.41      0.46     11384
+         1.0       0.40      0.52      0.45      8616
+
+    accuracy                           0.46     20000
+   macro avg       0.47      0.47      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 23.638911724090576
+Group: 1200_1800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.56      0.66     11383
+         1.0       0.59      0.81      0.68      8617
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.71      0.67      0.67     20000
+
+Time: 24.01573395729065
+Lap: 8
+Max length: 400
+Group: 100_400, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.37      0.49      9579
+         1.0       0.60      0.87      0.71     10421
+
+    accuracy                           0.63     20000
+   macro avg       0.66      0.62      0.60     20000
+weighted avg       0.66      0.63      0.60     20000
+
+Time: 5.1141746044158936
+Group: 100_400, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.58      0.34      0.43     10876
+         1.0       0.47      0.70      0.57      9124
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.53      0.51      0.49     20000
+
+Time: 5.064424276351929
+Group: 100_400, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.67      0.34      0.45     10062
+         1.0       0.55      0.83      0.67      9938
+
+    accuracy                           0.58     20000
+   macro avg       0.61      0.59      0.56     20000
+weighted avg       0.61      0.58      0.56     20000
+
+Time: 5.158099412918091
+Group: 100_400, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.42      0.47     11205
+         1.0       0.40      0.49      0.44      8795
+
+    accuracy                           0.45     20000
+   macro avg       0.46      0.46      0.45     20000
+weighted avg       0.47      0.45      0.46     20000
+
+Time: 4.986481666564941
+Group: 100_400, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.78      0.53      0.63     11403
+         1.0       0.56      0.80      0.66      8597
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.67      0.65     20000
+weighted avg       0.68      0.65      0.64     20000
+
+Time: 4.85685396194458
+Max length: 800
+Group: 400_800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.63      0.46      0.53      9448
+         1.0       0.61      0.76      0.67     10552
+
+    accuracy                           0.61     20000
+   macro avg       0.62      0.61      0.60     20000
+weighted avg       0.62      0.61      0.60     20000
+
+Time: 9.986245393753052
+Group: 400_800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.39      0.46     10858
+         1.0       0.47      0.65      0.55      9142
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.52      0.51      0.50     20000
+
+Time: 9.951070785522461
+Group: 400_800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.71      0.44      0.55     10003
+         1.0       0.59      0.82      0.69      9997
+
+    accuracy                           0.63     20000
+   macro avg       0.65      0.63      0.62     20000
+weighted avg       0.65      0.63      0.62     20000
+
+Time: 10.027273416519165
+Group: 400_800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.43      0.47     11251
+         1.0       0.40      0.49      0.44      8749
+
+    accuracy                           0.46     20000
+   macro avg       0.46      0.46      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 10.114591836929321
+Group: 400_800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.56      0.66     11569
+         1.0       0.57      0.80      0.66      8431
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.68      0.66     20000
+weighted avg       0.70      0.66      0.66     20000
+
+Time: 10.104538917541504
+Max length: 1200
+Group: 800_1200, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.43      0.54      9647
+         1.0       0.61      0.84      0.71     10353
+
+    accuracy                           0.64     20000
+   macro avg       0.67      0.64      0.62     20000
+weighted avg       0.66      0.64      0.63     20000
+
+Time: 15.0101158618927
+Group: 800_1200, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.56      0.41      0.48     10946
+         1.0       0.46      0.61      0.53      9054
+
+    accuracy                           0.50     20000
+   macro avg       0.51      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 15.267793893814087
+Group: 800_1200, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.73      0.50      0.60     10021
+         1.0       0.62      0.82      0.70      9979
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.66      0.65     20000
+weighted avg       0.68      0.66      0.65     20000
+
+Time: 15.358368158340454
+Group: 800_1200, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.54      0.41      0.47     11230
+         1.0       0.42      0.55      0.48      8770
+
+    accuracy                           0.47     20000
+   macro avg       0.48      0.48      0.47     20000
+weighted avg       0.49      0.47      0.47     20000
+
+Time: 15.455736637115479
+Group: 800_1200, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.58      0.67     11422
+         1.0       0.59      0.80      0.68      8578
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.70      0.67      0.67     20000
+
+Time: 15.014874696731567
+Max length: 1800
+Group: 1200_1800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.75      0.42      0.54      9642
+         1.0       0.62      0.87      0.72     10358
+
+    accuracy                           0.65     20000
+   macro avg       0.68      0.64      0.63     20000
+weighted avg       0.68      0.65      0.63     20000
+
+Time: 22.58451271057129
+Group: 1200_1800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.40      0.47     10938
+         1.0       0.47      0.63      0.54      9062
+
+    accuracy                           0.50     20000
+   macro avg       0.52      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 22.458651542663574
+Group: 1200_1800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.48      0.58     10004
+         1.0       0.61      0.81      0.70      9996
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.65      0.64     20000
+weighted avg       0.67      0.65      0.64     20000
+
+Time: 22.678657054901123
+Group: 1200_1800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.53      0.41      0.46     11384
+         1.0       0.40      0.52      0.45      8616
+
+    accuracy                           0.46     20000
+   macro avg       0.47      0.47      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 22.18109369277954
+Group: 1200_1800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.56      0.66     11383
+         1.0       0.59      0.81      0.68      8617
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.71      0.67      0.67     20000
+
+Time: 22.306870937347412
+Lap: 9
+Max length: 400
+Group: 100_400, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.37      0.49      9579
+         1.0       0.60      0.87      0.71     10421
+
+    accuracy                           0.63     20000
+   macro avg       0.66      0.62      0.60     20000
+weighted avg       0.66      0.63      0.60     20000
+
+Time: 4.9545512199401855
+Group: 100_400, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.58      0.34      0.43     10876
+         1.0       0.47      0.70      0.57      9124
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.53      0.51      0.49     20000
+
+Time: 4.9184651374816895
+Group: 100_400, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.67      0.34      0.45     10062
+         1.0       0.55      0.83      0.67      9938
+
+    accuracy                           0.58     20000
+   macro avg       0.61      0.59      0.56     20000
+weighted avg       0.61      0.58      0.56     20000
+
+Time: 4.926578044891357
+Group: 100_400, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.42      0.47     11205
+         1.0       0.40      0.49      0.44      8795
+
+    accuracy                           0.45     20000
+   macro avg       0.46      0.46      0.45     20000
+weighted avg       0.47      0.45      0.46     20000
+
+Time: 4.875941276550293
+Group: 100_400, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.78      0.53      0.63     11403
+         1.0       0.56      0.80      0.66      8597
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.67      0.65     20000
+weighted avg       0.68      0.65      0.64     20000
+
+Time: 4.9043965339660645
+Max length: 800
+Group: 400_800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.63      0.46      0.53      9448
+         1.0       0.61      0.76      0.67     10552
+
+    accuracy                           0.61     20000
+   macro avg       0.62      0.61      0.60     20000
+weighted avg       0.62      0.61      0.60     20000
+
+Time: 9.839085817337036
+Group: 400_800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.39      0.46     10858
+         1.0       0.47      0.65      0.55      9142
+
+    accuracy                           0.51     20000
+   macro avg       0.52      0.52      0.50     20000
+weighted avg       0.52      0.51      0.50     20000
+
+Time: 10.008044004440308
+Group: 400_800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.71      0.44      0.55     10003
+         1.0       0.59      0.82      0.69      9997
+
+    accuracy                           0.63     20000
+   macro avg       0.65      0.63      0.62     20000
+weighted avg       0.65      0.63      0.62     20000
+
+Time: 9.959723711013794
+Group: 400_800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.52      0.43      0.47     11251
+         1.0       0.40      0.49      0.44      8749
+
+    accuracy                           0.46     20000
+   macro avg       0.46      0.46      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 9.977755784988403
+Group: 400_800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.56      0.66     11569
+         1.0       0.57      0.80      0.66      8431
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.68      0.66     20000
+weighted avg       0.70      0.66      0.66     20000
+
+Time: 9.907931327819824
+Max length: 1200
+Group: 800_1200, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.43      0.54      9647
+         1.0       0.61      0.84      0.71     10353
+
+    accuracy                           0.64     20000
+   macro avg       0.67      0.64      0.62     20000
+weighted avg       0.66      0.64      0.63     20000
+
+Time: 14.956900596618652
+Group: 800_1200, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.56      0.41      0.48     10946
+         1.0       0.46      0.61      0.53      9054
+
+    accuracy                           0.50     20000
+   macro avg       0.51      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 14.762737035751343
+Group: 800_1200, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.73      0.50      0.60     10021
+         1.0       0.62      0.82      0.70      9979
+
+    accuracy                           0.66     20000
+   macro avg       0.68      0.66      0.65     20000
+weighted avg       0.68      0.66      0.65     20000
+
+Time: 15.111797094345093
+Group: 800_1200, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.54      0.41      0.47     11230
+         1.0       0.42      0.55      0.48      8770
+
+    accuracy                           0.47     20000
+   macro avg       0.48      0.48      0.47     20000
+weighted avg       0.49      0.47      0.47     20000
+
+Time: 14.991390705108643
+Group: 800_1200, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.58      0.67     11422
+         1.0       0.59      0.80      0.68      8578
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.70      0.67      0.67     20000
+
+Time: 15.102322101593018
+Max length: 1800
+Group: 1200_1800, fold: 1
+              precision    recall  f1-score   support
+
+         0.0       0.75      0.42      0.54      9642
+         1.0       0.62      0.87      0.72     10358
+
+    accuracy                           0.65     20000
+   macro avg       0.68      0.64      0.63     20000
+weighted avg       0.68      0.65      0.63     20000
+
+Time: 22.090195894241333
+Group: 1200_1800, fold: 2
+              precision    recall  f1-score   support
+
+         0.0       0.57      0.40      0.47     10938
+         1.0       0.47      0.63      0.54      9062
+
+    accuracy                           0.50     20000
+   macro avg       0.52      0.51      0.50     20000
+weighted avg       0.52      0.50      0.50     20000
+
+Time: 22.51339817047119
+Group: 1200_1800, fold: 3
+              precision    recall  f1-score   support
+
+         0.0       0.72      0.48      0.58     10004
+         1.0       0.61      0.81      0.70      9996
+
+    accuracy                           0.65     20000
+   macro avg       0.67      0.65      0.64     20000
+weighted avg       0.67      0.65      0.64     20000
+
+Time: 22.744666576385498
+Group: 1200_1800, fold: 4
+              precision    recall  f1-score   support
+
+         0.0       0.53      0.41      0.46     11384
+         1.0       0.40      0.52      0.45      8616
+
+    accuracy                           0.46     20000
+   macro avg       0.47      0.47      0.46     20000
+weighted avg       0.47      0.46      0.46     20000
+
+Time: 22.270798444747925
+Group: 1200_1800, fold: 5
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.56      0.66     11383
+         1.0       0.59      0.81      0.68      8617
+
+    accuracy                           0.67     20000
+   macro avg       0.69      0.69      0.67     20000
+weighted avg       0.71      0.67      0.67     20000
+
+Time: 22.612741708755493

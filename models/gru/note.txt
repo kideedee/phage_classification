@@ -1,0 +1,1 @@
+hidden_size_128_num_layers_1_learning_rate_0.001_epoch_35_bidirectional_True_group_400_800 can not be convergent

@@ -1,0 +1,1345 @@
+Training LSTM model for group 1200_1800 fold 5
+Start time: Thu Jan  9 01:24:45 2025
+Configuration:
+num_workers: 8
+input_size: 4
+hidden_size: 128
+num_layers: 2
+num_heads: 4
+batch_size: 32
+learning_rate: 0.001
+num_epochs: 100
+bidirectional: False
+dropout: 0.3
+weight_decay: 0.0001
+lr_patience: 5
+patience: 20
+Loading data for group 1200_1800 fold 5
+Train dataset shape: (160000, 1800, 4)
+Test dataset shape: (20000, 1800, 4)
+Current learning rate: 0.001
+
+Epoch [1/100]
+Train Loss: 0.5279, Train Acc: 0.7404, Val Loss: 0.4192, Val Acc: 0.8481, LR: 0.001000
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.69      0.87      0.77     80000
+         1.0       0.82      0.61      0.70     80000
+
+    accuracy                           0.74    160000
+   macro avg       0.76      0.74      0.74    160000
+weighted avg       0.76      0.74      0.74    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.88      0.85      0.86     11383
+         1.0       0.81      0.85      0.83      8617
+
+    accuracy                           0.85     20000
+   macro avg       0.84      0.85      0.85     20000
+weighted avg       0.85      0.85      0.85     20000
+
+Epoch time: 270.28 seconds
+Current learning rate: 0.001
+
+Epoch [2/100]
+Train Loss: 0.4873, Train Acc: 0.7755, Val Loss: 0.3510, Val Acc: 0.8471, LR: 0.001000
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.73      0.87      0.79     80000
+         1.0       0.84      0.68      0.75     80000
+
+    accuracy                           0.78    160000
+   macro avg       0.78      0.78      0.77    160000
+weighted avg       0.78      0.78      0.77    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.99      0.88     11383
+         1.0       0.98      0.66      0.79      8617
+
+    accuracy                           0.85     20000
+   macro avg       0.89      0.82      0.83     20000
+weighted avg       0.87      0.85      0.84     20000
+
+Epoch time: 183.52 seconds
+Current learning rate: 0.001
+
+Epoch [3/100]
+Train Loss: 0.4798, Train Acc: 0.7747, Val Loss: 0.3627, Val Acc: 0.8727, LR: 0.001000
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.73      0.87      0.79     80000
+         1.0       0.84      0.68      0.75     80000
+
+    accuracy                           0.77    160000
+   macro avg       0.79      0.77      0.77    160000
+weighted avg       0.79      0.77      0.77    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.90      0.87      0.89     11383
+         1.0       0.84      0.87      0.85      8617
+
+    accuracy                           0.87     20000
+   macro avg       0.87      0.87      0.87     20000
+weighted avg       0.87      0.87      0.87     20000
+
+Epoch time: 183.47 seconds
+Current learning rate: 0.001
+
+Epoch [4/100]
+Train Loss: 0.4517, Train Acc: 0.7977, Val Loss: 0.3687, Val Acc: 0.8627, LR: 0.001000
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.76      0.87      0.81     80000
+         1.0       0.85      0.72      0.78     80000
+
+    accuracy                           0.80    160000
+   macro avg       0.80      0.80      0.80    160000
+weighted avg       0.80      0.80      0.80    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.90      0.86      0.88     11383
+         1.0       0.82      0.87      0.85      8617
+
+    accuracy                           0.86     20000
+   macro avg       0.86      0.86      0.86     20000
+weighted avg       0.86      0.86      0.86     20000
+
+Epoch time: 183.45 seconds
+Current learning rate: 0.001
+
+Epoch [5/100]
+Train Loss: 0.4400, Train Acc: 0.8045, Val Loss: 0.3027, Val Acc: 0.8921, LR: 0.001000
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.77      0.88      0.82     80000
+         1.0       0.86      0.73      0.79     80000
+
+    accuracy                           0.80    160000
+   macro avg       0.81      0.80      0.80    160000
+weighted avg       0.81      0.80      0.80    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.88      0.94      0.91     11383
+         1.0       0.92      0.82      0.87      8617
+
+    accuracy                           0.89     20000
+   macro avg       0.90      0.88      0.89     20000
+weighted avg       0.89      0.89      0.89     20000
+
+Epoch time: 183.39 seconds
+Current learning rate: 0.001
+
+Epoch [6/100]
+Train Loss: 0.4325, Train Acc: 0.8078, Val Loss: 0.5077, Val Acc: 0.7871, LR: 0.001000
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.77      0.88      0.82     80000
+         1.0       0.86      0.73      0.79     80000
+
+    accuracy                           0.81    160000
+   macro avg       0.81      0.81      0.81    160000
+weighted avg       0.81      0.81      0.81    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.91      0.70      0.79     11383
+         1.0       0.69      0.90      0.79      8617
+
+    accuracy                           0.79     20000
+   macro avg       0.80      0.80      0.79     20000
+weighted avg       0.81      0.79      0.79     20000
+
+Epoch time: 184.29 seconds
+Current learning rate: 0.001
+
+Epoch [7/100]
+Train Loss: 0.4244, Train Acc: 0.8124, Val Loss: 0.2780, Val Acc: 0.9002, LR: 0.001000
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.77      0.88      0.82     80000
+         1.0       0.86      0.74      0.80     80000
+
+    accuracy                           0.81    160000
+   macro avg       0.82      0.81      0.81    160000
+weighted avg       0.82      0.81      0.81    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.87      0.96      0.92     11383
+         1.0       0.94      0.82      0.88      8617
+
+    accuracy                           0.90     20000
+   macro avg       0.91      0.89      0.90     20000
+weighted avg       0.90      0.90      0.90     20000
+
+Epoch time: 183.71 seconds
+Current learning rate: 0.001
+
+Epoch [8/100]
+Train Loss: 0.4194, Train Acc: 0.8133, Val Loss: 0.9066, Val Acc: 0.6206, LR: 0.001000
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.77      0.89      0.83     80000
+         1.0       0.87      0.74      0.80     80000
+
+    accuracy                           0.81    160000
+   macro avg       0.82      0.81      0.81    160000
+weighted avg       0.82      0.81      0.81    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.95      0.35      0.51     11383
+         1.0       0.53      0.97      0.69      8617
+
+    accuracy                           0.62     20000
+   macro avg       0.74      0.66      0.60     20000
+weighted avg       0.77      0.62      0.59     20000
+
+Epoch time: 183.72 seconds
+Current learning rate: 0.001
+
+Epoch [9/100]
+Train Loss: 0.4147, Train Acc: 0.8164, Val Loss: 0.2842, Val Acc: 0.8872, LR: 0.001000
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.78      0.89      0.83     80000
+         1.0       0.87      0.74      0.80     80000
+
+    accuracy                           0.82    160000
+   macro avg       0.82      0.82      0.82    160000
+weighted avg       0.82      0.82      0.82    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.87      0.95      0.91     11383
+         1.0       0.92      0.81      0.86      8617
+
+    accuracy                           0.89     20000
+   macro avg       0.89      0.88      0.88     20000
+weighted avg       0.89      0.89      0.89     20000
+
+Epoch time: 183.66 seconds
+Current learning rate: 0.001
+
+Epoch [10/100]
+Train Loss: 0.4096, Train Acc: 0.8196, Val Loss: 0.3678, Val Acc: 0.8546, LR: 0.001000
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.78      0.89      0.83     80000
+         1.0       0.87      0.75      0.81     80000
+
+    accuracy                           0.82    160000
+   macro avg       0.83      0.82      0.82    160000
+weighted avg       0.83      0.82      0.82    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.91      0.83      0.87     11383
+         1.0       0.80      0.89      0.84      8617
+
+    accuracy                           0.85     20000
+   macro avg       0.85      0.86      0.85     20000
+weighted avg       0.86      0.85      0.86     20000
+
+Epoch time: 183.65 seconds
+Current learning rate: 0.001
+
+Epoch [11/100]
+Train Loss: 0.4057, Train Acc: 0.8210, Val Loss: 0.9637, Val Acc: 0.6409, LR: 0.001000
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.78      0.89      0.83     80000
+         1.0       0.87      0.75      0.81     80000
+
+    accuracy                           0.82    160000
+   macro avg       0.83      0.82      0.82    160000
+weighted avg       0.83      0.82      0.82    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.97      0.38      0.55     11383
+         1.0       0.55      0.98      0.70      8617
+
+    accuracy                           0.64     20000
+   macro avg       0.76      0.68      0.62     20000
+weighted avg       0.79      0.64      0.61     20000
+
+Epoch time: 184.47 seconds
+Current learning rate: 0.001
+
+Epoch [12/100]
+Train Loss: 0.4038, Train Acc: 0.8217, Val Loss: 0.5108, Val Acc: 0.8125, LR: 0.001000
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.78      0.89      0.83     80000
+         1.0       0.87      0.75      0.81     80000
+
+    accuracy                           0.82    160000
+   macro avg       0.83      0.82      0.82    160000
+weighted avg       0.83      0.82      0.82    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.93      0.72      0.81     11383
+         1.0       0.72      0.93      0.81      8617
+
+    accuracy                           0.81     20000
+   macro avg       0.83      0.83      0.81     20000
+weighted avg       0.84      0.81      0.81     20000
+
+Epoch time: 183.63 seconds
+Current learning rate: 0.001
+
+Epoch [13/100]
+Train Loss: 0.3975, Train Acc: 0.8247, Val Loss: 0.5022, Val Acc: 0.7998, LR: 0.001000
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.79      0.89      0.84     80000
+         1.0       0.88      0.76      0.81     80000
+
+    accuracy                           0.82    160000
+   macro avg       0.83      0.82      0.82    160000
+weighted avg       0.83      0.82      0.82    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.93      0.70      0.80     11383
+         1.0       0.70      0.93      0.80      8617
+
+    accuracy                           0.80     20000
+   macro avg       0.82      0.82      0.80     20000
+weighted avg       0.83      0.80      0.80     20000
+
+Epoch time: 183.39 seconds
+Current learning rate: 0.0005
+
+Epoch [14/100]
+Train Loss: 0.3790, Train Acc: 0.8346, Val Loss: 0.2662, Val Acc: 0.9011, LR: 0.000500
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.90      0.84     80000
+         1.0       0.89      0.77      0.82     80000
+
+    accuracy                           0.83    160000
+   macro avg       0.84      0.83      0.83    160000
+weighted avg       0.84      0.83      0.83    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.90      0.93      0.91     11383
+         1.0       0.90      0.86      0.88      8617
+
+    accuracy                           0.90     20000
+   macro avg       0.90      0.90      0.90     20000
+weighted avg       0.90      0.90      0.90     20000
+
+Epoch time: 183.48 seconds
+Current learning rate: 0.0005
+
+Epoch [15/100]
+Train Loss: 0.3764, Train Acc: 0.8359, Val Loss: 0.2411, Val Acc: 0.9084, LR: 0.000500
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.90      0.85     80000
+         1.0       0.89      0.77      0.82     80000
+
+    accuracy                           0.84    160000
+   macro avg       0.84      0.84      0.84    160000
+weighted avg       0.84      0.84      0.84    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.90      0.95      0.92     11383
+         1.0       0.92      0.86      0.89      8617
+
+    accuracy                           0.91     20000
+   macro avg       0.91      0.90      0.91     20000
+weighted avg       0.91      0.91      0.91     20000
+
+Epoch time: 183.34 seconds
+Current learning rate: 0.0005
+
+Epoch [16/100]
+Train Loss: 0.3748, Train Acc: 0.8364, Val Loss: 0.3465, Val Acc: 0.8406, LR: 0.000500
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.90      0.85     80000
+         1.0       0.89      0.77      0.82     80000
+
+    accuracy                           0.84    160000
+   macro avg       0.84      0.84      0.84    160000
+weighted avg       0.84      0.84      0.84    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.78      1.00      0.88     11383
+         1.0       0.99      0.63      0.77      8617
+
+    accuracy                           0.84     20000
+   macro avg       0.89      0.82      0.83     20000
+weighted avg       0.87      0.84      0.83     20000
+
+Epoch time: 184.31 seconds
+Current learning rate: 0.0005
+
+Epoch [17/100]
+Train Loss: 0.3731, Train Acc: 0.8389, Val Loss: 0.4499, Val Acc: 0.8294, LR: 0.000500
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.90      0.85     80000
+         1.0       0.89      0.78      0.83     80000
+
+    accuracy                           0.84    160000
+   macro avg       0.84      0.84      0.84    160000
+weighted avg       0.84      0.84      0.84    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.93      0.75      0.83     11383
+         1.0       0.74      0.93      0.82      8617
+
+    accuracy                           0.83     20000
+   macro avg       0.84      0.84      0.83     20000
+weighted avg       0.85      0.83      0.83     20000
+
+Epoch time: 183.66 seconds
+Current learning rate: 0.0005
+
+Epoch [18/100]
+Train Loss: 0.3723, Train Acc: 0.8389, Val Loss: 0.4945, Val Acc: 0.8105, LR: 0.000500
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.90      0.85     80000
+         1.0       0.89      0.78      0.83     80000
+
+    accuracy                           0.84    160000
+   macro avg       0.84      0.84      0.84    160000
+weighted avg       0.84      0.84      0.84    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.93      0.72      0.81     11383
+         1.0       0.72      0.92      0.81      8617
+
+    accuracy                           0.81     20000
+   macro avg       0.82      0.82      0.81     20000
+weighted avg       0.84      0.81      0.81     20000
+
+Epoch time: 183.65 seconds
+Current learning rate: 0.0005
+
+Epoch [19/100]
+Train Loss: 0.3692, Train Acc: 0.8401, Val Loss: 0.4514, Val Acc: 0.8321, LR: 0.000500
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.90      0.85     80000
+         1.0       0.89      0.78      0.83     80000
+
+    accuracy                           0.84    160000
+   macro avg       0.85      0.84      0.84    160000
+weighted avg       0.85      0.84      0.84    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.93      0.76      0.84     11383
+         1.0       0.75      0.93      0.83      8617
+
+    accuracy                           0.83     20000
+   macro avg       0.84      0.84      0.83     20000
+weighted avg       0.85      0.83      0.83     20000
+
+Epoch time: 183.68 seconds
+Current learning rate: 0.0005
+
+Epoch [20/100]
+Train Loss: 0.3692, Train Acc: 0.8410, Val Loss: 0.3195, Val Acc: 0.8621, LR: 0.000500
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.90      0.85     80000
+         1.0       0.89      0.78      0.83     80000
+
+    accuracy                           0.84    160000
+   macro avg       0.85      0.84      0.84    160000
+weighted avg       0.85      0.84      0.84    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.81      0.99      0.89     11383
+         1.0       0.99      0.69      0.81      8617
+
+    accuracy                           0.86     20000
+   macro avg       0.90      0.84      0.85     20000
+weighted avg       0.89      0.86      0.86     20000
+
+Epoch time: 183.38 seconds
+Current learning rate: 0.0005
+
+Epoch [21/100]
+Train Loss: 0.3687, Train Acc: 0.8421, Val Loss: 0.2857, Val Acc: 0.8809, LR: 0.000500
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.81      0.90      0.85     80000
+         1.0       0.89      0.78      0.83     80000
+
+    accuracy                           0.84    160000
+   macro avg       0.85      0.84      0.84    160000
+weighted avg       0.85      0.84      0.84    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.84      0.98      0.90     11383
+         1.0       0.97      0.74      0.84      8617
+
+    accuracy                           0.88     20000
+   macro avg       0.90      0.86      0.87     20000
+weighted avg       0.90      0.88      0.88     20000
+
+Epoch time: 184.21 seconds
+Current learning rate: 0.00025
+
+Epoch [22/100]
+Train Loss: 0.3549, Train Acc: 0.8491, Val Loss: 0.2418, Val Acc: 0.9064, LR: 0.000250
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.81      0.91      0.86     80000
+         1.0       0.90      0.79      0.84     80000
+
+    accuracy                           0.85    160000
+   macro avg       0.85      0.85      0.85    160000
+weighted avg       0.85      0.85      0.85    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.89      0.96      0.92     11383
+         1.0       0.94      0.84      0.89      8617
+
+    accuracy                           0.91     20000
+   macro avg       0.91      0.90      0.90     20000
+weighted avg       0.91      0.91      0.91     20000
+
+Epoch time: 183.63 seconds
+Current learning rate: 0.00025
+
+Epoch [23/100]
+Train Loss: 0.3516, Train Acc: 0.8509, Val Loss: 0.2519, Val Acc: 0.9025, LR: 0.000250
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.81      0.91      0.86     80000
+         1.0       0.90      0.79      0.84     80000
+
+    accuracy                           0.85    160000
+   macro avg       0.86      0.85      0.85    160000
+weighted avg       0.86      0.85      0.85    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.88      0.96      0.92     11383
+         1.0       0.94      0.83      0.88      8617
+
+    accuracy                           0.90     20000
+   macro avg       0.91      0.89      0.90     20000
+weighted avg       0.91      0.90      0.90     20000
+
+Epoch time: 183.35 seconds
+Current learning rate: 0.00025
+
+Epoch [24/100]
+Train Loss: 0.3516, Train Acc: 0.8505, Val Loss: 0.4318, Val Acc: 0.8378, LR: 0.000250
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.81      0.91      0.86     80000
+         1.0       0.90      0.79      0.84     80000
+
+    accuracy                           0.85    160000
+   macro avg       0.86      0.85      0.85    160000
+weighted avg       0.86      0.85      0.85    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.94      0.76      0.84     11383
+         1.0       0.75      0.93      0.83      8617
+
+    accuracy                           0.84     20000
+   macro avg       0.84      0.85      0.84     20000
+weighted avg       0.86      0.84      0.84     20000
+
+Epoch time: 183.44 seconds
+Current learning rate: 0.00025
+
+Epoch [25/100]
+Train Loss: 0.3496, Train Acc: 0.8514, Val Loss: 0.2679, Val Acc: 0.8889, LR: 0.000250
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.81      0.91      0.86     80000
+         1.0       0.90      0.79      0.84     80000
+
+    accuracy                           0.85    160000
+   macro avg       0.86      0.85      0.85    160000
+weighted avg       0.86      0.85      0.85    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.86      0.96      0.91     11383
+         1.0       0.93      0.80      0.86      8617
+
+    accuracy                           0.89     20000
+   macro avg       0.90      0.88      0.88     20000
+weighted avg       0.89      0.89      0.89     20000
+
+Epoch time: 183.38 seconds
+Current learning rate: 0.00025
+
+Epoch [26/100]
+Train Loss: 0.3513, Train Acc: 0.8506, Val Loss: 0.2528, Val Acc: 0.8978, LR: 0.000250
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.81      0.91      0.86     80000
+         1.0       0.90      0.79      0.84     80000
+
+    accuracy                           0.85    160000
+   macro avg       0.86      0.85      0.85    160000
+weighted avg       0.86      0.85      0.85    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.87      0.97      0.92     11383
+         1.0       0.95      0.81      0.87      8617
+
+    accuracy                           0.90     20000
+   macro avg       0.91      0.89      0.89     20000
+weighted avg       0.90      0.90      0.90     20000
+
+Epoch time: 184.28 seconds
+Current learning rate: 0.00025
+
+Epoch [27/100]
+Train Loss: 0.3489, Train Acc: 0.8520, Val Loss: 0.2303, Val Acc: 0.9113, LR: 0.000250
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.81      0.91      0.86     80000
+         1.0       0.90      0.79      0.84     80000
+
+    accuracy                           0.85    160000
+   macro avg       0.86      0.85      0.85    160000
+weighted avg       0.86      0.85      0.85    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.89      0.96      0.92     11383
+         1.0       0.94      0.85      0.89      8617
+
+    accuracy                           0.91     20000
+   macro avg       0.92      0.90      0.91     20000
+weighted avg       0.91      0.91      0.91     20000
+
+Epoch time: 183.64 seconds
+Current learning rate: 0.00025
+
+Epoch [28/100]
+Train Loss: 0.3491, Train Acc: 0.8517, Val Loss: 0.3693, Val Acc: 0.8698, LR: 0.000250
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.81      0.91      0.86     80000
+         1.0       0.90      0.79      0.84     80000
+
+    accuracy                           0.85    160000
+   macro avg       0.86      0.85      0.85    160000
+weighted avg       0.86      0.85      0.85    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.94      0.82      0.88     11383
+         1.0       0.80      0.93      0.86      8617
+
+    accuracy                           0.87     20000
+   macro avg       0.87      0.88      0.87     20000
+weighted avg       0.88      0.87      0.87     20000
+
+Epoch time: 183.53 seconds
+Current learning rate: 0.00025
+
+Epoch [29/100]
+Train Loss: 0.3491, Train Acc: 0.8520, Val Loss: 0.2421, Val Acc: 0.9014, LR: 0.000250
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.82      0.91      0.86     80000
+         1.0       0.90      0.79      0.84     80000
+
+    accuracy                           0.85    160000
+   macro avg       0.86      0.85      0.85    160000
+weighted avg       0.86      0.85      0.85    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.87      0.96      0.92     11383
+         1.0       0.95      0.82      0.88      8617
+
+    accuracy                           0.90     20000
+   macro avg       0.91      0.89      0.90     20000
+weighted avg       0.91      0.90      0.90     20000
+
+Epoch time: 183.65 seconds
+Current learning rate: 0.00025
+
+Epoch [30/100]
+Train Loss: 0.3483, Train Acc: 0.8533, Val Loss: 0.2237, Val Acc: 0.9105, LR: 0.000250
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.82      0.91      0.86     80000
+         1.0       0.90      0.79      0.84     80000
+
+    accuracy                           0.85    160000
+   macro avg       0.86      0.85      0.85    160000
+weighted avg       0.86      0.85      0.85    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.89      0.96      0.92     11383
+         1.0       0.95      0.84      0.89      8617
+
+    accuracy                           0.91     20000
+   macro avg       0.92      0.90      0.91     20000
+weighted avg       0.91      0.91      0.91     20000
+
+Epoch time: 183.59 seconds
+Current learning rate: 0.00025
+
+Epoch [31/100]
+Train Loss: 0.3471, Train Acc: 0.8533, Val Loss: 0.2880, Val Acc: 0.8656, LR: 0.000250
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.82      0.91      0.86     80000
+         1.0       0.90      0.79      0.84     80000
+
+    accuracy                           0.85    160000
+   macro avg       0.86      0.85      0.85    160000
+weighted avg       0.86      0.85      0.85    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.82      0.99      0.89     11383
+         1.0       0.98      0.70      0.82      8617
+
+    accuracy                           0.87     20000
+   macro avg       0.90      0.85      0.86     20000
+weighted avg       0.88      0.87      0.86     20000
+
+Epoch time: 184.12 seconds
+Current learning rate: 0.00025
+
+Epoch [32/100]
+Train Loss: 0.3458, Train Acc: 0.8536, Val Loss: 0.2993, Val Acc: 0.8893, LR: 0.000250
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.82      0.91      0.86     80000
+         1.0       0.90      0.79      0.84     80000
+
+    accuracy                           0.85    160000
+   macro avg       0.86      0.85      0.85    160000
+weighted avg       0.86      0.85      0.85    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.91      0.89      0.90     11383
+         1.0       0.86      0.89      0.87      8617
+
+    accuracy                           0.89     20000
+   macro avg       0.89      0.89      0.89     20000
+weighted avg       0.89      0.89      0.89     20000
+
+Epoch time: 183.64 seconds
+Current learning rate: 0.00025
+
+Epoch [33/100]
+Train Loss: 0.3450, Train Acc: 0.8547, Val Loss: 0.2652, Val Acc: 0.8892, LR: 0.000250
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.82      0.91      0.86     80000
+         1.0       0.90      0.80      0.85     80000
+
+    accuracy                           0.85    160000
+   macro avg       0.86      0.85      0.85    160000
+weighted avg       0.86      0.85      0.85    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.86      0.96      0.91     11383
+         1.0       0.94      0.79      0.86      8617
+
+    accuracy                           0.89     20000
+   macro avg       0.90      0.88      0.88     20000
+weighted avg       0.90      0.89      0.89     20000
+
+Epoch time: 183.32 seconds
+Current learning rate: 0.00025
+
+Epoch [34/100]
+Train Loss: 0.3440, Train Acc: 0.8558, Val Loss: 0.2413, Val Acc: 0.9083, LR: 0.000250
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.82      0.91      0.86     80000
+         1.0       0.90      0.80      0.85     80000
+
+    accuracy                           0.86    160000
+   macro avg       0.86      0.86      0.86    160000
+weighted avg       0.86      0.86      0.86    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.89      0.96      0.92     11383
+         1.0       0.93      0.85      0.89      8617
+
+    accuracy                           0.91     20000
+   macro avg       0.91      0.90      0.91     20000
+weighted avg       0.91      0.91      0.91     20000
+
+Epoch time: 183.44 seconds
+Current learning rate: 0.00025
+
+Epoch [35/100]
+Train Loss: 0.3423, Train Acc: 0.8556, Val Loss: 0.3816, Val Acc: 0.8618, LR: 0.000250
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.82      0.92      0.86     80000
+         1.0       0.90      0.80      0.85     80000
+
+    accuracy                           0.86    160000
+   macro avg       0.86      0.86      0.86    160000
+weighted avg       0.86      0.86      0.86    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.94      0.81      0.87     11383
+         1.0       0.79      0.93      0.85      8617
+
+    accuracy                           0.86     20000
+   macro avg       0.86      0.87      0.86     20000
+weighted avg       0.87      0.86      0.86     20000
+
+Epoch time: 183.34 seconds
+Current learning rate: 0.00025
+
+Epoch [36/100]
+Train Loss: 0.3427, Train Acc: 0.8552, Val Loss: 0.2405, Val Acc: 0.9014, LR: 0.000250
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.82      0.91      0.86     80000
+         1.0       0.90      0.80      0.85     80000
+
+    accuracy                           0.86    160000
+   macro avg       0.86      0.86      0.85    160000
+weighted avg       0.86      0.86      0.85    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.88      0.96      0.92     11383
+         1.0       0.94      0.82      0.88      8617
+
+    accuracy                           0.90     20000
+   macro avg       0.91      0.89      0.90     20000
+weighted avg       0.91      0.90      0.90     20000
+
+Epoch time: 184.22 seconds
+Current learning rate: 0.000125
+
+Epoch [37/100]
+Train Loss: 0.3327, Train Acc: 0.8606, Val Loss: 0.2300, Val Acc: 0.9085, LR: 0.000125
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.82      0.92      0.87     80000
+         1.0       0.91      0.80      0.85     80000
+
+    accuracy                           0.86    160000
+   macro avg       0.87      0.86      0.86    160000
+weighted avg       0.87      0.86      0.86    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.88      0.97      0.92     11383
+         1.0       0.95      0.83      0.89      8617
+
+    accuracy                           0.91     20000
+   macro avg       0.92      0.90      0.90     20000
+weighted avg       0.91      0.91      0.91     20000
+
+Epoch time: 183.65 seconds
+Current learning rate: 0.000125
+
+Epoch [38/100]
+Train Loss: 0.3294, Train Acc: 0.8621, Val Loss: 0.2437, Val Acc: 0.9097, LR: 0.000125
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.82      0.92      0.87     80000
+         1.0       0.91      0.80      0.85     80000
+
+    accuracy                           0.86    160000
+   macro avg       0.87      0.86      0.86    160000
+weighted avg       0.87      0.86      0.86    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.91      0.93      0.92     11383
+         1.0       0.90      0.88      0.89      8617
+
+    accuracy                           0.91     20000
+   macro avg       0.91      0.91      0.91     20000
+weighted avg       0.91      0.91      0.91     20000
+
+Epoch time: 183.30 seconds
+Current learning rate: 0.000125
+
+Epoch [39/100]
+Train Loss: 0.3294, Train Acc: 0.8632, Val Loss: 0.2942, Val Acc: 0.8944, LR: 0.000125
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.83      0.92      0.87     80000
+         1.0       0.91      0.81      0.85     80000
+
+    accuracy                           0.86    160000
+   macro avg       0.87      0.86      0.86    160000
+weighted avg       0.87      0.86      0.86    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.94      0.88      0.90     11383
+         1.0       0.85      0.92      0.88      8617
+
+    accuracy                           0.89     20000
+   macro avg       0.89      0.90      0.89     20000
+weighted avg       0.90      0.89      0.89     20000
+
+Epoch time: 183.40 seconds
+Current learning rate: 0.000125
+
+Epoch [40/100]
+Train Loss: 0.3284, Train Acc: 0.8632, Val Loss: 0.2808, Val Acc: 0.8995, LR: 0.000125
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.83      0.92      0.87     80000
+         1.0       0.91      0.81      0.85     80000
+
+    accuracy                           0.86    160000
+   macro avg       0.87      0.86      0.86    160000
+weighted avg       0.87      0.86      0.86    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.93      0.90      0.91     11383
+         1.0       0.87      0.91      0.89      8617
+
+    accuracy                           0.90     20000
+   macro avg       0.90      0.90      0.90     20000
+weighted avg       0.90      0.90      0.90     20000
+
+Epoch time: 183.36 seconds
+Current learning rate: 0.000125
+
+Epoch [41/100]
+Train Loss: 0.3265, Train Acc: 0.8652, Val Loss: 0.3087, Val Acc: 0.8578, LR: 0.000125
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.83      0.92      0.87     80000
+         1.0       0.91      0.81      0.86     80000
+
+    accuracy                           0.87    160000
+   macro avg       0.87      0.87      0.86    160000
+weighted avg       0.87      0.87      0.86    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.80      0.99      0.89     11383
+         1.0       0.99      0.68      0.80      8617
+
+    accuracy                           0.86     20000
+   macro avg       0.90      0.84      0.85     20000
+weighted avg       0.88      0.86      0.85     20000
+
+Epoch time: 184.18 seconds
+Current learning rate: 0.000125
+
+Epoch [42/100]
+Train Loss: 0.3271, Train Acc: 0.8642, Val Loss: 0.2767, Val Acc: 0.8986, LR: 0.000125
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.83      0.92      0.87     80000
+         1.0       0.91      0.81      0.86     80000
+
+    accuracy                           0.86    160000
+   macro avg       0.87      0.86      0.86    160000
+weighted avg       0.87      0.86      0.86    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.91      0.91      0.91     11383
+         1.0       0.88      0.88      0.88      8617
+
+    accuracy                           0.90     20000
+   macro avg       0.90      0.90      0.90     20000
+weighted avg       0.90      0.90      0.90     20000
+
+Epoch time: 183.62 seconds
+Current learning rate: 6.25e-05
+
+Epoch [43/100]
+Train Loss: 0.3196, Train Acc: 0.8687, Val Loss: 0.3058, Val Acc: 0.8898, LR: 0.000063
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.83      0.92      0.88     80000
+         1.0       0.92      0.81      0.86     80000
+
+    accuracy                           0.87    160000
+   macro avg       0.87      0.87      0.87    160000
+weighted avg       0.87      0.87      0.87    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.94      0.87      0.90     11383
+         1.0       0.84      0.92      0.88      8617
+
+    accuracy                           0.89     20000
+   macro avg       0.89      0.89      0.89     20000
+weighted avg       0.89      0.89      0.89     20000
+
+Epoch time: 183.34 seconds
+Current learning rate: 6.25e-05
+
+Epoch [44/100]
+Train Loss: 0.3184, Train Acc: 0.8690, Val Loss: 0.4498, Val Acc: 0.8490, LR: 0.000063
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.83      0.92      0.88     80000
+         1.0       0.91      0.81      0.86     80000
+
+    accuracy                           0.87    160000
+   macro avg       0.87      0.87      0.87    160000
+weighted avg       0.87      0.87      0.87    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.96      0.77      0.85     11383
+         1.0       0.76      0.96      0.84      8617
+
+    accuracy                           0.85     20000
+   macro avg       0.86      0.86      0.85     20000
+weighted avg       0.87      0.85      0.85     20000
+
+Epoch time: 183.40 seconds
+Current learning rate: 6.25e-05
+
+Epoch [45/100]
+Train Loss: 0.3182, Train Acc: 0.8696, Val Loss: 0.2724, Val Acc: 0.9025, LR: 0.000063
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.83      0.92      0.88     80000
+         1.0       0.91      0.82      0.86     80000
+
+    accuracy                           0.87    160000
+   macro avg       0.87      0.87      0.87    160000
+weighted avg       0.87      0.87      0.87    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.92      0.90      0.91     11383
+         1.0       0.88      0.90      0.89      8617
+
+    accuracy                           0.90     20000
+   macro avg       0.90      0.90      0.90     20000
+weighted avg       0.90      0.90      0.90     20000
+
+Epoch time: 183.38 seconds
+Current learning rate: 6.25e-05
+
+Epoch [46/100]
+Train Loss: 0.3171, Train Acc: 0.8695, Val Loss: 0.2567, Val Acc: 0.9045, LR: 0.000063
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.83      0.92      0.88     80000
+         1.0       0.92      0.81      0.86     80000
+
+    accuracy                           0.87    160000
+   macro avg       0.87      0.87      0.87    160000
+weighted avg       0.87      0.87      0.87    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.91      0.92      0.92     11383
+         1.0       0.90      0.88      0.89      8617
+
+    accuracy                           0.90     20000
+   macro avg       0.90      0.90      0.90     20000
+weighted avg       0.90      0.90      0.90     20000
+
+Epoch time: 184.02 seconds
+Current learning rate: 6.25e-05
+
+Epoch [47/100]
+Train Loss: 0.3167, Train Acc: 0.8700, Val Loss: 0.2561, Val Acc: 0.9052, LR: 0.000063
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.83      0.92      0.88     80000
+         1.0       0.92      0.82      0.86     80000
+
+    accuracy                           0.87    160000
+   macro avg       0.87      0.87      0.87    160000
+weighted avg       0.87      0.87      0.87    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.91      0.92      0.92     11383
+         1.0       0.90      0.88      0.89      8617
+
+    accuracy                           0.91     20000
+   macro avg       0.90      0.90      0.90     20000
+weighted avg       0.91      0.91      0.91     20000
+
+Epoch time: 183.65 seconds
+Current learning rate: 6.25e-05
+
+Epoch [48/100]
+Train Loss: 0.3168, Train Acc: 0.8696, Val Loss: 0.2257, Val Acc: 0.9149, LR: 0.000063
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.83      0.92      0.88     80000
+         1.0       0.92      0.81      0.86     80000
+
+    accuracy                           0.87    160000
+   macro avg       0.87      0.87      0.87    160000
+weighted avg       0.87      0.87      0.87    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.90      0.95      0.93     11383
+         1.0       0.93      0.87      0.90      8617
+
+    accuracy                           0.91     20000
+   macro avg       0.92      0.91      0.91     20000
+weighted avg       0.92      0.91      0.91     20000
+
+Epoch time: 183.35 seconds
+Current learning rate: 3.125e-05
+
+Epoch [49/100]
+Train Loss: 0.3114, Train Acc: 0.8727, Val Loss: 0.2771, Val Acc: 0.9016, LR: 0.000031
+
+Training Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.84      0.93      0.88     80000
+         1.0       0.92      0.82      0.87     80000
+
+    accuracy                           0.87    160000
+   macro avg       0.88      0.87      0.87    160000
+weighted avg       0.88      0.87      0.87    160000
+
+
+Validation Performance:
+              precision    recall  f1-score   support
+
+         0.0       0.93      0.90      0.91     11383
+         1.0       0.87      0.91      0.89      8617
+
+    accuracy                           0.90     20000
+   macro avg       0.90      0.90      0.90     20000
+weighted avg       0.90      0.90      0.90     20000
+
+Epoch time: 183.41 seconds
+Current learning rate: 3.125e-05
+Early stopping triggered
+Total time: 9268.67 seconds
