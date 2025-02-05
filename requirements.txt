@@ -18,3 +18,4 @@ transformers==4.48.1
 biopython~=1.85
 tables==3.9.2
 python-dotenv==1.0.1
+tenacity~=9.0.0

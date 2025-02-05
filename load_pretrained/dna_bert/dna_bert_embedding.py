@@ -1,57 +1,50 @@
 import os
+
 import h5py
 import numpy as np
 import torch
 from Bio import SeqIO
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModel
-from concurrent.futures import ThreadPoolExecutor
-from tenacity import retry, stop_after_attempt, wait_exponential
-from typing import List, Generator
-from dataclasses import dataclass
+
 from common.env_config import config
 from log.custom_log import logger
 
-
-@dataclass
-class SequenceBatch:
-    ids: List[str]
-    descriptions: List[str]
-    sequences: List[str]
+os.environ['CUDA_LAUNCH_BLOCKING'] = '0'
 
 
 class DNABertEmbedding:
-    def __init__(self, model_name: str = "zhihan1996/DNA_bert_6", batch_size: int = 32):
+    def __init__(self, model_name="zhihan1996/DNA_bert_6", batch_size=32):
         logger.info(f"Loading model: {model_name}")
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         logger.info(f"Using device: {self.device}")
-        if self.device == 'cuda':
-            # Enable TF32 for better performance on Ampere GPUs
+
+        if torch.cuda.is_available():
+            # Clear GPU cache before loading model
+            torch.cuda.empty_cache()
+
+            # Set memory allocation strategy
+            torch.cuda.set_per_process_memory_fraction(0.8)  # Use up to 80% of GPU memory
+
+            # Enable TF32 for better performance on Ampere GPUs (RTX 3000 series)
             torch.backends.cuda.matmul.allow_tf32 = True
             torch.backends.cudnn.allow_tf32 = True
 
-            # Enable cuDNN benchmarking for optimal performance
-            torch.backends.cudnn.benchmark = True
-
-            # Initialize gradient scaler for mixed precision
-            # self.scaler = torch.cuda.amp.GradScaler()
-
-            # Set memory allocation strategy
-            # torch.cuda.set_per_process_memory_fraction(0.9)  # Use up to 90% of GPU memory
-            torch.cuda.empty_cache()
+            # Disable benchmarking to reduce memory usage
+            torch.backends.cudnn.benchmark = False
+            torch.backends.cudnn.deterministic = True
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModel.from_pretrained(model_name).to(self.device)
         self.model.eval()
-        self.batch_size = batch_size
-        self.embedding_dim = self.model.config.hidden_size
 
-    def _split_sequence(self, sequence: str, kmer: int = 6) -> List[str]:
+        # Reduce batch size if using GPU
+        self.batch_size = batch_size // 2 if torch.cuda.is_available() else batch_size
+
+    def _split_sequence(self, sequence, kmer=6):
         return [sequence[i:i + kmer] for i in range(0, len(sequence) - kmer + 1)]
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
-    @torch.cuda.amp.autocast()
-    def embed_batch(self, sequences: List[str]) -> np.ndarray:
+    def embed_batch(self, sequences):
         try:
             kmer_lists = [self._split_sequence(str(seq)) for seq in sequences]
             kmer_strs = [" ".join(kmers) for kmers in kmer_lists]
@@ -59,131 +52,105 @@ class DNABertEmbedding:
             inputs = self.tokenizer(kmer_strs, return_tensors="pt", padding=True, truncation=True)
             inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
-            with torch.no_grad():
-                outputs = self.model(**inputs)
-                embeddings = outputs.last_hidden_state[:, 0, :].cpu().numpy()
+            # Add gradient checkpointing for memory efficiency
+            self.model.gradient_checkpointing_enable()
 
-            torch.cuda.empty_cache()
+            with torch.cuda.amp.autocast():  # Enable automatic mixed precision
+                with torch.no_grad():
+                    outputs = self.model(**inputs)
+                    embeddings = outputs.last_hidden_state[:, 0, :].cpu().numpy()
+
+            # Clear GPU cache after processing each batch
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
             return embeddings
 
-        except torch.cuda.OutOfMemoryError:
-            torch.cuda.empty_cache()
-            raise
+        except RuntimeError as e:
+            logger.error(f"GPU error in embed_batch: {str(e)}")
+            # If we encounter a CUDA error, try processing with an even smaller batch
+            if len(sequences) > 1:
+                mid = len(sequences) // 2
+                first_half = self.embed_batch(sequences[:mid])
+                second_half = self.embed_batch(sequences[mid:])
+                return np.vstack([first_half, second_half])
+            else:
+                raise e
 
-    def sequence_generator(self, fna_path: str) -> Generator[SequenceBatch, None, None]:
-        batch_ids, batch_desc, batch_seq = [], [], []
+    def process_and_save(self, fna_path, output_path):
+        """
+        Process .fna file and save embeddings to .h5 file using batched processing
+        Args:
+            fna_path: Path to input .fna file
+            output_path: Path to output .h5 file
+        """
+        logger.info(f"Processing {fna_path} and saving to {output_path}")
 
-        for record in SeqIO.parse(fna_path, "fasta"):
-            batch_ids.append(record.id)
-            batch_desc.append(record.description)
-            batch_seq.append(str(record.seq))
-
-            if len(batch_ids) == self.batch_size:
-                yield SequenceBatch(batch_ids, batch_desc, batch_seq)
-                batch_ids, batch_desc, batch_seq = [], [], []
-
-        if batch_ids:  # Process remaining sequences
-            yield SequenceBatch(batch_ids, batch_desc, batch_seq)
-
-    def process_and_save(self, fna_path: str, output_path: str):
-        logger.info(f"Processing {fna_path}")
+        # Create output directory if it doesn't exist
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-        # Count sequences first
-        with open(fna_path) as f:
-            total_sequences = sum(1 for _ in SeqIO.parse(f, "fasta"))
+        sequences = list(SeqIO.parse(fna_path, "fasta"))
+        total_sequences = len(sequences)
+        embeddings = []
+        seq_ids = []
+        descriptions = []
+        sequences_str = []
+
+        # Process in batches
+        for i in tqdm(range(0, total_sequences, self.batch_size), desc="Processing batches"):
+            batch_sequences = sequences[i:i + self.batch_size]
+            batch_embeddings = self.embed_batch([seq.seq for seq in batch_sequences])
+
+            embeddings.extend(batch_embeddings)
+            seq_ids.extend([seq.id for seq in batch_sequences])
+            descriptions.extend([seq.description for seq in batch_sequences])
+            sequences_str.extend([str(seq.seq) for seq in batch_sequences])
+
+        embeddings = np.array(embeddings)
 
         with h5py.File(output_path, 'w') as f:
-            # Initialize datasets with compression
-            embeddings_dataset = f.create_dataset(
-                'embeddings',
-                shape=(total_sequences, self.embedding_dim),
-                dtype=np.float32,
-                compression="gzip",
-                compression_opts=4,
-                chunks=True
-            )
-
+            f.create_dataset('embeddings', data=embeddings)
             dt = h5py.special_dtype(vlen=str)
-            seq_ids_dataset = f.create_dataset('sequence_ids', shape=(total_sequences,), dtype=dt)
-            desc_dataset = f.create_dataset('descriptions', shape=(total_sequences,), dtype=dt)
-            seq_dataset = f.create_dataset('sequences', shape=(total_sequences,), dtype=dt)
+            f.create_dataset('sequence_ids', data=seq_ids, dtype=dt)
+            f.create_dataset('descriptions', data=descriptions, dtype=dt)
+            f.create_dataset('sequences', data=sequences_str, dtype=dt)
+            f.attrs['embedding_dim'] = self.get_embedding_dim()
+            f.attrs['num_sequences'] = len(sequences)
 
-            f.attrs['embedding_dim'] = self.embedding_dim
-            f.attrs['num_sequences'] = total_sequences
-
-            current_idx = 0
-            for batch in tqdm(self.sequence_generator(fna_path),
-                              total=(total_sequences + self.batch_size - 1) // self.batch_size,
-                              desc="Processing batches"):
-                batch_size = len(batch.ids)
-                embeddings = self.embed_batch(batch.sequences)
-
-                # Save batch data
-                embeddings_dataset[current_idx:current_idx + batch_size] = embeddings
-                seq_ids_dataset[current_idx:current_idx + batch_size] = batch.ids
-                desc_dataset[current_idx:current_idx + batch_size] = batch.descriptions
-                seq_dataset[current_idx:current_idx + batch_size] = batch.sequences
-
-                current_idx += batch_size
-
-        logger.info(f"Saved embeddings to {output_path}")
-        return output_path
-
-
-def process_folder(folder_path: str, result_dir: str, dna_embedder: DNABertEmbedding):
-    try:
-        for file in os.listdir(folder_path):
-            if file.endswith('.fna'):
-                fna_path = os.path.join(folder_path, file)
-                output_path = os.path.join(
-                    result_dir,
-                    os.path.basename(folder_path),
-                    file.replace(".fna", ".h5")
-                )
-
-                output_path = dna_embedder.process_and_save(fna_path, output_path)
-
-                with h5py.File(output_path, 'r') as f:
-                    logger.info(f"Processed {file}")
-                    logger.info(f"Number of sequences: {f.attrs['num_sequences']}")
-                    logger.info(f"Embeddings shape: {f['embeddings'].shape}")
-
-    except Exception as e:
-        logger.error(f"Error processing folder {folder_path}: {str(e)}")
-        raise
+    def get_embedding_dim(self):
+        return self.model.config.hidden_size
 
 
 def main():
     logger.info("Initializing DNABertEmbedding...")
     try:
-        data_type = "train"
+        data_type = "test"
         data_dir = f"{config.DNA_BERT_INPUT_DATA_PATH}/{data_type}"
         result_dir = f"{config.DNA_BERT_OUTPUT_DATA_PATH}/{data_type}"
 
-        dna_embedder = DNABertEmbedding(
-            model_name=config.DNA_BERT_MODEL_PATH,
-            batch_size=32  # Adjust based on GPU memory
-        )
+        # Initialize embedder once outside the loop
+        dna_embedder = DNABertEmbedding(model_name=config.DNA_BERT_MODEL_PATH)
 
-        with ThreadPoolExecutor() as executor:
-            folder_paths = [
-                os.path.join(data_dir, folder)
-                for folder in os.listdir(data_dir)
-                if os.path.isdir(os.path.join(data_dir, folder))
-            ]
+        for folder in os.listdir(data_dir):
+            folder_path = os.path.join(data_dir, folder)
+            if os.path.isdir(folder_path):
+                for file in os.listdir(folder_path):
+                    if os.path.exists(os.path.join(result_dir, folder, file.replace(".fna", ".h5"))) or not file.endswith(".fna"):
+                        logger.info(f"Skipping {file}")
+                        continue
 
-            futures = [
-                executor.submit(process_folder, folder_path, result_dir, dna_embedder)
-                for folder_path in folder_paths
-            ]
+                    fna_path = os.path.join(folder_path, file)
+                    output_path = os.path.join(result_dir, folder, file.replace(".fna", ".h5"))
 
-            for future in futures:
-                future.result()  # Will raise any exceptions that occurred
+                    dna_embedder.process_and_save(fna_path, output_path)
+
+                    with h5py.File(output_path, 'r') as f:
+                        logger.info(f"Processed {file}")
+                        logger.info(f"Number of sequences: {f.attrs['num_sequences']}")
+                        logger.info(f"Embeddings shape: {f['embeddings'].shape}")
 
     except Exception as e:
         logger.error(f"An error occurred: {str(e)}")
-        raise
 
 
 if __name__ == "__main__":
