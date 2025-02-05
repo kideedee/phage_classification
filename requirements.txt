@@ -17,3 +17,4 @@ tqdm==4.67.1
 transformers==4.48.1
 biopython~=1.85
 tables==3.9.2
+python-dotenv==1.0.1
