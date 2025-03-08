@@ -1,0 +1,1645 @@
+KẾT QUẢ TÌM KIẾM GEN PHAGE
+==================================================
+TỔNG SỐ GEN TÌM THẤY: 197
+
+BẢNG THỐNG KÊ:
+--------------------------------------------------
+TÊN GEN                          SỐ LƯỢNG
+--------------------------------------------------
+antitermination protein Q               2
+cI repressor                           10
+cII protein                             4
+cIII protein                            2
+excisionase                             2
+integrase                               2
+recombination protein Bet               2
+regulatory protein cro                  2
+replication protein O                  87
+replication protein P                  84
+--------------------------------------------------
+
+CHI TIẾT:
+==================================================
+
+GEN: antitermination protein Q
+--------------------------------------------------
+    Số lượng tìm thấy: 2
+
+    Kết quả #1:
+    - Loại: gene
+    - Vị trí: [19695:20169](+)
+    - Chuỗi: +
+    - gene: Q
+
+    Kết quả #2:
+    - Loại: CDS
+    - Vị trí: [19695:20169](+)
+    - Chuỗi: +
+    - gene: Q
+    - product: antitermination protein
+    - function: antitermination
+    - protein_id: NP_050538.1
+
+
+GEN: cI repressor
+--------------------------------------------------
+    Số lượng tìm thấy: 10
+
+    Kết quả #1:
+    - Loại: CDS
+    - Vị trí: [1391:1691](-)
+    - Chuỗi: -
+    - gene: xis
+    - product: excisionase
+    - function: recombination
+    - protein_id: NP_050501.1
+
+    Kết quả #2:
+    - Loại: gene
+    - Vị trí: [7777:7942](-)
+    - Chuỗi: -
+    - gene: cIII
+
+    Kết quả #3:
+    - Loại: CDS
+    - Vị trí: [7777:7942](-)
+    - Chuỗi: -
+    - gene: cIII
+    - product: CIII anti-termination
+    - protein_id: NP_050516.1
+
+    Kết quả #4:
+    - Loại: gene
+    - Vị trí: [10899:11409](-)
+    - Chuỗi: -
+    - gene: cI
+
+    Kết quả #5:
+    - Loại: CDS
+    - Vị trí: [10899:11409](-)
+    - Chuỗi: -
+    - gene: cI
+    - product: LexA family transcriptional regulator
+    - protein_id: NP_050522.1
+
+    Kết quả #6:
+    - Loại: gene
+    - Vị trí: [12027:12324](+)
+    - Chuỗi: +
+    - gene: cII
+
+    Kết quả #7:
+    - Loại: CDS
+    - Vị trí: [12027:12324](+)
+    - Chuỗi: +
+    - gene: cII
+    - product: CII-like transcriptional activator
+    - function: establishment of lysogenic state
+    - protein_id: NP_050524.1
+
+    Kết quả #8:
+    - Loại: CDS
+    - Vị trí: [18945:19551](+)
+    - Chuỗi: +
+    - product: NinG/ Rap DNA junction specific endonuclease
+    - note: orf37
+    - protein_id: NP_050536.1
+
+    Kết quả #9:
+    - Loại: CDS
+    - Vị trí: [43025:43643](+)
+    - Chuỗi: +
+    - product: membrane associated protein
+    - note: orf64
+    - protein_id: NP_050563.1
+
+    Kết quả #10:
+    - Loại: CDS
+    - Vị trí: [46507:46759](+)
+    - Chuỗi: +
+    - product: bacteriocin
+    - note: orf69
+    - protein_id: NP_050568.1
+
+
+GEN: cII protein
+--------------------------------------------------
+    Số lượng tìm thấy: 4
+
+    Kết quả #1:
+    - Loại: gene
+    - Vị trí: [7777:7942](-)
+    - Chuỗi: -
+    - gene: cIII
+
+    Kết quả #2:
+    - Loại: CDS
+    - Vị trí: [7777:7942](-)
+    - Chuỗi: -
+    - gene: cIII
+    - product: CIII anti-termination
+    - protein_id: NP_050516.1
+
+    Kết quả #3:
+    - Loại: gene
+    - Vị trí: [12027:12324](+)
+    - Chuỗi: +
+    - gene: cII
+
+    Kết quả #4:
+    - Loại: CDS
+    - Vị trí: [12027:12324](+)
+    - Chuỗi: +
+    - gene: cII
+    - product: CII-like transcriptional activator
+    - function: establishment of lysogenic state
+    - protein_id: NP_050524.1
+
+
+GEN: cIII protein
+--------------------------------------------------
+    Số lượng tìm thấy: 2
+
+    Kết quả #1:
+    - Loại: gene
+    - Vị trí: [7777:7942](-)
+    - Chuỗi: -
+    - gene: cIII
+
+    Kết quả #2:
+    - Loại: CDS
+    - Vị trí: [7777:7942](-)
+    - Chuỗi: -
+    - gene: cIII
+    - product: CIII anti-termination
+    - protein_id: NP_050516.1
+
+
+GEN: excisionase
+--------------------------------------------------
+    Số lượng tìm thấy: 2
+
+    Kết quả #1:
+    - Loại: gene
+    - Vị trí: [1391:1691](-)
+    - Chuỗi: -
+    - gene: xis
+
+    Kết quả #2:
+    - Loại: CDS
+    - Vị trí: [1391:1691](-)
+    - Chuỗi: -
+    - gene: xis
+    - product: excisionase
+    - function: recombination
+    - protein_id: NP_050501.1
+
+
+GEN: integrase
+--------------------------------------------------
+    Số lượng tìm thấy: 2
+
+    Kết quả #1:
+    - Loại: gene
+    - Vị trí: [28:1363](-)
+    - Chuỗi: -
+    - gene: int
+
+    Kết quả #2:
+    - Loại: CDS
+    - Vị trí: [28:1363](-)
+    - Chuỗi: -
+    - gene: int
+    - product: integrase
+    - function: recombination
+    - protein_id: NP_050500.1
+
+
+GEN: recombination protein Bet
+--------------------------------------------------
+    Số lượng tìm thấy: 2
+
+    Kết quả #1:
+    - Loại: gene
+    - Vị trí: [6503:7289](-)
+    - Chuỗi: -
+    - gene: bet
+
+    Kết quả #2:
+    - Loại: CDS
+    - Vị trí: [6503:7289](-)
+    - Chuỗi: -
+    - gene: bet
+    - product: RecT-like ssDNA annealing protein
+    - function: recombination
+    - protein_id: NP_050513.1
+
+
+GEN: regulatory protein cro
+--------------------------------------------------
+    Số lượng tìm thấy: 2
+
+    Kết quả #1:
+    - Loại: gene
+    - Vị trí: [11670:11886](+)
+    - Chuỗi: +
+    - gene: cro
+
+    Kết quả #2:
+    - Loại: CDS
+    - Vị trí: [11670:11886](+)
+    - Chuỗi: +
+    - gene: cro
+    - product: transcriptional repressor
+    - protein_id: NP_050523.1
+
+
+GEN: replication protein O
+--------------------------------------------------
+    Số lượng tìm thấy: 87
+
+    Kết quả #1:
+    - Loại: CDS
+    - Vị trí: [28:1363](-)
+    - Chuỗi: -
+    - gene: int
+    - product: integrase
+    - function: recombination
+    - protein_id: NP_050500.1
+
+    Kết quả #2:
+    - Loại: CDS
+    - Vị trí: [1391:1691](-)
+    - Chuỗi: -
+    - gene: xis
+    - product: excisionase
+    - function: recombination
+    - protein_id: NP_050501.1
+
+    Kết quả #3:
+    - Loại: CDS
+    - Vị trí: [1761:2073](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf3
+    - protein_id: NP_050502.1
+
+    Kết quả #4:
+    - Loại: CDS
+    - Vị trí: [2132:3032](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf4
+    - protein_id: NP_050503.1
+
+    Kết quả #5:
+    - Loại: CDS
+    - Vị trí: [3035:3323](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf5
+    - protein_id: NP_050504.1
+
+    Kết quả #6:
+    - Loại: CDS
+    - Vị trí: [3324:3543](-)
+    - Chuỗi: -
+    - product: released from the phage upon host infection
+    - note: orf6
+    - protein_id: NP_050505.1
+
+    Kết quả #7:
+    - Loại: CDS
+    - Vị trí: [3544:3832](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf7
+    - protein_id: NP_050506.1
+
+    Kết quả #8:
+    - Loại: CDS
+    - Vị trí: [3761:4229](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf8
+    - protein_id: NP_050507.1
+
+    Kết quả #9:
+    - Loại: CDS
+    - Vị trí: [4101:4875](-)
+    - Chuỗi: -
+    - product: ead/Ea22-like family protein
+    - note: orf9; similar to ea22 protein of bacteriophage lambda
+    - protein_id: NP_050508.1
+
+    Kết quả #10:
+    - Loại: CDS
+    - Vị trí: [4871:5093](-)
+    - Chuỗi: -
+    - product: DksA-like zinc-finger protein
+    - note: Predicted by ZCURVE_V program; putative C4-type zinc finger domain
+    - protein_id: YP_089649.1
+
+    Kết quả #11:
+    - Loại: CDS
+    - Vị trí: [5191:5473](-)
+    - Chuỗi: -
+    - product: cell division protein ZapA
+    - note: orf10; similar to orf61 protein of bacteriophage lambda
+    - protein_id: NP_050509.1
+
+    Kết quả #12:
+    - Loại: CDS
+    - Vị trí: [5483:5675](-)
+    - Chuỗi: -
+    - product: DUF1382 family protein
+    - note: orf11; similar to orf63 protein of bacteriophage lambda
+    - protein_id: NP_050510.1
+
+    Kết quả #13:
+    - Loại: CDS
+    - Vị trí: [5647:5836](-)
+    - Chuỗi: -
+    - product: DUF1317 domain-containing protein
+    - note: orf12; similar to orf60a protein of bacteriophage lambda
+    - protein_id: NP_050511.1
+
+    Kết quả #14:
+    - Loại: gene
+    - Vị trí: [5826:6507](-)
+    - Chuỗi: -
+    - gene: exo
+
+    Kết quả #15:
+    - Loại: CDS
+    - Vị trí: [5826:6507](-)
+    - Chuỗi: -
+    - gene: exo
+    - product: exonuclease
+    - function: recombination
+    - protein_id: NP_050512.1
+
+    Kết quả #16:
+    - Loại: CDS
+    - Vị trí: [6503:7289](-)
+    - Chuỗi: -
+    - gene: bet
+    - product: RecT-like ssDNA annealing protein
+    - function: recombination
+    - protein_id: NP_050513.1
+
+    Kết quả #17:
+    - Loại: CDS
+    - Vị trí: [7294:7711](-)
+    - Chuỗi: -
+    - gene: gam
+    - product: gam-like host nuclease inhibitor
+    - protein_id: NP_050514.1
+
+    Kết quả #18:
+    - Loại: CDS
+    - Vị trí: [7665:7935](-)
+    - Chuỗi: -
+    - gene: kil
+    - product: Kil protein for bacterial septation inhibition
+    - protein_id: NP_050515.1
+
+    Kết quả #19:
+    - Loại: CDS
+    - Vị trí: [7777:7942](-)
+    - Chuỗi: -
+    - gene: cIII
+    - product: CIII anti-termination
+    - protein_id: NP_050516.1
+
+    Kết quả #20:
+    - Loại: CDS
+    - Vị trí: [8014:8383](-)
+    - Chuỗi: -
+    - gene: ea10
+    - product: hypothetical protein
+    - protein_id: NP_050517.1
+
+    Kết quả #21:
+    - Loại: CDS
+    - Vị trí: [8468:8624](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf19
+    - protein_id: NP_050518.1
+
+    Kết quả #22:
+    - Loại: CDS
+    - Vị trí: [8565:8817](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf20
+    - protein_id: NP_050519.1
+
+    Kết quả #23:
+    - Loại: CDS
+    - Vị trí: [8875:9220](-)
+    - Chuỗi: -
+    - gene: N
+    - product: anti-termination protein N-like
+    - function: antitermination
+    - protein_id: NP_050520.1
+
+    Kết quả #24:
+    - Loại: CDS
+    - Vị trí: [9604:9766](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: Predicted by GeneMark
+    - protein_id: NP_597694.1
+
+    Kết quả #25:
+    - Loại: CDS
+    - Vị trí: [9876:10398](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf22
+    - protein_id: NP_050521.1
+
+    Kết quả #26:
+    - Loại: CDS
+    - Vị trí: [10899:11409](-)
+    - Chuỗi: -
+    - gene: cI
+    - product: LexA family transcriptional regulator
+    - protein_id: NP_050522.1
+
+    Kết quả #27:
+    - Loại: CDS
+    - Vị trí: [11466:11595](-)
+    - Chuỗi: -
+    - product: c1 repressor protein fragment
+    - note: Predicted by GeneMark
+    - protein_id: NP_597695.1
+
+    Kết quả #28:
+    - Loại: gene
+    - Vị trí: [11670:11886](+)
+    - Chuỗi: +
+    - gene: cro
+
+    Kết quả #29:
+    - Loại: CDS
+    - Vị trí: [11670:11886](+)
+    - Chuỗi: +
+    - gene: cro
+    - product: transcriptional repressor
+    - protein_id: NP_050523.1
+
+    Kết quả #30:
+    - Loại: CDS
+    - Vị trí: [12027:12324](+)
+    - Chuỗi: +
+    - gene: cII
+    - product: CII-like transcriptional activator
+    - function: establishment of lysogenic state
+    - protein_id: NP_050524.1
+
+    Kết quả #31:
+    - Loại: gene
+    - Vị trí: [12495:13395](+)
+    - Chuỗi: +
+    - gene: O
+
+    Kết quả #32:
+    - Loại: CDS
+    - Vị trí: [12495:13395](+)
+    - Chuỗi: +
+    - gene: O
+    - product: similar to O protein of bacteriophage HK022
+    - function: replication
+    - protein_id: NP_050525.1
+
+    Kết quả #33:
+    - Loại: CDS
+    - Vị trí: [13369:14821](+)
+    - Chuỗi: +
+    - gene: P
+    - product: DnaB-like replicative helicase
+    - function: replication
+    - protein_id: NP_050526.1
+
+    Kết quả #34:
+    - Loại: CDS
+    - Vị trí: [14820:15090](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf28
+    - protein_id: NP_050527.1
+
+    Kết quả #35:
+    - Loại: CDS
+    - Vị trí: [15160:15439](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf29
+    - protein_id: NP_050528.1
+
+    Kết quả #36:
+    - Loại: CDS
+    - Vị trí: [15791:16034](+)
+    - Chuỗi: +
+    - product: Lar-like restriction alleviation protein
+    - note: orf30
+    - protein_id: NP_050529.1
+
+    Kết quả #37:
+    - Loại: CDS
+    - Vị trí: [15891:16437](+)
+    - Chuỗi: +
+    - product: NinB/ Orf homologous recombination mediator
+    - note: orf31
+    - protein_id: NP_050530.1
+
+    Kết quả #38:
+    - Loại: CDS
+    - Vị trí: [16433:16961](+)
+    - Chuỗi: +
+    - product: DNA methyltransferase
+    - note: orf32
+    - protein_id: NP_050531.1
+
+    Kết quả #39:
+    - Loại: CDS
+    - Vị trí: [16957:17140](+)
+    - Chuỗi: +
+    - product: NinE family protein
+    - note: orf33
+    - protein_id: NP_050532.1
+
+    Kết quả #40:
+    - Loại: CDS
+    - Vị trí: [17244:17418](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf34
+    - protein_id: NP_050533.1
+
+    Kết quả #41:
+    - Loại: CDS
+    - Vị trí: [17414:18149](+)
+    - Chuỗi: +
+    - gene: ant
+    - product: anti-repressor Ant
+    - protein_id: NP_050534.1
+
+    Kết quả #42:
+    - Loại: gene
+    - Vị trí: [18217:18946](+)
+    - Chuỗi: +
+    - gene: roi
+
+    Kết quả #43:
+    - Loại: CDS
+    - Vị trí: [18217:18946](+)
+    - Chuỗi: +
+    - gene: roi
+    - product: anti-repressor
+    - protein_id: NP_050535.1
+
+    Kết quả #44:
+    - Loại: CDS
+    - Vị trí: [18945:19551](+)
+    - Chuỗi: +
+    - product: NinG/ Rap DNA junction specific endonuclease
+    - note: orf37
+    - protein_id: NP_050536.1
+
+    Kết quả #45:
+    - Loại: CDS
+    - Vị trí: [19547:19742](+)
+    - Chuỗi: +
+    - product: NinH family protein
+    - note: orf38
+    - protein_id: NP_050537.1
+
+    Kết quả #46:
+    - Loại: CDS
+    - Vị trí: [19695:20169](+)
+    - Chuỗi: +
+    - gene: Q
+    - product: antitermination protein
+    - function: antitermination
+    - protein_id: NP_050538.1
+
+    Kết quả #47:
+    - Loại: CDS
+    - Vị trí: [20952:21912](+)
+    - Chuỗi: +
+    - gene: stx2A
+    - product: Shiga toxin subunit A
+    - protein_id: NP_050539.1
+
+    Kết quả #48:
+    - Loại: CDS
+    - Vị trí: [21923:22193](+)
+    - Chuỗi: +
+    - gene: stx2B
+    - product: Shiga toxin subunit B
+    - protein_id: NP_050540.1
+
+    Kết quả #49:
+    - Loại: CDS
+    - Vị trí: [22679:24617](+)
+    - Chuỗi: +
+    - product: SASA family carbohydrate esterase
+    - note: orf42
+    - protein_id: NP_050541.1
+
+    Kết quả #50:
+    - Loại: CDS
+    - Vị trí: [24800:25220](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf43
+    - protein_id: NP_050542.1
+
+    Kết quả #51:
+    - Loại: CDS
+    - Vị trí: [25222:25513](+)
+    - Chuỗi: +
+    - gene: S
+    - product: holin
+    - function: cell lysis
+    - protein_id: NP_050543.1
+
+    Kết quả #52:
+    - Loại: CDS
+    - Vị trí: [25517:26051](+)
+    - Chuỗi: +
+    - gene: R
+    - product: lysozyme
+    - function: cell lysis
+    - protein_id: NP_050544.1
+
+    Kết quả #53:
+    - Loại: CDS
+    - Vị trí: [26321:26891](+)
+    - Chuỗi: +
+    - gene: ant
+    - product: anti-repressor Ant
+    - protein_id: NP_050545.1
+
+    Kết quả #54:
+    - Loại: CDS
+    - Vị trí: [27499:27760](+)
+    - Chuỗi: +
+    - product: Rz-like spanin
+    - note: orf48
+    - protein_id: NP_050547.1
+
+    Kết quả #55:
+    - Loại: CDS
+    - Vị trí: [27815:28622](+)
+    - Chuỗi: +
+    - product: terminase
+    - note: orf49
+    - protein_id: NP_050548.1
+
+    Kết quả #56:
+    - Loại: CDS
+    - Vị trí: [28602:30309](+)
+    - Chuỗi: +
+    - product: terminase
+    - note: orf50
+    - protein_id: NP_050549.1
+
+    Kết quả #57:
+    - Loại: CDS
+    - Vị trí: [30308:32453](+)
+    - Chuỗi: +
+    - product: portal protein
+    - note: orf51
+    - protein_id: NP_050550.1
+
+    Kết quả #58:
+    - Loại: CDS
+    - Vị trí: [32610:33618](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf52
+    - protein_id: NP_050551.1
+
+    Kết quả #59:
+    - Loại: CDS
+    - Vị trí: [33641:34856](+)
+    - Chuỗi: +
+    - product: major head protein
+    - note: orf53
+    - protein_id: NP_050552.1
+
+    Kết quả #60:
+    - Loại: CDS
+    - Vị trí: [34911:35301](+)
+    - Chuỗi: +
+    - product: virion structural protein
+    - note: orf54
+    - protein_id: NP_050553.1
+
+    Kết quả #61:
+    - Loại: CDS
+    - Vị trí: [35323:35812](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf55
+    - protein_id: NP_050554.1
+
+    Kết quả #62:
+    - Loại: CDS
+    - Vị trí: [35687:36359](+)
+    - Chuỗi: +
+    - product: virion structural protein
+    - note: orf56
+    - protein_id: NP_050555.1
+
+    Kết quả #63:
+    - Loại: CDS
+    - Vị trí: [36358:37009](+)
+    - Chuỗi: +
+    - product: structural protein
+    - note: orf57
+    - protein_id: NP_050556.1
+
+    Kết quả #64:
+    - Loại: CDS
+    - Vị trí: [37005:38943](+)
+    - Chuỗi: +
+    - product: tail fiber protein
+    - note: orf58
+    - protein_id: NP_050557.1
+
+    Kết quả #65:
+    - Loại: CDS
+    - Vị trí: [38824:39214](+)
+    - Chuỗi: +
+    - product: tail fiber protein
+    - note: orf59
+    - protein_id: NP_050558.1
+
+    Kết quả #66:
+    - Loại: CDS
+    - Vị trí: [39260:39542](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf60
+    - protein_id: NP_050559.1
+
+    Kết quả #67:
+    - Loại: CDS
+    - Vị trí: [39758:41462](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf61
+    - protein_id: NP_050560.1
+
+    Kết quả #68:
+    - Loại: CDS
+    - Vị trí: [41458:42727](+)
+    - Chuỗi: +
+    - product: tail fiber protein
+    - note: orf62
+    - protein_id: NP_050561.1
+
+    Kết quả #69:
+    - Loại: CDS
+    - Vị trí: [42792:43020](+)
+    - Chuỗi: +
+    - product: outer membrane protein
+    - note: orf63
+    - protein_id: NP_050562.1
+
+    Kết quả #70:
+    - Loại: CDS
+    - Vị trí: [43025:43643](+)
+    - Chuỗi: +
+    - product: membrane associated protein
+    - note: orf64
+    - protein_id: NP_050563.1
+
+    Kết quả #71:
+    - Loại: gene
+    - Vị trí: [43733:44468](+)
+    - Chuỗi: +
+    - gene: lom
+
+    Kết quả #72:
+    - Loại: CDS
+    - Vị trí: [43733:44468](+)
+    - Chuỗi: +
+    - gene: lom
+    - product: Lom outer membrane protein
+    - protein_id: NP_050564.1
+
+    Kết quả #73:
+    - Loại: CDS
+    - Vị trí: [44897:45299](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf66
+    - protein_id: NP_050565.1
+
+    Kết quả #74:
+    - Loại: CDS
+    - Vị trí: [45392:46049](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf67
+    - protein_id: NP_050566.1
+
+    Kết quả #75:
+    - Loại: CDS
+    - Vị trí: [46051:46498](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf68
+    - protein_id: NP_050567.1
+
+    Kết quả #76:
+    - Loại: CDS
+    - Vị trí: [46507:46759](+)
+    - Chuỗi: +
+    - product: bacteriocin
+    - note: orf69
+    - protein_id: NP_050568.1
+
+    Kết quả #77:
+    - Loại: CDS
+    - Vị trí: [46769:48035](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf70
+    - protein_id: NP_050569.1
+
+    Kết quả #78:
+    - Loại: CDS
+    - Vị trí: [48065:56486](+)
+    - Chuỗi: +
+    - product: LPD5 domain-containing protein
+    - note: orf71
+    - protein_id: NP_050570.1
+
+    Kết quả #79:
+    - Loại: CDS
+    - Vị trí: [56768:56957](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf72
+    - protein_id: NP_050571.1
+
+    Kết quả #80:
+    - Loại: CDS
+    - Vị trí: [57036:57381](-)
+    - Chuỗi: -
+    - product: YgiW/YdeI family stress tolerance OB fold protein
+    - note: orf73
+    - protein_id: NP_050572.1
+
+    Kết quả #81:
+    - Loại: CDS
+    - Vị trí: [57500:57713](-)
+    - Chuỗi: -
+    - product: MokW-like host killing
+    - note: gef homolog; orf74
+    - protein_id: NP_050573.1
+
+    Kết quả #82:
+    - Loại: CDS
+    - Vị trí: [57946:58417](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf75
+    - protein_id: NP_050574.1
+
+    Kết quả #83:
+    - Loại: CDS
+    - Vị trí: [58341:59001](-)
+    - Chuỗi: -
+    - product: DUF551 domain-containing protein
+    - note: orf76
+    - protein_id: NP_050575.1
+
+    Kết quả #84:
+    - Loại: CDS
+    - Vị trí: [59021:59252](-)
+    - Chuỗi: -
+    - product: ead/Ea22-like family protein
+    - note: orf77
+    - protein_id: NP_050576.1
+
+    Kết quả #85:
+    - Loại: CDS
+    - Vị trí: [59226:59511](-)
+    - Chuỗi: -
+    - product: DUF4752 family protein
+    - note: orf78
+    - protein_id: NP_050577.1
+
+    Kết quả #86:
+    - Loại: CDS
+    - Vị trí: [59507:59729](-)
+    - Chuỗi: -
+    - product: DksA-like zinc-finger protein
+    - note: putative C4-type zinc finger domain
+    - protein_id: NP_050578.1
+
+    Kết quả #87:
+    - Loại: CDS
+    - Vị trí: [59776:60406](-)
+    - Chuỗi: -
+    - product: anti-repressor Ant
+    - note: orf80
+    - protein_id: NP_050579.1
+
+
+GEN: replication protein P
+--------------------------------------------------
+    Số lượng tìm thấy: 84
+
+    Kết quả #1:
+    - Loại: CDS
+    - Vị trí: [28:1363](-)
+    - Chuỗi: -
+    - gene: int
+    - product: integrase
+    - function: recombination
+    - protein_id: NP_050500.1
+
+    Kết quả #2:
+    - Loại: CDS
+    - Vị trí: [1391:1691](-)
+    - Chuỗi: -
+    - gene: xis
+    - product: excisionase
+    - function: recombination
+    - protein_id: NP_050501.1
+
+    Kết quả #3:
+    - Loại: CDS
+    - Vị trí: [1761:2073](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf3
+    - protein_id: NP_050502.1
+
+    Kết quả #4:
+    - Loại: CDS
+    - Vị trí: [2132:3032](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf4
+    - protein_id: NP_050503.1
+
+    Kết quả #5:
+    - Loại: CDS
+    - Vị trí: [3035:3323](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf5
+    - protein_id: NP_050504.1
+
+    Kết quả #6:
+    - Loại: CDS
+    - Vị trí: [3324:3543](-)
+    - Chuỗi: -
+    - product: released from the phage upon host infection
+    - note: orf6
+    - protein_id: NP_050505.1
+
+    Kết quả #7:
+    - Loại: CDS
+    - Vị trí: [3544:3832](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf7
+    - protein_id: NP_050506.1
+
+    Kết quả #8:
+    - Loại: CDS
+    - Vị trí: [3761:4229](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf8
+    - protein_id: NP_050507.1
+
+    Kết quả #9:
+    - Loại: CDS
+    - Vị trí: [4101:4875](-)
+    - Chuỗi: -
+    - product: ead/Ea22-like family protein
+    - note: orf9; similar to ea22 protein of bacteriophage lambda
+    - protein_id: NP_050508.1
+
+    Kết quả #10:
+    - Loại: CDS
+    - Vị trí: [4871:5093](-)
+    - Chuỗi: -
+    - product: DksA-like zinc-finger protein
+    - note: Predicted by ZCURVE_V program; putative C4-type zinc finger domain
+    - protein_id: YP_089649.1
+
+    Kết quả #11:
+    - Loại: CDS
+    - Vị trí: [5191:5473](-)
+    - Chuỗi: -
+    - product: cell division protein ZapA
+    - note: orf10; similar to orf61 protein of bacteriophage lambda
+    - protein_id: NP_050509.1
+
+    Kết quả #12:
+    - Loại: CDS
+    - Vị trí: [5483:5675](-)
+    - Chuỗi: -
+    - product: DUF1382 family protein
+    - note: orf11; similar to orf63 protein of bacteriophage lambda
+    - protein_id: NP_050510.1
+
+    Kết quả #13:
+    - Loại: CDS
+    - Vị trí: [5647:5836](-)
+    - Chuỗi: -
+    - product: DUF1317 domain-containing protein
+    - note: orf12; similar to orf60a protein of bacteriophage lambda
+    - protein_id: NP_050511.1
+
+    Kết quả #14:
+    - Loại: CDS
+    - Vị trí: [5826:6507](-)
+    - Chuỗi: -
+    - gene: exo
+    - product: exonuclease
+    - function: recombination
+    - protein_id: NP_050512.1
+
+    Kết quả #15:
+    - Loại: CDS
+    - Vị trí: [6503:7289](-)
+    - Chuỗi: -
+    - gene: bet
+    - product: RecT-like ssDNA annealing protein
+    - function: recombination
+    - protein_id: NP_050513.1
+
+    Kết quả #16:
+    - Loại: CDS
+    - Vị trí: [7294:7711](-)
+    - Chuỗi: -
+    - gene: gam
+    - product: gam-like host nuclease inhibitor
+    - protein_id: NP_050514.1
+
+    Kết quả #17:
+    - Loại: CDS
+    - Vị trí: [7665:7935](-)
+    - Chuỗi: -
+    - gene: kil
+    - product: Kil protein for bacterial septation inhibition
+    - protein_id: NP_050515.1
+
+    Kết quả #18:
+    - Loại: CDS
+    - Vị trí: [7777:7942](-)
+    - Chuỗi: -
+    - gene: cIII
+    - product: CIII anti-termination
+    - protein_id: NP_050516.1
+
+    Kết quả #19:
+    - Loại: CDS
+    - Vị trí: [8014:8383](-)
+    - Chuỗi: -
+    - gene: ea10
+    - product: hypothetical protein
+    - protein_id: NP_050517.1
+
+    Kết quả #20:
+    - Loại: CDS
+    - Vị trí: [8468:8624](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf19
+    - protein_id: NP_050518.1
+
+    Kết quả #21:
+    - Loại: CDS
+    - Vị trí: [8565:8817](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf20
+    - protein_id: NP_050519.1
+
+    Kết quả #22:
+    - Loại: CDS
+    - Vị trí: [8875:9220](-)
+    - Chuỗi: -
+    - gene: N
+    - product: anti-termination protein N-like
+    - function: antitermination
+    - protein_id: NP_050520.1
+
+    Kết quả #23:
+    - Loại: CDS
+    - Vị trí: [9604:9766](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: Predicted by GeneMark
+    - protein_id: NP_597694.1
+
+    Kết quả #24:
+    - Loại: CDS
+    - Vị trí: [9876:10398](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf22
+    - protein_id: NP_050521.1
+
+    Kết quả #25:
+    - Loại: CDS
+    - Vị trí: [10899:11409](-)
+    - Chuỗi: -
+    - gene: cI
+    - product: LexA family transcriptional regulator
+    - protein_id: NP_050522.1
+
+    Kết quả #26:
+    - Loại: CDS
+    - Vị trí: [11466:11595](-)
+    - Chuỗi: -
+    - product: c1 repressor protein fragment
+    - note: Predicted by GeneMark
+    - protein_id: NP_597695.1
+
+    Kết quả #27:
+    - Loại: CDS
+    - Vị trí: [11670:11886](+)
+    - Chuỗi: +
+    - gene: cro
+    - product: transcriptional repressor
+    - protein_id: NP_050523.1
+
+    Kết quả #28:
+    - Loại: CDS
+    - Vị trí: [12027:12324](+)
+    - Chuỗi: +
+    - gene: cII
+    - product: CII-like transcriptional activator
+    - function: establishment of lysogenic state
+    - protein_id: NP_050524.1
+
+    Kết quả #29:
+    - Loại: CDS
+    - Vị trí: [12495:13395](+)
+    - Chuỗi: +
+    - gene: O
+    - product: similar to O protein of bacteriophage HK022
+    - function: replication
+    - protein_id: NP_050525.1
+
+    Kết quả #30:
+    - Loại: gene
+    - Vị trí: [13369:14821](+)
+    - Chuỗi: +
+    - gene: P
+
+    Kết quả #31:
+    - Loại: CDS
+    - Vị trí: [13369:14821](+)
+    - Chuỗi: +
+    - gene: P
+    - product: DnaB-like replicative helicase
+    - function: replication
+    - protein_id: NP_050526.1
+
+    Kết quả #32:
+    - Loại: CDS
+    - Vị trí: [14820:15090](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf28
+    - protein_id: NP_050527.1
+
+    Kết quả #33:
+    - Loại: CDS
+    - Vị trí: [15160:15439](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf29
+    - protein_id: NP_050528.1
+
+    Kết quả #34:
+    - Loại: CDS
+    - Vị trí: [15791:16034](+)
+    - Chuỗi: +
+    - product: Lar-like restriction alleviation protein
+    - note: orf30
+    - protein_id: NP_050529.1
+
+    Kết quả #35:
+    - Loại: CDS
+    - Vị trí: [15891:16437](+)
+    - Chuỗi: +
+    - product: NinB/ Orf homologous recombination mediator
+    - note: orf31
+    - protein_id: NP_050530.1
+
+    Kết quả #36:
+    - Loại: CDS
+    - Vị trí: [16433:16961](+)
+    - Chuỗi: +
+    - product: DNA methyltransferase
+    - note: orf32
+    - protein_id: NP_050531.1
+
+    Kết quả #37:
+    - Loại: CDS
+    - Vị trí: [16957:17140](+)
+    - Chuỗi: +
+    - product: NinE family protein
+    - note: orf33
+    - protein_id: NP_050532.1
+
+    Kết quả #38:
+    - Loại: CDS
+    - Vị trí: [17244:17418](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf34
+    - protein_id: NP_050533.1
+
+    Kết quả #39:
+    - Loại: CDS
+    - Vị trí: [17414:18149](+)
+    - Chuỗi: +
+    - gene: ant
+    - product: anti-repressor Ant
+    - protein_id: NP_050534.1
+
+    Kết quả #40:
+    - Loại: CDS
+    - Vị trí: [18217:18946](+)
+    - Chuỗi: +
+    - gene: roi
+    - product: anti-repressor
+    - protein_id: NP_050535.1
+
+    Kết quả #41:
+    - Loại: CDS
+    - Vị trí: [18945:19551](+)
+    - Chuỗi: +
+    - product: NinG/ Rap DNA junction specific endonuclease
+    - note: orf37
+    - protein_id: NP_050536.1
+
+    Kết quả #42:
+    - Loại: CDS
+    - Vị trí: [19547:19742](+)
+    - Chuỗi: +
+    - product: NinH family protein
+    - note: orf38
+    - protein_id: NP_050537.1
+
+    Kết quả #43:
+    - Loại: CDS
+    - Vị trí: [19695:20169](+)
+    - Chuỗi: +
+    - gene: Q
+    - product: antitermination protein
+    - function: antitermination
+    - protein_id: NP_050538.1
+
+    Kết quả #44:
+    - Loại: CDS
+    - Vị trí: [20952:21912](+)
+    - Chuỗi: +
+    - gene: stx2A
+    - product: Shiga toxin subunit A
+    - protein_id: NP_050539.1
+
+    Kết quả #45:
+    - Loại: CDS
+    - Vị trí: [21923:22193](+)
+    - Chuỗi: +
+    - gene: stx2B
+    - product: Shiga toxin subunit B
+    - protein_id: NP_050540.1
+
+    Kết quả #46:
+    - Loại: CDS
+    - Vị trí: [22679:24617](+)
+    - Chuỗi: +
+    - product: SASA family carbohydrate esterase
+    - note: orf42
+    - protein_id: NP_050541.1
+
+    Kết quả #47:
+    - Loại: CDS
+    - Vị trí: [24800:25220](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf43
+    - protein_id: NP_050542.1
+
+    Kết quả #48:
+    - Loại: CDS
+    - Vị trí: [25222:25513](+)
+    - Chuỗi: +
+    - gene: S
+    - product: holin
+    - function: cell lysis
+    - protein_id: NP_050543.1
+
+    Kết quả #49:
+    - Loại: CDS
+    - Vị trí: [25517:26051](+)
+    - Chuỗi: +
+    - gene: R
+    - product: lysozyme
+    - function: cell lysis
+    - protein_id: NP_050544.1
+
+    Kết quả #50:
+    - Loại: CDS
+    - Vị trí: [26321:26891](+)
+    - Chuỗi: +
+    - gene: ant
+    - product: anti-repressor Ant
+    - protein_id: NP_050545.1
+
+    Kết quả #51:
+    - Loại: CDS
+    - Vị trí: [27044:27512](+)
+    - Chuỗi: +
+    - gene: Rz
+    - product: Rz-like spanin
+    - function: cell lysis
+    - protein_id: NP_050546.1
+
+    Kết quả #52:
+    - Loại: CDS
+    - Vị trí: [27499:27760](+)
+    - Chuỗi: +
+    - product: Rz-like spanin
+    - note: orf48
+    - protein_id: NP_050547.1
+
+    Kết quả #53:
+    - Loại: CDS
+    - Vị trí: [27815:28622](+)
+    - Chuỗi: +
+    - product: terminase
+    - note: orf49
+    - protein_id: NP_050548.1
+
+    Kết quả #54:
+    - Loại: CDS
+    - Vị trí: [28602:30309](+)
+    - Chuỗi: +
+    - product: terminase
+    - note: orf50
+    - protein_id: NP_050549.1
+
+    Kết quả #55:
+    - Loại: CDS
+    - Vị trí: [30308:32453](+)
+    - Chuỗi: +
+    - product: portal protein
+    - note: orf51
+    - protein_id: NP_050550.1
+
+    Kết quả #56:
+    - Loại: CDS
+    - Vị trí: [32610:33618](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf52
+    - protein_id: NP_050551.1
+
+    Kết quả #57:
+    - Loại: CDS
+    - Vị trí: [33641:34856](+)
+    - Chuỗi: +
+    - product: major head protein
+    - note: orf53
+    - protein_id: NP_050552.1
+
+    Kết quả #58:
+    - Loại: CDS
+    - Vị trí: [34911:35301](+)
+    - Chuỗi: +
+    - product: virion structural protein
+    - note: orf54
+    - protein_id: NP_050553.1
+
+    Kết quả #59:
+    - Loại: CDS
+    - Vị trí: [35323:35812](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf55
+    - protein_id: NP_050554.1
+
+    Kết quả #60:
+    - Loại: CDS
+    - Vị trí: [35687:36359](+)
+    - Chuỗi: +
+    - product: virion structural protein
+    - note: orf56
+    - protein_id: NP_050555.1
+
+    Kết quả #61:
+    - Loại: CDS
+    - Vị trí: [36358:37009](+)
+    - Chuỗi: +
+    - product: structural protein
+    - note: orf57
+    - protein_id: NP_050556.1
+
+    Kết quả #62:
+    - Loại: CDS
+    - Vị trí: [37005:38943](+)
+    - Chuỗi: +
+    - product: tail fiber protein
+    - note: orf58
+    - protein_id: NP_050557.1
+
+    Kết quả #63:
+    - Loại: CDS
+    - Vị trí: [38824:39214](+)
+    - Chuỗi: +
+    - product: tail fiber protein
+    - note: orf59
+    - protein_id: NP_050558.1
+
+    Kết quả #64:
+    - Loại: CDS
+    - Vị trí: [39260:39542](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf60
+    - protein_id: NP_050559.1
+
+    Kết quả #65:
+    - Loại: CDS
+    - Vị trí: [39758:41462](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf61
+    - protein_id: NP_050560.1
+
+    Kết quả #66:
+    - Loại: CDS
+    - Vị trí: [41458:42727](+)
+    - Chuỗi: +
+    - product: tail fiber protein
+    - note: orf62
+    - protein_id: NP_050561.1
+
+    Kết quả #67:
+    - Loại: CDS
+    - Vị trí: [42792:43020](+)
+    - Chuỗi: +
+    - product: outer membrane protein
+    - note: orf63
+    - protein_id: NP_050562.1
+
+    Kết quả #68:
+    - Loại: CDS
+    - Vị trí: [43025:43643](+)
+    - Chuỗi: +
+    - product: membrane associated protein
+    - note: orf64
+    - protein_id: NP_050563.1
+
+    Kết quả #69:
+    - Loại: CDS
+    - Vị trí: [43733:44468](+)
+    - Chuỗi: +
+    - gene: lom
+    - product: Lom outer membrane protein
+    - protein_id: NP_050564.1
+
+    Kết quả #70:
+    - Loại: CDS
+    - Vị trí: [44897:45299](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf66
+    - protein_id: NP_050565.1
+
+    Kết quả #71:
+    - Loại: CDS
+    - Vị trí: [45392:46049](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf67
+    - protein_id: NP_050566.1
+
+    Kết quả #72:
+    - Loại: CDS
+    - Vị trí: [46051:46498](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf68
+    - protein_id: NP_050567.1
+
+    Kết quả #73:
+    - Loại: CDS
+    - Vị trí: [46507:46759](+)
+    - Chuỗi: +
+    - product: bacteriocin
+    - note: orf69
+    - protein_id: NP_050568.1
+
+    Kết quả #74:
+    - Loại: CDS
+    - Vị trí: [46769:48035](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf70
+    - protein_id: NP_050569.1
+
+    Kết quả #75:
+    - Loại: CDS
+    - Vị trí: [48065:56486](+)
+    - Chuỗi: +
+    - product: LPD5 domain-containing protein
+    - note: orf71
+    - protein_id: NP_050570.1
+
+    Kết quả #76:
+    - Loại: CDS
+    - Vị trí: [56768:56957](+)
+    - Chuỗi: +
+    - product: hypothetical protein
+    - note: orf72
+    - protein_id: NP_050571.1
+
+    Kết quả #77:
+    - Loại: CDS
+    - Vị trí: [57036:57381](-)
+    - Chuỗi: -
+    - product: YgiW/YdeI family stress tolerance OB fold protein
+    - note: orf73
+    - protein_id: NP_050572.1
+
+    Kết quả #78:
+    - Loại: CDS
+    - Vị trí: [57500:57713](-)
+    - Chuỗi: -
+    - product: MokW-like host killing
+    - note: gef homolog; orf74
+    - protein_id: NP_050573.1
+
+    Kết quả #79:
+    - Loại: CDS
+    - Vị trí: [57946:58417](-)
+    - Chuỗi: -
+    - product: hypothetical protein
+    - note: orf75
+    - protein_id: NP_050574.1
+
+    Kết quả #80:
+    - Loại: CDS
+    - Vị trí: [58341:59001](-)
+    - Chuỗi: -
+    - product: DUF551 domain-containing protein
+    - note: orf76
+    - protein_id: NP_050575.1
+
+    Kết quả #81:
+    - Loại: CDS
+    - Vị trí: [59021:59252](-)
+    - Chuỗi: -
+    - product: ead/Ea22-like family protein
+    - note: orf77
+    - protein_id: NP_050576.1
+
+    Kết quả #82:
+    - Loại: CDS
+    - Vị trí: [59226:59511](-)
+    - Chuỗi: -
+    - product: DUF4752 family protein
+    - note: orf78
+    - protein_id: NP_050577.1
+
+    Kết quả #83:
+    - Loại: CDS
+    - Vị trí: [59507:59729](-)
+    - Chuỗi: -
+    - product: DksA-like zinc-finger protein
+    - note: putative C4-type zinc finger domain
+    - protein_id: NP_050578.1
+
+    Kết quả #84:
+    - Loại: CDS
+    - Vị trí: [59776:60406](-)
+    - Chuỗi: -
+    - product: anti-repressor Ant
+    - note: orf80
+    - protein_id: NP_050579.1
+
+

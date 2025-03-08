@@ -21,7 +21,7 @@ Entrez.email = "your_email@example.com"  # Replace with your email
 Entrez.tool = "ncbi_batch_downloader"
 
 # Output directory
-base_dir = "../data/ncbi_data/gen_bank"
+base_dir = "../../data/ncbi_data/gen_bank"
 os.makedirs(base_dir, exist_ok=True)
 
 # Create cache directory for tracking completed downloads

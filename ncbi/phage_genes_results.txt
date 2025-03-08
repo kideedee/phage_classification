@@ -1,0 +1,43 @@
+KẾT QUẢ TÌM KIẾM GEN PHAGE
+==================================================
+TỔNG SỐ GEN TÌM THẤY: 2
+
+BẢNG THỐNG KÊ:
+--------------------------------------------------
+TÊN GEN                          SỐ LƯỢNG
+--------------------------------------------------
+excisionase                             1
+integrase                               1
+--------------------------------------------------
+
+CHI TIẾT:
+==================================================
+
+GEN: excisionase
+--------------------------------------------------
+    Số lượng tìm thấy: 1
+
+    Kết quả #1:
+    - Loại: CDS
+    - Vị trí: [1391:1691](-)
+    - Chuỗi: -
+    - gene: xis
+    - product: excisionase
+    - function: recombination
+    - protein_id: NP_050501.1
+
+
+GEN: integrase
+--------------------------------------------------
+    Số lượng tìm thấy: 1
+
+    Kết quả #1:
+    - Loại: CDS
+    - Vị trí: [28:1363](-)
+    - Chuỗi: -
+    - gene: int
+    - product: integrase
+    - function: recombination
+    - protein_id: NP_050500.1
+
+

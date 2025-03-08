@@ -1,33 +1,27 @@
-import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
+import pandas as pd
 from datasets import Dataset
-import torch
+from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer
 
-# Load your dataset
-# Assuming format: "sequence,label" where label is 0 for temperate and 1 for virulent
-# Adjust the paths to your files
 train_df = pd.read_csv('../data/dnabert_2_preparation/train.csv')
 test_df = pd.read_csv('../data/dnabert_2_preparation/dev.csv')
 
-# Check the dataset
 print(f"Train set shape: {train_df.shape}")
 print(f"Test set shape: {test_df.shape}")
 print(f"Label distribution in train set: {train_df['label'].value_counts()}")
 print(f"Label distribution in test set: {test_df['label'].value_counts()}")
 
-# If needed, you can split the train set to create a validation set
 if 'validation_set' not in locals():
     train_df, val_df = train_test_split(train_df, test_size=0.1, stratify=train_df['label'], random_state=42)
     print(f"Validation set created, shape: {val_df.shape}")
 
-# Initialize the DNABert2 tokenizer
 tokenizer = AutoTokenizer.from_pretrained("zhihan1996/DNABERT-2-117M")
 
-# DNABert2 expects the full sequence to be passed to the tokenizer
+
 def tokenize_function(examples):
     return tokenizer(examples["sequence"], padding="max_length", truncation=True, max_length=512)
+
 
 # Convert pandas DataFrame to HuggingFace Dataset
 train_dataset = Dataset.from_pandas(train_df)
@@ -39,14 +33,12 @@ tokenized_train = train_dataset.map(tokenize_function, batched=True)
 tokenized_val = val_dataset.map(tokenize_function, batched=True)
 tokenized_test = test_dataset.map(tokenize_function, batched=True)
 
-# Check sequence lengths for potential truncation issues
 seq_lengths = [len(seq) for seq in train_df['sequence']]
 print(f"Mean sequence length: {np.mean(seq_lengths)}")
 print(f"Max sequence length: {np.max(seq_lengths)}")
 print(f"Min sequence length: {np.min(seq_lengths)}")
 print(f"Sequences longer than 512: {sum(1 for l in seq_lengths if l > 512)}")
 
-# Save processed datasets
 tokenized_train.save_to_disk("processed_train_dataset")
 tokenized_val.save_to_disk("processed_val_dataset")
 tokenized_test.save_to_disk("processed_test_dataset")

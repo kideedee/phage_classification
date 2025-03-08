@@ -1,26 +1,23 @@
+import logging
+import random
+from datetime import datetime
+
 import numpy as np
 import torch
 from datasets import load_from_disk
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support, roc_auc_score
 from transformers import (
     AutoModelForSequenceClassification,
     TrainingArguments,
     Trainer,
-    AutoTokenizer,
-    EarlyStoppingCallback,
-    BertConfig
+    EarlyStoppingCallback
 )
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support, roc_auc_score
-import random
-import logging
-import os
-from datetime import datetime
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# Set random seeds for reproducibility
 def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
@@ -36,7 +33,6 @@ set_seed(42)
 def compute_metrics(pred):
     labels = pred.label_ids
 
-    # Check if predictions is a tuple and extract logits
     if isinstance(pred.predictions, tuple):
         logits = pred.predictions[0]
     else:
@@ -46,7 +42,6 @@ def compute_metrics(pred):
     precision, recall, f1, _ = precision_recall_fscore_support(labels, preds, average='binary')
     acc = accuracy_score(labels, preds)
 
-    # Calculate ROC-AUC if possible
     try:
         # For binary classification
         roc_auc = roc_auc_score(labels, logits[:, 1])
@@ -63,13 +58,11 @@ def compute_metrics(pred):
 
 
 def main():
-    # Check available hardware
     if torch.cuda.is_available():
         device_name = torch.cuda.get_device_name(0)
         gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1024 ** 3
         logger.info(f"Training on GPU: {device_name} with {gpu_memory:.2f} GB memory")
 
-        # Check for tensor cores (for bf16 support)
         tensor_core_support = False
         if 'RTX' in device_name or 'A100' in device_name or 'A6000' in device_name or \
                 'Ampere' in device_name or 'Ada' in device_name or 'Hopper' in device_name:
@@ -80,20 +73,16 @@ def main():
     else:
         logger.info("No GPU available, training on CPU (this will be very slow)")
 
-    # Load tokenized datasets
     tokenized_train = load_from_disk("processed_train_dataset")
     tokenized_val = load_from_disk("processed_val_dataset")
     tokenized_test = load_from_disk("processed_test_dataset")
 
-    # Convert to PyTorch format
     tokenized_train.set_format("torch", columns=["input_ids", "attention_mask", "label"])
     tokenized_val.set_format("torch", columns=["input_ids", "attention_mask", "label"])
     tokenized_test.set_format("torch", columns=["input_ids", "attention_mask", "label"])
 
-    # Instead of directly loading the model, we'll first get the tokenizer and config
-    tokenizer = AutoTokenizer.from_pretrained("zhihan1996/DNABERT-2-117M")
+    # tokenizer = AutoTokenizer.from_pretrained("zhihan1996/DNABERT-2-117M")
 
-    # Set performance optimization flags
     torch.backends.cudnn.benchmark = True  # Enable CUDNN auto-tuner
     if torch.cuda.is_available():
         logger.info(f"Training on GPU: {torch.cuda.get_device_name(0)}")
@@ -107,7 +96,6 @@ def main():
         torch.backends.cudnn.benchmark = False
         torch.backends.cudnn.deterministic = True
 
-    # Then load the model with explicit configuration to avoid mismatch
     model = AutoModelForSequenceClassification.from_pretrained(
         "zhihan1996/DNABERT-2-117M",
         num_labels=2,  # Binary classification: virulent vs temperate
@@ -121,12 +109,11 @@ def main():
 
     # Freeze the first 6 encoder layers (out of 12 total)
     for i in range(6):
-        for param in model.bert.encoder.layer[i].parameters():
+        for param in model.bert.encoder.layer[i].paameters():
             param.requires_grad = False
 
     logger.info("Frozen embeddings and first 6 encoder layers for faster training")
 
-    # Define optimized training arguments for faster training
     training_args = TrainingArguments(
         output_dir=f"./dnabert2_phage_classifier_{datetime.now().strftime('%Y%m%d_%H%M')}",
         learning_rate=5e-5,
@@ -154,7 +141,6 @@ def main():
         half_precision_backend="auto",  # Auto-select the best precision backend
     )
 
-    # Initialize Trainer
     trainer = Trainer(
         model=model,
         args=training_args,
@@ -164,16 +150,13 @@ def main():
         callbacks=[EarlyStoppingCallback(early_stopping_patience=3)]
     )
 
-    # Train the model
     logger.info("Starting training...")
     trainer.train()
 
-    # Evaluate the model on test set
     logger.info("Evaluating on test set...")
     test_results = trainer.evaluate(tokenized_test)
     logger.info(f"Test results: {test_results}")
 
-    # Save the best model
     trainer.save_model("./best_dnabert2_phage_classifier")
     logger.info("Training completed and model saved!")
 
