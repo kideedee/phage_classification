@@ -1,1 +1,0 @@
-python search_lysogenic.py -i train_NC_000902_Lysogneic_Group1.gb -o phage_genes_result.txt -v
