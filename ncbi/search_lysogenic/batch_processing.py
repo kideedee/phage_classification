@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Script tìm kiếm các gen phage trong file GenBank
-"""
-
 import argparse
 import os
 import re
@@ -23,7 +17,6 @@ def setup_argument_parser():
 
 
 def load_genbank_file(file_path):
-    """Đọc file GenBank và trả về record"""
     try:
         record = SeqIO.read(file_path, "genbank")
         return record
@@ -33,17 +26,6 @@ def load_genbank_file(file_path):
 
 
 def search_phage_genes(record, target_genes_dict, verbose=False):
-    """
-    Tìm kiếm các gen phage trong record GenBank
-
-    Args:
-        record: Record GenBank từ Biopython
-        target_genes_dict: Từ điển chứa các gen cần tìm và các biến thể của chúng
-        verbose: Hiển thị thông tin chi tiết trong quá trình xử lý
-
-    Returns:
-        Từ điển chứa các gen tìm thấy và thông tin của chúng
-    """
     results = {}
     gene_counter = {gene: 0 for gene in target_genes_dict.keys()}
 
@@ -54,23 +36,16 @@ def search_phage_genes(record, target_genes_dict, verbose=False):
         for gene, variants in target_genes_dict.items():
             print(f"  - {gene}: {len(variants)} biến thể")
 
-    # Tạo các pattern regex từ danh sách biến thể (không phân biệt chữ hoa/thường)
     patterns = {}
     for gene_name, variants in target_genes_dict.items():
-        # Tạo pattern cho mỗi biến thể của gen
         pattern_strs = [re.escape(variant) for variant in variants]
-        # Kết hợp tất cả biến thể bằng toán tử OR (|)
         combined_pattern = '|'.join(pattern_strs)
-        # Biên dịch pattern với cờ IGNORECASE
         patterns[gene_name] = re.compile(combined_pattern, re.IGNORECASE)
 
-    # Duyệt qua tất cả các features trong record
     for feature in record.features:
-        # Chỉ quan tâm đến các features có type là gene, CDS hoặc misc_feature
         if feature.type not in ["gene", "CDS", "misc_feature"]:
             continue
 
-        # Lấy tất cả các qualifier có thể chứa thông tin về gen
         qualifiers_to_check = ["gene", "product", "note", "function", "protein_id"]
         feature_info = {}
 
@@ -78,11 +53,9 @@ def search_phage_genes(record, target_genes_dict, verbose=False):
             if qualifier in feature.qualifiers:
                 feature_info[qualifier] = feature.qualifiers[qualifier][0]
 
-        # Nếu không có thông tin hữu ích, bỏ qua feature này
         if not feature_info:
             continue
 
-        # Tìm kiếm từng gen trong các thông tin của feature
         for gene_name, pattern in patterns.items():
             found = False
 
@@ -92,20 +65,18 @@ def search_phage_genes(record, target_genes_dict, verbose=False):
                     break
 
             if found:
-                # Nếu tìm thấy, thêm vào kết quả
+
                 if gene_name not in results:
                     results[gene_name] = []
 
-                # Cập nhật bộ đếm
                 gene_counter[gene_name] += 1
 
-                # Thêm thông tin về gene này
                 gene_result = {
                     'type': feature.type,
                     'location': str(feature.location),
                     'strand': '+' if feature.location.strand == 1 else '-',
                     'info': feature_info,
-                    'count': gene_counter[gene_name]  # Thêm số thứ tự cho gen này
+                    'count': gene_counter[gene_name]
                 }
 
                 results[gene_name].append(gene_result)
@@ -117,26 +88,15 @@ def search_phage_genes(record, target_genes_dict, verbose=False):
 
 
 def format_results(results):
-    """
-    Định dạng kết quả tìm kiếm để hiển thị hoặc lưu vào file
-
-    Args:
-        results: Từ điển chứa kết quả tìm kiếm
-
-    Returns:
-        Chuỗi đã được định dạng
-    """
     if not results:
         return "Không tìm thấy gen phage nào trong file GenBank đã cho."
 
-    # Tính tổng số gen tìm thấy
     total_genes_found = sum(len(findings) for findings in results.values())
 
     output = "KẾT QUẢ TÌM KIẾM GEN PHAGE\n"
     output += "=" * 50 + "\n"
     output += f"TỔNG SỐ GEN TÌM THẤY: {total_genes_found}\n\n"
 
-    # Tạo bảng tóm tắt số lượng của mỗi loại gen
     output += "BẢNG THỐNG KÊ:\n"
     output += "-" * 50 + "\n"
     output += f"{'TÊN GEN':<30} {'SỐ LƯỢNG':>10}\n"
@@ -147,7 +107,6 @@ def format_results(results):
 
     output += "-" * 50 + "\n\n"
 
-    # Chi tiết về từng gen
     output += "CHI TIẾT:\n"
     output += "=" * 50 + "\n\n"
 
@@ -187,7 +146,6 @@ def save_results_to_file(formatted_results, output_file):
 
 
 def main():
-    # Danh sách các gen phage cần tìm kiếm với các biến thể
     default_patterns = {
         "integrase": [
             "integrase", "int gene", "int protein", "site-specific integrase",
@@ -237,8 +195,6 @@ def main():
             "Redbeta", "Red-beta", "single strand annealing protein", "SSAP", "Bet", "bet"
         ]
     }
-
-    # Đọc file GenBank
 
     data_dir = "../../data/ncbi_data/gen_bank/train/Lysogneic"
     for group in os.listdir(data_dir):

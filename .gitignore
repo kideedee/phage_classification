@@ -3,6 +3,6 @@
 pre_trained_models
 data
 results
-
+dnabert_2/dnabert2_phage_classifier_20250305_*
 venv
 *.csv

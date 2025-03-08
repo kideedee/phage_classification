@@ -1,14 +1,8 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Script tìm kiếm các gen phage trong file GenBank
-"""
+import argparse
+import re
+import sys
 
 from Bio import SeqIO
-import re
-import os
-import sys
-import argparse
 
 
 def setup_argument_parser():
@@ -21,7 +15,6 @@ def setup_argument_parser():
 
 
 def load_genbank_file(file_path):
-    """Đọc file GenBank và trả về record"""
     try:
         record = SeqIO.read(file_path, "genbank")
         return record
@@ -31,17 +24,6 @@ def load_genbank_file(file_path):
 
 
 def search_phage_genes(record, target_genes, verbose=False):
-    """
-    Tìm kiếm các gen phage trong record GenBank
-
-    Args:
-        record: Record GenBank từ Biopython
-        target_genes: Danh sách các gen cần tìm
-        verbose: Hiển thị thông tin chi tiết trong quá trình xử lý
-
-    Returns:
-        Từ điển chứa các gen tìm thấy và thông tin của chúng
-    """
     results = {}
     gene_counter = {gene: 0 for gene in target_genes}
 
@@ -49,16 +31,12 @@ def search_phage_genes(record, target_genes, verbose=False):
         print(f"Đang tìm kiếm trong trình tự: {record.id}")
         print(f"Số lượng features: {len(record.features)}")
 
-    # Tạo các pattern regex từ danh sách gen (không phân biệt chữ hoa/thường)
     patterns = {gene: re.compile(gene, re.IGNORECASE) for gene in target_genes}
 
-    # Duyệt qua tất cả các features trong record
     for feature in record.features:
-        # Chỉ quan tâm đến các features có type là gene, CDS hoặc misc_feature
         if feature.type not in ["gene", "CDS", "misc_feature"]:
             continue
 
-        # Lấy tất cả các qualifier có thể chứa thông tin về gen
         qualifiers_to_check = ["gene", "product", "note", "function", "protein_id"]
         feature_info = {}
 
@@ -66,7 +44,6 @@ def search_phage_genes(record, target_genes, verbose=False):
             if qualifier in feature.qualifiers:
                 feature_info[qualifier] = feature.qualifiers[qualifier][0]
 
-        # Nếu không có thông tin hữu ích, bỏ qua feature này
         if not feature_info:
             continue
 
@@ -190,25 +167,19 @@ def main():
         "recombination protein Bet"
     ]
 
-    # Phân tích tham số dòng lệnh
     # parser = setup_argument_parser()
     # args = parser.parse_args()
 
-    # Thiết lập đường dẫn file đầu ra
     # output_file = args.output if args.output else "phage_genes_results.txt"
-    output_file =  "phage_genes_results.txt"
+    output_file = "phage_genes_results.txt"
 
-    # Đọc file GenBank
     record = load_genbank_file("search_lysogenic/train_NC_000902_Lysogneic_Group1.gb")
 
-    # Tìm kiếm các gen phage
     results = search_phage_genes(record, target_genes, True)
 
-    # Định dạng và hiển thị kết quả
     formatted_results = format_results(results)
     print("\n" + formatted_results)
 
-    # Lưu kết quả vào file
     save_results_to_file(formatted_results, output_file)
 
 
