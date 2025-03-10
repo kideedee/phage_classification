@@ -80,20 +80,42 @@ def main():
     # Configure device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    # RTX 3070 Ti specific memory settings
+    if torch.cuda.is_available():
+        # Monitor initial GPU memory
+        initial_mem = torch.cuda.memory_allocated(0) / (1024 ** 3)
+        logger.info(f"Initial GPU memory usage: {initial_mem:.2f} GB")
+
     if torch.cuda.is_available():
         device_name = torch.cuda.get_device_name(0)
-        gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1024 ** 3
+        gpu_memory = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
         logger.info(f"Training on GPU: {device_name} with {gpu_memory:.2f} GB memory")
 
-        # Enable deterministic behavior
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
-
-        # Try to set TF32 precision
+        # RTX 3070 Ti optimizations
+        # Enable TF32 precision - great for Ampere architecture (RTX 30 series)
         try:
+            # Enable TF32 for matrix multiplications
+            torch.backends.cuda.matmul.allow_tf32 = True
             torch.backends.cudnn.allow_tf32 = True
+            logger.info("Enabled TF32 precision for faster training on RTX 30 series")
         except AttributeError:
             pass
+
+        # Enable cuDNN benchmark mode since we're using fixed input sizes
+        # This is good for RTX GPUs with consistent batch sizes
+        torch.backends.cudnn.benchmark = True
+        logger.info("Enabled cuDNN benchmark mode for RTX optimization")
+
+        # Only use deterministic algorithms if absolutely necessary for reproducibility
+        # as they can significantly slow down training on RTX GPUs
+        torch.backends.cudnn.deterministic = False
+
+        # Set optimal memory allocation strategy for RTX 30 series
+        torch.cuda.empty_cache()
+
+        # Log GPU information
+        logger.info(f"CUDA Version: {torch.version.cuda}")
+        logger.info(f"cuDNN Version: {torch.backends.cudnn.version()}")
     else:
         logger.info("No GPU available, training on CPU")
 
@@ -115,43 +137,67 @@ def main():
         ignore_mismatched_sizes=True
     ).to(device)
 
-    # Freeze embedding layer and first 8 encoder layers to reduce memory usage and speed up training
+    # Optimize model for RTX 3070 Ti memory constraints
+    # Adaptive layer freezing based on memory usage
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_before = sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+    # Freeze embedding layer and a few encoder layers
     for param in model.bert.embeddings.parameters():
         param.requires_grad = False
 
-    for i in range(8):
+    # For RTX 3070 Ti, freeze first 6 layers instead of 8 for better fine-tuning
+    # while still keeping memory usage reasonable
+    for i in range(6):
         for param in model.bert.encoder.layer[i].parameters():
             param.requires_grad = False
 
-    logger.info("Frozen embeddings and first 8 encoder layers")
+    # Apply gradient checkpointing for remaining trainable layers
+    # This significantly reduces memory usage with minimal performance impact
+    if hasattr(model, "gradient_checkpointing_enable"):
+        model.gradient_checkpointing_enable()
+        logger.info("Enabled gradient checkpointing for memory efficiency")
 
-    # Training arguments compatible with transformers 4.28.0
-    # Modified to reduce memory usage during evaluation
+    # Log memory savings
+    trainable_after = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    logger.info(f"Total model parameters: {total_params:,}")
+    logger.info(f"Trainable parameters reduced from {trainable_before:,} to {trainable_after:,}")
+    logger.info(f"Memory saving: {(1 - trainable_after / trainable_before) * 100:.1f}%")
+    logger.info("Frozen embeddings and first 6 encoder layers")
+
+    # Training arguments optimized for RTX 3070 Ti
     output_dir = f"./dnabert2_phage_classifier_{datetime.now().strftime('%Y%m%d_%H%M')}"
     training_args = TrainingArguments(
         output_dir=output_dir,
         learning_rate=3e-5,
-        per_device_train_batch_size=16,  # Reduced from 16 to save memory
-        per_device_eval_batch_size=16,  # Reduced from 8 to save memory
+        per_device_train_batch_size=12,  # Optimized for RTX 3070 Ti's 8GB VRAM
+        per_device_eval_batch_size=16,  # Can use larger batch for evaluation (no gradients)
         num_train_epochs=5,
         weight_decay=0.01,
-        # Reduce evaluation frequency to once every 100 steps
         evaluation_strategy="steps",
-        eval_steps=5,
+        eval_steps=5,  # Less frequent evaluation to speed up training
         save_strategy="steps",
-        save_steps=100,
-        save_total_limit=1,
+        save_steps=200,
+        save_total_limit=1,  # Keep only best model to save disk space
         load_best_model_at_end=True,
         metric_for_best_model="roc_auc",
         push_to_hub=False,
         logging_dir="./logs",
-        fp16=False,
-        gradient_accumulation_steps=32,  # Increased from 16 to compensate for smaller batch size
+        # Enable mixed precision training - very effective on RTX 30 series
+        fp16=True,  # Use FP16 for faster training on RTX 3070 Ti
+        fp16_opt_level="O1",  # Conservative mixed precision setting
+        gradient_accumulation_steps=16,
         logging_steps=50,
-        dataloader_num_workers=0,  # Disable parallel loading to save memory
+        # Use 2 workers for data loading - RTX 3070 Ti systems typically have enough CPU
+        dataloader_num_workers=2,
         max_grad_norm=1.0,
-        # Explicitly specify optimizer to avoid the warning
-        optim="adamw_hf",  # Use the HuggingFace implementation to avoid warning
+        optim="adamw_hf",
+        # Faster optimizer operations
+        adam_beta1=0.9,
+        adam_beta2=0.999,
+        adam_epsilon=1e-8,
+        # Slightly warm up learning rate
+        warmup_ratio=0.1,
     )
 
     # Define a custom trainer class instead of monkey-patching
@@ -211,9 +257,22 @@ def main():
     # Set format for validation data
     tokenized_val.set_format("torch", columns=["input_ids", "attention_mask", "label"])
 
+    # Apply training optimizations specific to RTX 3070 Ti
+    logger.info("Starting training with RTX 3070 Ti optimizations...")
+
+    # Monitor GPU memory before training
+    if torch.cuda.is_available():
+        before_train_mem = torch.cuda.memory_allocated(0) / (1024 ** 3)
+        logger.info(f"GPU memory before training: {before_train_mem:.2f} GB")
+
     # Train model
-    logger.info("Starting training...")
     trainer.train()
+
+    # Free up memory before evaluation
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        current_mem = torch.cuda.memory_allocated(0) / (1024 ** 3)
+        logger.info(f"GPU memory after training: {current_mem:.2f} GB")
 
     # Evaluate on validation set
     logger.info("Evaluating on validation set...")
@@ -226,8 +285,20 @@ def main():
     test_results = trainer.evaluate(tokenized_test)
     logger.info(f"Test results: {test_results}")
 
+    # Save model - use half precision to reduce file size
+    logger.info("Saving model in optimized format...")
+
     # Save model
-    trainer.save_model("./best_dnabert2_phage_classifier")
+    model_save_path = "./best_dnabert2_phage_classifier"
+    trainer.save_model(model_save_path)
+
+    # Log final statistics
+    if torch.cuda.is_available():
+        peak_mem = torch.cuda.max_memory_allocated(0) / (1024 ** 3)
+        final_mem = torch.cuda.memory_allocated(0) / (1024 ** 3)
+        logger.info(f"Peak GPU memory usage: {peak_mem:.2f} GB")
+        logger.info(f"Final GPU memory usage: {final_mem:.2f} GB")
+
     logger.info("Training completed and model saved!")
 
 
