@@ -13,6 +13,7 @@ from transformers import (
     Trainer,
     EarlyStoppingCallback
 )
+import gc
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -87,35 +88,39 @@ def main():
         logger.info(f"Initial GPU memory usage: {initial_mem:.2f} GB")
 
     if torch.cuda.is_available():
+        # Monitor initial GPU memory
+        initial_mem = torch.cuda.memory_allocated(0) / (1024 ** 3)
+        logger.info(f"Initial GPU memory usage: {initial_mem:.2f} GB")
+
         device_name = torch.cuda.get_device_name(0)
         gpu_memory = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
         logger.info(f"Training on GPU: {device_name} with {gpu_memory:.2f} GB memory")
 
-        # RTX 3070 Ti optimizations
-        # Enable TF32 precision - great for Ampere architecture (RTX 30 series)
-        try:
-            # Enable TF32 for matrix multiplications
-            torch.backends.cuda.matmul.allow_tf32 = True
-            torch.backends.cudnn.allow_tf32 = True
-            logger.info("Enabled TF32 precision for faster training on RTX 30 series")
-        except AttributeError:
-            pass
-
-        # Enable cuDNN benchmark mode since we're using fixed input sizes
-        # This is good for RTX GPUs with consistent batch sizes
-        torch.backends.cudnn.benchmark = True
-        logger.info("Enabled cuDNN benchmark mode for RTX optimization")
-
-        # Only use deterministic algorithms if absolutely necessary for reproducibility
-        # as they can significantly slow down training on RTX GPUs
-        torch.backends.cudnn.deterministic = False
-
-        # Set optimal memory allocation strategy for RTX 30 series
+        # Force garbage collection and clear cache before starting
+        gc.collect()
         torch.cuda.empty_cache()
 
-        # Log GPU information
+        # Disable TF32 as it can cause numerical instability with limited memory
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+        logger.info("Disabled TF32 precision to improve stability")
+
+        # Set memory allocation strategy
+        if hasattr(torch.cuda, 'memory_stats'):
+            logger.info(f"Current reserved memory: {torch.cuda.memory_reserved(0) / (1024 ** 3):.2f} GB")
+
+        # Disable cuDNN benchmark as we'll be using different batch sizes
+        torch.backends.cudnn.benchmark = False
+        logger.info("Disabled cuDNN benchmark mode for better stability")
+
+        # Set deterministic algorithms for reproducibility
+        torch.backends.cudnn.deterministic = True
+        logger.info("Enabled deterministic algorithms")
+
+        # Log CUDA information
         logger.info(f"CUDA Version: {torch.version.cuda}")
-        logger.info(f"cuDNN Version: {torch.backends.cudnn.version()}")
+        logger.info(
+            f"cuDNN Version: {torch.backends.cudnn.version() if torch.backends.cudnn.is_available() else 'Not available'}")
     else:
         logger.info("No GPU available, training on CPU")
 
@@ -171,7 +176,7 @@ def main():
         output_dir=output_dir,
         learning_rate=3e-5,
         per_device_train_batch_size=12,  # Optimized for RTX 3070 Ti's 8GB VRAM
-        per_device_eval_batch_size=16,  # Can use larger batch for evaluation (no gradients)
+        per_device_eval_batch_size=12,  # Can use larger batch for evaluation (no gradients)
         num_train_epochs=5,
         weight_decay=0.01,
         evaluation_strategy="steps",
