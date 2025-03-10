@@ -5,16 +5,15 @@ from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer
 
 train_df = pd.read_csv('../data/dnabert_2_preparation/train.csv')
-test_df = pd.read_csv('../data/dnabert_2_preparation/dev.csv')
+val_df = pd.read_csv('../data/dnabert_2_preparation/val.csv')
+test_df = pd.read_csv('../data/dnabert_2_preparation/test.csv')
 
 print(f"Train set shape: {train_df.shape}")
+print(f"Validation set shape: {val_df.shape}")
 print(f"Test set shape: {test_df.shape}")
 print(f"Label distribution in train set: {train_df['label'].value_counts()}")
+print(f"Label distribution in validation set: {val_df['label'].value_counts()}")
 print(f"Label distribution in test set: {test_df['label'].value_counts()}")
-
-if 'validation_set' not in locals():
-    train_df, val_df = train_test_split(train_df, test_size=0.1, stratify=train_df['label'], random_state=42)
-    print(f"Validation set created, shape: {val_df.shape}")
 
 tokenizer = AutoTokenizer.from_pretrained("zhihan1996/DNABERT-2-117M")
 
