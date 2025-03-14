@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 from datasets import Dataset
-from sklearn.model_selection import train_test_split
 from transformers import AutoTokenizer
 
 train_df = pd.read_csv('../data/dnabert_2_preparation/train.csv')

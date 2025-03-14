@@ -21,16 +21,16 @@ def sliding_window_with_skip(sequences, window_size=100, skip_step=1):
 
 def preprocess_data(lysogenic_seqs, lytic_seqs, window_size=100):
     lysogenic_windows = sliding_window_with_skip(lysogenic_seqs, window_size=window_size, skip_step=1)
-    lytic_windows = sliding_window_with_skip(lytic_seqs, window_size=window_size, skip_step=91)
+    lytic_windows = sliding_window_with_skip(lytic_seqs, window_size=window_size, skip_step=125)
 
     print(f"Generated {len(lysogenic_windows)} lysogenic windows and {len(lytic_windows)} lytic windows")
-    min_count = min(len(lysogenic_windows), len(lytic_windows))
+    # min_count = min(len(lysogenic_windows), len(lytic_windows))
 
-    if len(lysogenic_windows) > min_count:
-        lysogenic_windows = random.sample(lysogenic_windows, min_count)
-
-    if len(lytic_windows) > min_count:
-        lytic_windows = random.sample(lytic_windows, min_count)
+    # if len(lysogenic_windows) > min_count:
+    #     lysogenic_windows = random.sample(lysogenic_windows, min_count)
+    #
+    # if len(lytic_windows) > min_count:
+    #     lytic_windows = random.sample(lytic_windows, min_count)
 
     return {
         'lysogenic_windows': lysogenic_windows,
@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
     labels = [1] * len(prepared_train_data['lytic_windows'])
     lytic_df = pd.DataFrame(zip(prepared_train_data['lytic_windows'], labels), columns=columns)
-    print(lysogenic_df.size)
+    print(lytic_df.size)
 
     combined_df = pd.concat([lysogenic_df, lytic_df], ignore_index=True)
     shuffled_df = combined_df.sample(frac=1, random_state=42).reset_index(drop=True)

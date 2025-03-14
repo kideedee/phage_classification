@@ -3,7 +3,8 @@
 pre_trained_models
 data
 results
-dnabert_2/dnabert2_phage_classifier_20250305_*
+dnabert_2/dnabert2*
+dnabert_2/best*/
 dnabert_2/*_dataset/
 dnabert_2/logs/
 venv

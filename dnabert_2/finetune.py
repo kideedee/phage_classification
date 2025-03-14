@@ -1,19 +1,18 @@
+import gc
 import logging
 import random
 from datetime import datetime
 
 import numpy as np
 import torch
-import torch.nn as nn
 from datasets import load_from_disk
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support, roc_auc_score
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support, roc_auc_score, confusion_matrix
 from transformers import (
     AutoModelForSequenceClassification,
     TrainingArguments,
     Trainer,
     EarlyStoppingCallback
 )
-import gc
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -45,6 +44,15 @@ def compute_metrics(pred):
     else:
         preds = np.argmax(logits, axis=-1)
 
+    # Compute confusion matrix
+    cm = confusion_matrix(labels, preds)
+    logger.info(f"Confusion Matrix:\n{cm}")
+
+    # Log detailed stats from confusion matrix
+    tn, fp, fn, tp = cm.ravel()
+    logger.info(f"True Negatives: {tn}, False Positives: {fp}")
+    logger.info(f"False Negatives: {fn}, True Positives: {tp}")
+
     precision, recall, f1, _ = precision_recall_fscore_support(labels, preds, average='binary')
     acc = accuracy_score(labels, preds)
 
@@ -70,8 +78,57 @@ def compute_metrics(pred):
         'f1': f1,
         'precision': precision,
         'recall': recall,
-        'roc_auc': roc_auc
+        'roc_auc': roc_auc,
+        'tn': float(tn),
+        'fp': float(fp),
+        'fn': float(fn),
+        'tp': float(tp)
     }
+
+
+# Define a custom trainer class instead of monkey-patching
+class MemoryEfficientTrainer(Trainer):
+    def prediction_step(
+            self, model, inputs, prediction_loss_only, ignore_keys=None
+    ):
+        """
+        Custom prediction step to reduce memory usage during evaluation.
+        """
+        has_labels = all(inputs.get(k) is not None for k in self.label_names)
+
+        # Handle different signature for _prepare_inputs in transformers 4.28.0
+        for k, v in inputs.items():
+            if isinstance(v, torch.Tensor):
+                inputs[k] = v.to(self.args.device)
+
+        with torch.no_grad():
+            if has_labels:
+                with self.autocast_smart_context_manager():
+                    outputs = model(**inputs)
+                if prediction_loss_only:
+                    loss = outputs[0].mean().detach()
+                    return (loss, None, None)
+                else:
+                    loss = outputs[0].mean().detach()
+                    logits = outputs[1]
+                    labels = tuple(inputs.get(name).detach().cpu() for name in self.label_names)
+                    if len(labels) == 1:
+                        labels = labels[0]
+            else:
+                with self.autocast_smart_context_manager():
+                    outputs = model(**inputs)
+                loss = None
+                if self.args.past_index >= 0:
+                    logits = outputs[0]
+                else:
+                    logits = outputs
+                labels = None
+
+        # Move logits to CPU to save GPU memory
+        if not prediction_loss_only:
+            logits = logits.detach().cpu()
+
+        return (loss, logits, labels)
 
 
 def main():
@@ -148,14 +205,14 @@ def main():
     trainable_before = sum(p.numel() for p in model.parameters() if p.requires_grad)
 
     # Freeze embedding layer and a few encoder layers
-    for param in model.bert.embeddings.parameters():
-        param.requires_grad = False
+    # for param in model.bert.embeddings.parameters():
+    #     param.requires_grad = False
 
     # For RTX 3070 Ti, freeze first 6 layers instead of 8 for better fine-tuning
     # while still keeping memory usage reasonable
-    for i in range(6):
-        for param in model.bert.encoder.layer[i].parameters():
-            param.requires_grad = False
+    # for i in range(6):
+    #     for param in model.bert.encoder.layer[i].parameters():
+    #         param.requires_grad = False
 
     # Apply gradient checkpointing for remaining trainable layers
     # This significantly reduces memory usage with minimal performance impact
@@ -179,13 +236,15 @@ def main():
         per_device_eval_batch_size=12,  # Can use larger batch for evaluation (no gradients)
         num_train_epochs=5,
         weight_decay=0.01,
-        evaluation_strategy="steps",
-        eval_steps=5,  # Less frequent evaluation to speed up training
-        save_strategy="steps",
-        save_steps=200,
+        # evaluation_strategy="steps",
+        # eval_steps=5,  # Less frequent evaluation to speed up training
+        # save_strategy="steps",
+        # save_steps=200,
+        evaluation_strategy="epoch",
+        save_strategy="epoch",
         save_total_limit=1,  # Keep only best model to save disk space
         load_best_model_at_end=True,
-        metric_for_best_model="roc_auc",
+        metric_for_best_model="precision",
         push_to_hub=False,
         logging_dir="./logs",
         # Enable mixed precision training - very effective on RTX 30 series
@@ -204,50 +263,6 @@ def main():
         # Slightly warm up learning rate
         warmup_ratio=0.1,
     )
-
-    # Define a custom trainer class instead of monkey-patching
-    class MemoryEfficientTrainer(Trainer):
-        def prediction_step(
-                self, model, inputs, prediction_loss_only, ignore_keys=None
-        ):
-            """
-            Custom prediction step to reduce memory usage during evaluation.
-            """
-            has_labels = all(inputs.get(k) is not None for k in self.label_names)
-
-            # Handle different signature for _prepare_inputs in transformers 4.28.0
-            for k, v in inputs.items():
-                if isinstance(v, torch.Tensor):
-                    inputs[k] = v.to(self.args.device)
-
-            with torch.no_grad():
-                if has_labels:
-                    with self.autocast_smart_context_manager():
-                        outputs = model(**inputs)
-                    if prediction_loss_only:
-                        loss = outputs[0].mean().detach()
-                        return (loss, None, None)
-                    else:
-                        loss = outputs[0].mean().detach()
-                        logits = outputs[1]
-                        labels = tuple(inputs.get(name).detach().cpu() for name in self.label_names)
-                        if len(labels) == 1:
-                            labels = labels[0]
-                else:
-                    with self.autocast_smart_context_manager():
-                        outputs = model(**inputs)
-                    loss = None
-                    if self.args.past_index >= 0:
-                        logits = outputs[0]
-                    else:
-                        logits = outputs
-                    labels = None
-
-            # Move logits to CPU to save GPU memory
-            if not prediction_loss_only:
-                logits = logits.detach().cpu()
-
-            return (loss, logits, labels)
 
     # Create our custom trainer with memory efficiency features
     trainer = MemoryEfficientTrainer(
