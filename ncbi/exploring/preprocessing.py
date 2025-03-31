@@ -215,27 +215,29 @@ def process_lysogenic():
     val_df.to_csv("lysogenic_val.csv", index=False)
 
 
-def process_without_extract(data_dir, is_train=False, output_file=None):
+def process_without_extract(data_dir, is_train=False, data_class=None):
     all_results = process_genbank_folder(data_dir, is_train)
     data_frames = run(all_results)
     gen_df = data_frames.get('basic_df')
 
     if is_train:
         train_df, val_df = train_test_split(gen_df, test_size=0.2, random_state=42)
-        train_df.to_csv("lytic_train.csv", index=False)
-        val_df.to_csv("lytic_val.csv", index=False)
+        train_df.to_csv(f"{data_class}_train.csv", index=False)
+        val_df.to_csv(f"{data_class}_val.csv", index=False)
+
         return
 
-    gen_df.to_csv(output_file, index=False)
+    gen_df.to_csv(f"{data_class}_test.csv", index=False)
 
 
 
 def process_test():
-    process_without_extract(lysogenic_test_dir, False, "lysogenic_test.csv")
-    process_without_extract(lytic_test_dir, False, "lytic_test.csv")
+    process_without_extract(lysogenic_test_dir, False, "lysogenic")
+    process_without_extract(lytic_test_dir, False, "lytic")
 
 
 if __name__ == '__main__':
-    process_lysogenic()
-    process_without_extract(lytic_train_dir, True)
+    # process_lysogenic()
+    process_without_extract(lysogenic_train_dir, True, "lysogenic")
+    process_without_extract(lytic_train_dir, True, "lytic")
     process_test()

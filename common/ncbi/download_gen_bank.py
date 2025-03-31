@@ -7,22 +7,13 @@ import pandas as pd
 from Bio import Entrez
 from tqdm import tqdm
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("ncbi_download.log"),
-        logging.StreamHandler()
-    ]
-)
+from common.env_config import config
 
 Entrez.email = "your_email@example.com"  # Replace with your email
 Entrez.tool = "ncbi_batch_downloader"
 
 # Output directory
-base_dir = "../../data/ncbi_data/gen_bank"
-os.makedirs(base_dir, exist_ok=True)
+base_dir = config.GEN_BANK_DIR
 
 # Create cache directory for tracking completed downloads
 cache_dir = os.path.join(base_dir, ".cache")
@@ -35,6 +26,7 @@ def download_genbank(accession, output_dir, output_file=None, retries=3, retry_d
 
     Args:
         accession: Accession number of the sequence
+        output_dir: Output directory
         output_file: Output filename (optional)
         retries: Number of retry attempts
         retry_delay: Delay between retries in seconds
@@ -117,7 +109,7 @@ def download_worker(args):
     return download_genbank(accession, output_dir, output_file)
 
 
-def download_batch_from_excel(file_path, is_train=True, max_workers=5, batch_size=200):
+def download_batch(file_path, is_train=True, max_workers=5, batch_size=200):
     """
     Download GenBank data for all accessions in Excel file with parallel processing
     and batch processing to avoid overwhelming NCBI servers
@@ -129,35 +121,23 @@ def download_batch_from_excel(file_path, is_train=True, max_workers=5, batch_siz
         batch_size: Size of batches to process with pauses between them
     """
     try:
-        excel_df = pd.read_excel(file_path)
+        df = pd.read_csv(file_path)
 
-        if 'Accession number' not in excel_df.columns:
-            logging.error("Error: Excel file must have 'Accession number' column")
-            return
+        # if 'Accession number' not in df.columns:
+        #     logging.error("Error: Excel file must have 'Accession number' column")
+        #     return
 
-        if 'Lifecycle' not in excel_df.columns:
-            logging.error("Error: Excel file must have 'Lifecycle' column")
+        if 'label' not in df.columns:
+            logging.error("Error: Excel file must have 'label' column")
             return
 
         download_tasks = []
-        for index, row in excel_df.iterrows():
-            accession = str(row['Accession number']).strip()
-            life_cycle = str(row["Lifecycle"]).strip()
+        for index, row in df.iterrows():
+            accession = str(row['accession_number']).strip()
+            life_cycle = str(row["label"]).strip()
 
-            if is_train:
-                if "5-fold cross-validation" not in excel_df.columns:
-                    logging.error("Error: Training data Excel file must have '5-fold cross-validation' column")
-                    return
-                group = str(row["5-fold cross-validation"]).strip()
-                output_dir = os.path.join(base_dir, f"train/{life_cycle}/{group}")
-                if not os.path.exists(output_dir):
-                    os.makedirs(output_dir, exist_ok=True)
-                output_file = f"train_{accession}_{life_cycle}_{group}"
-            else:
-                output_dir = os.path.join(base_dir, f"test/{life_cycle}")
-                if not os.path.exists(output_dir):
-                    os.makedirs(output_dir, exist_ok=True)
-                output_file = f"test_{accession}_{life_cycle}"
+            output_dir = base_dir
+            output_file = f"{accession}_{life_cycle}"
 
             download_tasks.append((accession, output_dir, output_file))
 
@@ -186,15 +166,17 @@ def download_batch_from_excel(file_path, is_train=True, max_workers=5, batch_siz
 def resume_download(file_path, is_train=True):
     """Resume a previously interrupted download"""
     logging.info(f"Resuming download from {file_path}")
-    download_batch_from_excel(file_path, is_train)
+    download_batch(file_path, is_train)
 
 
 if __name__ == "__main__":
     # Example usage:
 
     # 1. Download batch data from Excel
-    download_batch_from_excel("../../data/deep_pl_data/train_dataset.xlsx", is_train=True, max_workers=3, batch_size=100)
-    download_batch_from_excel("../../data/deep_pl_data/test_dataset.xlsx", is_train=False, max_workers=3, batch_size=100)
+    download_batch("../../data/my_data/aggregated_deephage_deeppl_data/valid_ds.csv", is_train=True, max_workers=3,
+                   batch_size=100)
+    # download_batch_from_excel("../../data/deep_pl_data/test_dataset.xlsx", is_train=False, max_workers=3,
+    #                           batch_size=100)
 
     # 2. Resume a previously interrupted download
     # resume_download("train_dataset.xlsx", is_train=True)

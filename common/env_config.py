@@ -5,9 +5,35 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def get_project_root():
+    # Tìm vị trí của file .git hoặc requirements.txt để xác định root
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    while current_dir != os.path.dirname(current_dir):  # Không phải root của ổ đĩa
+        if os.path.exists(os.path.join(current_dir, '.git')) or \
+                os.path.exists(os.path.join(current_dir, 'requirements.txt')):
+            return current_dir
+        current_dir = os.path.dirname(current_dir)
+    return current_dir  # Fallback
+
+
 # Configuration
 class Config:
-    NUM_WORKERS = int(os.getenv("NUM_WORKERS", 8))
+    CACHE_FOLDER = os.path.join(get_project_root(), os.getenv("CACHE_FOLDER", "cache"))
+    if not os.path.exists(CACHE_FOLDER):
+        os.makedirs(CACHE_FOLDER)
+    TEMP_FOLDER = os.path.join(get_project_root(), os.getenv("TEMP_FOLDER", "temp"))
+    if not os.path.exists(TEMP_FOLDER):
+        os.makedirs(TEMP_FOLDER)
+    LOG_DIR = os.path.join(get_project_root(), os.getenv("LOG_DIR", "logs"))
+    if not os.path.exists(LOG_DIR):
+        os.makedirs(LOG_DIR)
+    GEN_BANK_DIR = os.path.join(get_project_root(), os.getenv("GEN_BANK_DIR", "gen_bank"))
+    if not os.path.exists(GEN_BANK_DIR):
+        os.makedirs(GEN_BANK_DIR)
+
+    NCBI_DOWNLOAD_MAX_WORKERS = int(os.getenv("NCBI_DOWNLOAD_MAX_WORKERS", 4))
+    NCBI_REQUEST_DELAY = float(os.getenv("NCBI_REQUEST_DELAY", 0.5))
+
     INPUT_SIZE = int(os.getenv("INPUT_SIZE", 1024))
     HIDDEN_SIZE = int(os.getenv("HIDDEN_SIZE", 128))
     NUM_LAYERS = int(os.getenv("NUM_LAYERS", 2))

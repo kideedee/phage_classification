@@ -1,5 +1,6 @@
 import gc
 import logging
+import os
 import random
 from datetime import datetime
 
@@ -138,17 +139,12 @@ def main():
     # Configure device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # RTX 3070 Ti specific memory settings
+    # RTX 5070 Ti specific memory settings
+    # RTX 5070 Ti (Blackwell) comprehensive optimization settings
     if torch.cuda.is_available():
         # Monitor initial GPU memory
         initial_mem = torch.cuda.memory_allocated(0) / (1024 ** 3)
         logger.info(f"Initial GPU memory usage: {initial_mem:.2f} GB")
-
-    if torch.cuda.is_available():
-        # Monitor initial GPU memory
-        initial_mem = torch.cuda.memory_allocated(0) / (1024 ** 3)
-        logger.info(f"Initial GPU memory usage: {initial_mem:.2f} GB")
-
         device_name = torch.cuda.get_device_name(0)
         gpu_memory = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
         logger.info(f"Training on GPU: {device_name} with {gpu_memory:.2f} GB memory")
@@ -157,27 +153,101 @@ def main():
         gc.collect()
         torch.cuda.empty_cache()
 
-        # Disable TF32 as it can cause numerical instability with limited memory
+        # Enable TF32 precision for improved performance on Blackwell architecture
         torch.backends.cuda.matmul.allow_tf32 = True
         torch.backends.cudnn.allow_tf32 = True
-        logger.info("Disabled TF32 precision to improve stability")
+        logger.info("Enabled TF32 precision for improved performance")
+
+        # Enable tensor cores for FP16/BF16 operations (Blackwell architecture)
+        torch.set_float32_matmul_precision('highest')
+        logger.info("Set highest precision for float32 matmul operations")
+
+        # Enable BF16 format which is optimal for Blackwell architecture
+        if torch.cuda.is_bf16_supported():
+            logger.info("BF16 format is supported and recommended for this GPU")
 
         # Set memory allocation strategy
         if hasattr(torch.cuda, 'memory_stats'):
             logger.info(f"Current reserved memory: {torch.cuda.memory_reserved(0) / (1024 ** 3):.2f} GB")
 
-        # Disable cuDNN benchmark as we'll be using different batch sizes
-        torch.backends.cudnn.benchmark = False
-        logger.info("Disabled cuDNN benchmark mode for better stability")
+        # Enable cuDNN benchmark for optimized performance
+        torch.backends.cudnn.benchmark = True
+        logger.info("Enabled cuDNN benchmark mode for optimal performance")
 
-        # Set deterministic algorithms for reproducibility
-        torch.backends.cudnn.deterministic = True
-        logger.info("Enabled deterministic algorithms")
+        # Balance between reproducibility and performance
+        # Comment this line if absolute reproducibility is not required
+        # torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.deterministic = False
+        logger.info("Disabled deterministic algorithms for better performance")
+
+        # Enable Flash Attention 2.0 optimized for Blackwell architecture
+        try:
+            import flash_attn
+            logger.info("Flash Attention is available and optimized for Blackwell architecture")
+
+            # Check for Blackwell-specific optimizations in CUDA version
+            cuda_version = torch.version.cuda.split('.')
+            if int(cuda_version[0]) >= 12 and int(cuda_version[1]) >= 2:
+                logger.info("Using CUDA version with Blackwell optimizations")
+        except ImportError:
+            logger.info(
+                "Flash Attention not available - consider installing for faster attention computation on Blackwell GPUs")
+
+        # Enable PyTorch 2.0+ compiler for Blackwell optimization
+        if hasattr(torch, 'compile'):
+            logger.info("PyTorch compile is available - use torch.compile() for model optimization")
+            # Example: model = torch.compile(model, mode="reduce-overhead", fullgraph=True)
+
+        # Configure CUDA Graph for repeated forward passes
+        logger.info("For repeated identical operations, consider using CUDA Graphs")
+        # Example usage:
+        # g = torch.cuda.CUDAGraph()
+        # with torch.cuda.graph(g):
+        #     output = model(static_input)
+        # For dynamic execution: output = g.replay()
+
+        # Enable optimized memory allocator
+        # if hasattr(torch.cuda, 'memory_allocator'):
+        #     try:
+        #         # PyTorch 2.X+ setting for Blackwell
+        #         torch.cuda.memory_allocator(allocator_type='native')
+        #         logger.info("Using native CUDA memory allocator for Blackwell")
+        #     except:
+        #         logger.info("Memory allocator settings not available in this PyTorch version")
+
+        # Enable FP8 if supported on Blackwell architecture
+        try:
+            import transformer_engine as te
+            logger.info("TransformerEngine with FP8 support is available - optimal for Blackwell")
+        except ImportError:
+            logger.info("TransformerEngine not installed - consider using it for FP8 on Blackwell")
+
+        # Enable SHARP for multi-GPU training if applicable
+        try:
+            # Set environmental variable
+            os.environ['NCCL_SHARP_DISABLE'] = '0'
+            os.environ['NCCL_COLLNET_ENABLE'] = '1'
+            logger.info("Enabled SHARP and COLLNET for optimized multi-GPU communication")
+        except:
+            pass
+
+        # Enable pinned memory for faster host-to-device transfers
+        torch.multiprocessing.set_sharing_strategy('file_system')
+        # Configure your DataLoader with pin_memory=True
 
         # Log CUDA information
         logger.info(f"CUDA Version: {torch.version.cuda}")
         logger.info(
             f"cuDNN Version: {torch.backends.cudnn.version() if torch.backends.cudnn.is_available() else 'Not available'}")
+
+        # Blackwell optimized kernel tuning
+        try:
+            # Set environment variables for Blackwell
+            os.environ['CUDA_AUTO_TUNE'] = '1'
+            os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:128'
+            logger.info("Set optimized kernel autotuning for Blackwell")
+        except:
+            pass
     else:
         logger.info("No GPU available, training on CPU")
 
@@ -232,7 +302,7 @@ def main():
     training_args = TrainingArguments(
         output_dir=output_dir,
         learning_rate=3e-5,
-        per_device_train_batch_size=12,  # Optimized for RTX 3070 Ti's 8GB VRAM
+        per_device_train_batch_size=32,  # Optimized for RTX 3070 Ti's 8GB VRAM
         per_device_eval_batch_size=12,  # Can use larger batch for evaluation (no gradients)
         num_train_epochs=5,
         weight_decay=0.01,

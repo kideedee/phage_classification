@@ -281,7 +281,8 @@ if __name__ == "__main__":
 
     # Download data from test file
     logger.info("\n=== Downloading test dataset ===")
-    test_success, test_failed, test_total, test_failed_records = download_data_parallel("test_dataset.xlsx",
+    test_success, test_failed, test_total, test_failed_records = download_data_parallel(
+        "../../data/deep_pl_data/test_dataset.xlsx",
                                                                                         "test_dataset")
 
     if test_failed > 0:
