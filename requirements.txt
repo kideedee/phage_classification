@@ -1,11 +1,7 @@
 h5py~=3.13.0
 matplotlib==3.9.4
-numpy==1.26.4
 openpyxl==3.1.5
 pandas==2.2.3
-torch~=2.8.0.dev20250329+cu128
-torchaudio==2.6.0.dev20250316+cu128
-torchvision==0.22.0.dev20250316+cu128
 tqdm==4.67.1
 transformers==4.50.0
 biopython==1.85
@@ -22,3 +18,8 @@ catboost~=1.2.7
 gensim~=4.3.3
 scikit-optimize==0.10.2
 umap-learn==0.5.7
+imbalanced-learn==0.13.0
+numpy~=1.26.4
+torch~=2.8.0.dev20250406+cu128
+cuml-cu12==25.2.1
+cudf-cu12==25.2.2

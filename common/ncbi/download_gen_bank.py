@@ -1,4 +1,3 @@
-import logging
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -8,6 +7,7 @@ from Bio import Entrez
 from tqdm import tqdm
 
 from common.env_config import config
+from logger.phg_cls_log import log
 
 Entrez.email = "your_email@example.com"  # Replace with your email
 Entrez.tool = "ncbi_batch_downloader"
@@ -38,8 +38,8 @@ def download_genbank(accession, output_dir, output_file=None, retries=3, retry_d
     if output_file:
         cache_file = os.path.join(cache_dir, f"{output_file}.done")
         final_output = os.path.join(output_dir, f"{output_file}.gb")
-        if os.path.exists(cache_file) and os.path.exists(final_output):
-            logging.info(f"Skipping {accession} - already downloaded")
+        if os.path.exists(final_output):
+            log.info(f"Skipping {accession} - already downloaded")
             return final_output
 
     for attempt in range(retries):
@@ -50,13 +50,13 @@ def download_genbank(accession, output_dir, output_file=None, retries=3, retry_d
                 record = Entrez.read(handle)
                 handle.close()
             except Exception as e:
-                logging.warning(f"Search error for {accession} (attempt {attempt + 1}/{retries}): {e}")
+                log.warning(f"Search error for {accession} (attempt {attempt + 1}/{retries}): {e}")
                 time.sleep(retry_delay)
                 continue
 
             # Check if record was found
             if not record["IdList"]:
-                logging.warning(f"No record found for {accession}")
+                log.warning(f"No record found for {accession}")
                 return None
 
             id_list = record["IdList"]
@@ -72,7 +72,7 @@ def download_genbank(accession, output_dir, output_file=None, retries=3, retry_d
                 content = handle.read()
                 handle.close()
             except Exception as e:
-                logging.warning(f"Fetch error for {accession} (attempt {attempt + 1}/{retries}): {e}")
+                log.warning(f"Fetch error for {accession} (attempt {attempt + 1}/{retries}): {e}")
                 time.sleep(retry_delay)
                 continue
 
@@ -91,15 +91,15 @@ def download_genbank(accession, output_dir, output_file=None, retries=3, retry_d
                 with open(os.path.join(cache_dir, f"{output_file}.done"), "w") as f:
                     f.write("done")
 
-            logging.info(f"Successfully downloaded {accession} to {final_output}")
+            log.info(f"Successfully downloaded {accession} to {final_output}")
             return final_output
 
         except Exception as e:
-            logging.error(f"Error downloading {accession} (attempt {attempt + 1}/{retries}): {e}")
+            log.error(f"Error downloading {accession} (attempt {attempt + 1}/{retries}): {e}")
             if attempt < retries - 1:
                 time.sleep(retry_delay)
 
-    logging.error(f"Failed to download {accession} after {retries} attempts")
+    log.error(f"Failed to download {accession} after {retries} attempts")
     return None
 
 
@@ -124,11 +124,11 @@ def download_batch(file_path, is_train=True, max_workers=5, batch_size=200):
         df = pd.read_csv(file_path)
 
         # if 'Accession number' not in df.columns:
-        #     logging.error("Error: Excel file must have 'Accession number' column")
+        #     log.error("Error: Excel file must have 'Accession number' column")
         #     return
 
         if 'label' not in df.columns:
-            logging.error("Error: Excel file must have 'label' column")
+            log.error("Error: Excel file must have 'label' column")
             return
 
         download_tasks = []
@@ -143,29 +143,29 @@ def download_batch(file_path, is_train=True, max_workers=5, batch_size=200):
 
         # Process in batches with progress bar
         total_tasks = len(download_tasks)
-        logging.info(f"Starting download of {total_tasks} GenBank records from {file_path}")
+        log.info(f"Starting download of {total_tasks} GenBank records from {file_path}")
 
         for i in range(0, total_tasks, batch_size):
             batch = download_tasks[i:i + batch_size]
-            logging.info(f"Processing batch {i // batch_size + 1}/{(total_tasks + batch_size - 1) // batch_size}")
+            log.info(f"Processing batch {i // batch_size + 1}/{(total_tasks + batch_size - 1) // batch_size}")
 
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 list(tqdm(executor.map(download_worker, batch), total=len(batch), desc="Downloading"))
 
-            if i + batch_size < total_tasks:
-                logging.info(f"Pausing between batches for 10 seconds...")
-                time.sleep(10)
+            # if i + batch_size < total_tasks:
+            #     log.info(f"Pausing between batches for 10 seconds...")
+            #     time.sleep(10)
 
-        logging.info(f"Completed downloading GenBank records from {file_path}")
+        log.info(f"Completed downloading GenBank records from {file_path}")
 
     except Exception as e:
-        logging.error(f"Error processing Excel file: {e}")
+        log.error(f"Error processing Excel file: {e}")
         raise
 
 
 def resume_download(file_path, is_train=True):
     """Resume a previously interrupted download"""
-    logging.info(f"Resuming download from {file_path}")
+    log.info(f"Resuming download from {file_path}")
     download_batch(file_path, is_train)
 
 
@@ -173,7 +173,7 @@ if __name__ == "__main__":
     # Example usage:
 
     # 1. Download batch data from Excel
-    download_batch("../../data/my_data/aggregated_deephage_deeppl_data/val_ds.csv", is_train=True, max_workers=3,
+    download_batch("../../data/custom/combined_ds.csv", is_train=True, max_workers=3,
                    batch_size=100)
     # download_batch_from_excel("../../data/deep_pl_data/test_dataset.xlsx", is_train=False, max_workers=3,
     #                           batch_size=100)

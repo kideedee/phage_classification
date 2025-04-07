@@ -18,18 +18,13 @@ def get_project_root():
 
 # Configuration
 class Config:
+    DATA_DIR = os.path.join(get_project_root(), os.getenv("DATA_DIR"))
     CACHE_FOLDER = os.path.join(get_project_root(), os.getenv("CACHE_FOLDER", "cache"))
-    if not os.path.exists(CACHE_FOLDER):
-        os.makedirs(CACHE_FOLDER)
     TEMP_FOLDER = os.path.join(get_project_root(), os.getenv("TEMP_FOLDER", "temp"))
-    if not os.path.exists(TEMP_FOLDER):
-        os.makedirs(TEMP_FOLDER)
     LOG_DIR = os.path.join(get_project_root(), os.getenv("LOG_DIR", "logs"))
-    if not os.path.exists(LOG_DIR):
-        os.makedirs(LOG_DIR)
-    GEN_BANK_DIR = os.path.join(get_project_root(), os.getenv("GEN_BANK_DIR", "gen_bank"))
-    if not os.path.exists(GEN_BANK_DIR):
-        os.makedirs(GEN_BANK_DIR)
+
+    GEN_BANK_DIR = os.path.join(DATA_DIR, "gen_bank")
+    CUSTOM_DATA_DIR = os.path.join(DATA_DIR, "custom")
 
     NCBI_DOWNLOAD_MAX_WORKERS = int(os.getenv("NCBI_DOWNLOAD_MAX_WORKERS", 4))
     NCBI_REQUEST_DELAY = float(os.getenv("NCBI_REQUEST_DELAY", 0.5))
