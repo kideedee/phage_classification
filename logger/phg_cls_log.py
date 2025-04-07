@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime
 
 from common.env_config import config
@@ -20,5 +21,5 @@ monitor_logger = logging.getLogger('monitor')
 monitor_logger.setLevel(logging.INFO)
 
 # File handler
-monitor_file_handler = logging.FileHandler(config.LOG_DIR / f"monitor_{current_time}.log", mode='w')
+monitor_file_handler = logging.FileHandler(os.path.join(config.LOG_DIR, f"monitor_{current_time}.log"), mode='w')
 monitor_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))

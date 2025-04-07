@@ -173,7 +173,7 @@ if __name__ == "__main__":
     # Example usage:
 
     # 1. Download batch data from Excel
-    download_batch("../../data/my_data/aggregated_deephage_deeppl_data/valid_ds.csv", is_train=True, max_workers=3,
+    download_batch("../../data/my_data/aggregated_deephage_deeppl_data/val_ds.csv", is_train=True, max_workers=3,
                    batch_size=100)
     # download_batch_from_excel("../../data/deep_pl_data/test_dataset.xlsx", is_train=False, max_workers=3,
     #                           batch_size=100)

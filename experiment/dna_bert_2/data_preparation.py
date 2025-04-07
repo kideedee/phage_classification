@@ -4,7 +4,7 @@ from Bio import SeqIO
 from datasets import Dataset
 from transformers import AutoTokenizer
 
-from common import sequence_windowing
+from common import fasta_sequence_windowing
 from common.env_config import config
 
 
@@ -16,12 +16,13 @@ if __name__ == '__main__':
 
     # Read all sequences from the file
     train_sequences = list(SeqIO.parse(config.TRAIN_DATA_FASTA_FILE, "fasta"))
-    test_sequences = list(SeqIO.parse(config.TEST_DATA_FASTA_FILE, "fasta"))
+    val_sequences = list(SeqIO.parse(config.VAL_DATA_FASTA_FILE, "fasta"))
 
     # Create windowed sequences
+    train_windowed_fasta_file = "train_windowed_sequences.fasta"
     train_windowed_records = sequence_windowing.window_fasta_with_distribution(
         config.TRAIN_DATA_FASTA_FILE,
-        "train_sequences.fasta",
+        train_windowed_fasta_file,
         distribution_type="normal",
         min_size=100,
         max_size=400,
@@ -29,9 +30,10 @@ if __name__ == '__main__':
         overlap_percent=10,
         step_size=None
     )
+    val_windowed_fasta_file = "test_windowed_sequences.fasta"
     test_windowed_records = sequence_windowing.window_fasta_with_distribution(
-        config.TEST_DATA_FASTA_FILE,
-        "test_sequences.fasta",
+        config.VAL_DATA_FASTA_FILE,
+        val_windowed_fasta_file,
         distribution_type="normal",
         min_size=100,
         max_size=400,
@@ -42,8 +44,8 @@ if __name__ == '__main__':
 
     # windowed_records = list(SeqIO.parse("train_sequences.fasta", "fasta"))
 
-    sequence_windowing.analyze_window_sizes(train_windowed_records, "uniform_distribution.png")
-    sequence_windowing.analyze_window_sizes(test_windowed_records, "uniform_distribution.png")
+    # sequence_windowing.analyze_window_sizes(train_windowed_records, "uniform_distribution.png")
+    # sequence_windowing.analyze_window_sizes(test_windowed_records, "uniform_distribution.png")
 
     train_record_sequences = []
     train_record_labels = []

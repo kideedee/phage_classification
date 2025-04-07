@@ -571,10 +571,10 @@ if __name__ == '__main__':
     os.makedirs("confusion_matrices", exist_ok=True)
     os.makedirs("roc_curves", exist_ok=True)
 
-    X_train = np.load("word2vec_train_vector.npy")
-    y_train = np.load("y_train.npy")
-    X_val = np.load("word2vec_val_vector.npy")
-    y_val = np.load("y_val.npy")
+    X_train = np.load("../word2vec_train_vector.npy")
+    y_train = np.load("../y_train.npy")
+    X_val = np.load("../word2vec_val_vector.npy")
+    y_val = np.load("../y_val.npy")
 
     log.info(f"Train set shape: {X_train.shape}")
     log.info(f"Train labels shape: {y_train.shape}")

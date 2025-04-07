@@ -33,6 +33,10 @@ class Config:
 
     NCBI_DOWNLOAD_MAX_WORKERS = int(os.getenv("NCBI_DOWNLOAD_MAX_WORKERS", 4))
     NCBI_REQUEST_DELAY = float(os.getenv("NCBI_REQUEST_DELAY", 0.5))
+    TRAIN_DATA_FASTA_FILE = os.path.join(get_project_root(), os.getenv("TRAIN_DATA_FASTA_FILE"))
+    VAL_DATA_FASTA_FILE = os.path.join(get_project_root(), os.getenv("TEST_DATA_FASTA_FILE"))
+    TRAIN_DATA_CSV_FILE = os.path.join(get_project_root(), os.getenv("TRAIN_DATA_CSV_FILE"))
+    VAL_DATA_CSV_FILE = os.path.join(get_project_root(), os.getenv("VAL_DATA_CSV_FILE"))
 
     INPUT_SIZE = int(os.getenv("INPUT_SIZE", 1024))
     HIDDEN_SIZE = int(os.getenv("HIDDEN_SIZE", 128))

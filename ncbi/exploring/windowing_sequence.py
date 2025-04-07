@@ -21,15 +21,6 @@ def preprocess_data(lysogenic_seqs, lytic_seqs, window_size=100):
     lysogenic_windows = sliding_window_with_skip(lysogenic_seqs, window_size=window_size, skip_step=85)
     lytic_windows = sliding_window_with_skip(lytic_seqs, window_size=window_size, skip_step=256)
 
-    # print(f"Generated {len(lysogenic_windows)} lysogenic windows and {len(lytic_windows)} lytic windows")
-    # min_count = min(len(lysogenic_windows), len(lytic_windows))
-
-    # if len(lysogenic_windows) > min_count:
-    #     lysogenic_windows = random.sample(lysogenic_windows, min_count)
-    #
-    # if len(lytic_windows) > min_count:
-    #     lytic_windows = random.sample(lytic_windows, min_count)
-
     return {
         'lysogenic_windows': lysogenic_windows,
         'lytic_windows': lytic_windows

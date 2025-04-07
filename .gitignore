@@ -192,3 +192,8 @@ venv
 *.csv
 temp
 cache
+*.npy
+*.npz
+*.pkl
+*.bin
+*.fasta

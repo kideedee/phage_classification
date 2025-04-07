@@ -6,11 +6,10 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.preprocessing import StandardScaler
-from xgboost import XGBClassifier, callback
+from xgboost import XGBClassifier
 import warnings
-from tqdm.auto import tqdm  # Import tqdm for progress bars
 
 warnings.filterwarnings('ignore')
 
@@ -75,48 +74,83 @@ def train_and_evaluate(X_train, y_train, X_val, y_val, ids_train, ids_val, confi
     X_train_scaled = scaler.fit_transform(X_train)
     X_val_scaled = scaler.transform(X_val)
 
-    # Set up XGBoost model
-    param_grid = config['xgb_params_test'] if test_mode else config['xgb_params']
+    # Set up XGBoost model parameters
+    if test_mode:
+        print("TEST MODE: Using simplified model without GridSearch")
+        # Use first parameters from test grid
+        params = {
+            'n_estimators': config['xgb_params_test']['n_estimators'][0],
+            'max_depth': config['xgb_params_test']['max_depth'][0],
+            'learning_rate': config['xgb_params_test']['learning_rate'][0],
+            'subsample': config['xgb_params_test']['subsample'][0],
+            'colsample_bytree': config['xgb_params_test']['colsample_bytree'][0],
+            'random_state': random_seed,
+            'verbosity': 1,
+            'eval_metric': 'logloss',
+            'tree_method': 'hist'  # Default to CPU mode first
+        }
 
-    # Adjust base model parameters for test mode
-    n_estimators = 10 if test_mode else 100
+        # Create and train a simple model
+        print("Training XGBoost model...")
+        model = XGBClassifier(**params)
+        model.fit(X_train_scaled, y_train,
+                  eval_set=[(X_val_scaled, y_val)],
+                  verbose=True)
 
-    base_model = XGBClassifier(
-        random_state=random_seed,
-        tree_method='hist',  # GPU acceleration
-        device="cuda",
-        predictor='gpu_predictor',
-        eval_metric='logloss',
-        n_estimators=n_estimators
-    )
+        best_model = model
 
-    # Perform grid search
-    print("Training XGBoost model with hyperparameter tuning...")
-    # Create a progress callback for base model
-    progress = callback.ProgressBar(period=10)  # Update every 10 boosting rounds
+    else:
+        # FULL MODE: Use GridSearchCV
+        print("FULL MODE: Performing hyperparameter tuning with GridSearchCV")
 
-    # Adjust cv and verbosity based on test mode
-    cv = 2 if test_mode else 5
-    verbose_level = 1 if test_mode else 2
+        # Create base model - use simple parameters that work with all XGBoost versions
+        base_model = XGBClassifier(
+            random_state=random_seed,
+            verbosity=1,  # Show some output
+            tree_method='hist'  # Default to CPU
+        )
 
-    # Add a verbose parameter to the base model
-    base_model.set_params(verbosity=1)  # Set verbosity level
+        # Set up parameter grid
+        param_grid = config['xgb_params']
 
-    grid_search = GridSearchCV(
-        base_model,
-        param_grid,
-        cv=cv,
-        scoring='precision',
-        n_jobs=-1,
-        verbose=verbose_level
-    )
-    grid_search.fit(X_train_scaled, y_train, callbacks=[progress])
+        # Set up cross-validation
+        cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_seed)
+        if test_mode:
+            cv = StratifiedKFold(n_splits=2, shuffle=True, random_state=random_seed)
 
-    # Get the best model
-    best_model = grid_search.best_estimator_
-    print(f"Best parameters: {grid_search.best_params_}")
+        # Calculate total combinations for progress tracking
+        total_combinations = (
+                len(param_grid['n_estimators']) *
+                len(param_grid['max_depth']) *
+                len(param_grid['learning_rate']) *
+                len(param_grid['subsample']) *
+                len(param_grid['colsample_bytree'])
+        )
+
+        print(f"Testing {total_combinations} parameter combinations with {cv.n_splits}-fold cross-validation")
+        print(f"This will result in {total_combinations * cv.n_splits} model fits")
+
+        # Create GridSearchCV
+        grid_search = GridSearchCV(
+            base_model,
+            param_grid,
+            scoring='precision',
+            cv=cv,
+            n_jobs=-1,
+            verbose=2,  # Show detailed output
+            error_score='raise'  # Raise errors for debugging
+        )
+
+        # Fit the model
+        print("Starting GridSearch...")
+        grid_search.fit(X_train_scaled, y_train)
+
+        # Get best model
+        best_model = grid_search.best_estimator_
+        print(f"Best parameters: {grid_search.best_params_}")
 
     # Evaluate on validation set
+    print("Evaluating model on validation data...")
     y_pred = best_model.predict(X_val_scaled)
     y_prob = best_model.predict_proba(X_val_scaled)[:, 1]
 
@@ -172,40 +206,6 @@ def train_and_evaluate(X_train, y_train, X_val, y_val, ids_train, ids_val, confi
         'confusion_matrix': conf_matrix,
         'validation_predictions': results_df
     }
-
-
-def create_custom_progress_callback(title="Training Progress"):
-    """
-    Create a custom progress callback that shows more detailed information.
-    """
-    from tqdm import tqdm
-
-    class CustomProgressCallback(callback.TrainingCallback):
-        def __init__(self):
-            self.pbar = None
-
-        def before_training(self, model):
-            # Initialize progress bar before training starts
-            self.pbar = tqdm(total=model.get_params()['n_estimators'], desc=title)
-            return model
-
-        def after_iteration(self, model, epoch, evals_log):
-            # Update progress bar after each iteration
-            self.pbar.update(1)
-            if evals_log:
-                # If evaluation results exist, display them in the progress bar description
-                eval_results = list(evals_log.items())[0][1]
-                metric = list(eval_results.keys())[0]
-                value = eval_results[metric][-1]
-                self.pbar.set_description(f"{title} - {metric}: {value:.4f}")
-            return False
-
-        def after_training(self, model):
-            # Close progress bar after training finishes
-            self.pbar.close()
-            return model
-
-    return CustomProgressCallback()
 
 
 def run_training(config=None):
@@ -404,30 +404,15 @@ if __name__ == "__main__":
         if args.output:
             config['output_dir'] = args.output
 
-        # Add tqdm to track overall progress
+        # Start training pipeline
         print("Starting XGBoost training pipeline...")
 
-        # You can also wrap longer operations in tqdm
-        with tqdm(total=3, desc="Pipeline Progress") as pbar:
-            # Load data
-            pbar.set_description("Loading data")
-            pbar.update(1)
+        # Run training
+        run_training(config)
+        print("XGBoost training complete!")
 
-            # Run XGBoost training
-            pbar.set_description("Training model")
-            run_training(config)
-            pbar.update(1)
-
-            # Finalize
-            pbar.set_description("Saving results")
-            print("XGBoost training complete!")
-            pbar.update(1)
     except Exception as e:
         print(f"Error when running XGBoost: {e}")
+        import traceback
 
-    # Uncomment to predict on new data
-    # predict_new_samples(
-    #     embeddings_dir='./new_data',
-    #     model_dir='./model_output',
-    #     has_labels=True  # Set to False if new data doesn't have labels
-    # )
+        traceback.print_exc()  # Print full stack trace for debugging
