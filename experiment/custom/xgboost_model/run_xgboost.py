@@ -1,16 +1,23 @@
+import datetime
+import itertools
 import os
+import random
 import time
 
 import matplotlib.pyplot as plt
 import numpy as np
 import xgboost as xgb
+from imblearn.under_sampling import RandomUnderSampler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, roc_curve, auc
 
-from logger.phg_cls_log import log
+from logger.phg_cls_log import setup_logger
+
+log = setup_logger(__file__)
 
 
-def train_xgboost(X_train, y_train, X_val, y_val, params=None, early_stopping_rounds=20, verbose=True):
+def train_xgboost(X_train, y_train, X_val, y_val, params=None, early_stopping_rounds=20, verbose=True,
+                  results_dir=None):
     """
     Train an XGBoost classifier with the given data
 
@@ -42,7 +49,6 @@ def train_xgboost(X_train, y_train, X_val, y_val, params=None, early_stopping_ro
         }
 
     # Create results directory and subdirectories
-    results_dir = "results"
     os.makedirs(results_dir, exist_ok=True)
     os.makedirs(f"{results_dir}/confusion_matrices", exist_ok=True)
     os.makedirs(f"{results_dir}/roc_curves", exist_ok=True)
@@ -228,12 +234,9 @@ def calculate_scale_pos_weight(y):
     # Tính tỷ lệ
     ratio = neg_count / pos_count
 
-    print(f"Phân bố lớp: Âm={neg_count}, Dương={pos_count}, Tỷ lệ={ratio:.2f}")
+    log.info(f"Class distribution: Negative={neg_count}, Positive={pos_count}, Ratio={ratio}")
 
     return ratio
-
-
-import itertools
 
 
 def create_param_combinations(param_grid):
@@ -270,6 +273,7 @@ def create_param_combinations(param_grid):
 
     return param_combinations
 
+
 def manual_gpu_tuning_with_balance(X_train, y_train, X_val, y_val):
     """
     Manual GPU hyperparameter tuning với xử lý dữ liệu mất cân bằng
@@ -302,14 +306,14 @@ def manual_gpu_tuning_with_balance(X_train, y_train, X_val, y_val):
         'colsample_bytree': [0.8, 1.0],
         'min_child_weight': [1, 3],
         'gamma': [0, 0.1],
-        'eval_metric': ['logloss', 'auc'],
+        'eval_metric': ['logloss', 'error'],
         'device': ['cuda'],
     }
     # Tạo lưới tham số bao gồm scale_pos_weight
     param_grid_list = create_param_combinations(param_grid)
 
     # Số lượng ước lượng để thử
-    n_estimators_list = [100, 200, 300]
+    n_estimators_list = [100, 200]
 
     # Thiết lập đánh giá và dừng sớm
     watchlist = [(dtrain, 'train'), (dval, 'val')]
@@ -625,60 +629,7 @@ def load_model(path='xgboost_model.json'):
     return model
 
 
-if __name__ == '__main__':
-    # Create timestamp for this run
-    import datetime
-
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-
-    # Set up results directory with timestamp
-    results_dir = f"results_{timestamp}"
-    os.makedirs(results_dir, exist_ok=True)
-    os.makedirs(f"{results_dir}/confusion_matrices", exist_ok=True)
-    os.makedirs(f"{results_dir}/roc_curves", exist_ok=True)
-    os.makedirs(f"{results_dir}/metrics", exist_ok=True)
-    os.makedirs(f"{results_dir}/models", exist_ok=True)
-
-    log.info(f"Results will be saved to: {results_dir}")
-
-    # Load data
-    X_train = np.load("../word2vec_train_vector.npy")
-    y_train = np.load("../y_train.npy")
-    X_val = np.load("../word2vec_val_vector.npy")
-    y_val = np.load("../y_val.npy")
-
-    log.info(f"Train set shape: {X_train.shape}")
-    log.info(f"Train labels shape: {y_train.shape}")
-    log.info(f"Validation set shape: {X_val.shape}")
-    log.info(f"Validation labels shape: {y_val.shape}")
-
-    scale_pos_weight = calculate_scale_pos_weight(y_train)
-
-    # Option 1: Train with default parameters
-    # params = {
-    #     'objective': 'binary:logistic',
-    #     'eval_metric': 'logloss',
-    #     'max_depth': 6,
-    #     'learning_rate': 0.1,
-    #     'n_estimators': 200,
-    #     'subsample': 0.8,
-    #     'colsample_bytree': 0.8,
-    #     'gamma': 0,
-    #     'min_child_weight': 1,
-    #     'device': 'cuda'  # Use GPU acceleration for RTX 5070Ti
-    #     'scale_pos_weight': scale_pos_weight
-    # }
-    #
-    # model, history = train_xgboost(X_train, y_train, X_val, y_val, params=params)
-
-    # Option 2: Tune hyperparameters (uncomment to use)
-    # Tuning can take a long time
-
-    X_sample, y_sample = get_subsample(X_train, y_train, fraction=0.5)
-    X_val_sample, y_val_sample = get_subsample(X_val, y_val, fraction=0.5)
-    best_params, best_model = manual_gpu_tuning_with_balance(X_sample, y_sample, X_val_sample, y_val_sample)
-    model, history = train_xgboost(X_train, y_train, X_val, y_val, params=best_params)
-
+def final_evaluation(model, history, X_train, X_val, results_dir, timestamp, params):
     # Plot and save training history
     plot_training_history(history, save_dir=results_dir)
 
@@ -739,39 +690,131 @@ if __name__ == '__main__':
     log.info(f"Final ROC AUC: {final_metrics['roc_auc']:.4f}")
 
     # Generate a summary report
-    # with open(f"{results_dir}/summary_report.txt", 'w') as f:
-    #     f.write("=== XGBoost Phage Classification Summary ===\n\n")
-    #     f.write(f"Timestamp: {timestamp}\n")
-    #     f.write(f"Training samples: {X_train.shape[0]}\n")
-    #     f.write(f"Validation samples: {X_val.shape[0]}\n")
-    #     f.write(f"Feature dimensions: {X_train.shape[1]}\n\n")
-    #
-    #     f.write("=== Model Parameters ===\n")
-    #     for param, value in params.items():
-    #         f.write(f"{param}: {value}\n")
-    #     f.write("\n")
-    #
-    #     f.write("=== Final Performance ===\n")
-    #     f.write(f"Training accuracy: {final_metrics['train_acc']:.4f}\n")
-    #     f.write(f"Validation accuracy: {final_metrics['val_acc']:.4f}\n")
-    #     f.write(f"Precision: {final_metrics['precision']:.4f}\n")
-    #     f.write(f"Sensitivity/Recall: {final_metrics['sensitivity']:.4f}\n")
-    #     f.write(f"Specificity: {final_metrics['specificity']:.4f}\n")
-    #     f.write(f"F1 Score: {final_metrics['f1']:.4f}\n")
-    #     f.write(f"ROC AUC: {final_metrics['roc_auc']:.4f}\n\n")
-    #
-    #     f.write("=== Confusion Matrix ===\n")
-    #     f.write("          Predicted       \n")
-    #     f.write("          Temp    Virulent\n")
-    #     f.write(f"Actual Temp    {tn}      {fp}\n")
-    #     f.write(f"       Virulent {fn}      {tp}\n\n")
-    #
-    #     f.write("=== Files Generated ===\n")
-    #     f.write(f"Training history plots: {results_dir}/metrics/training_history.png\n")
-    #     f.write(f"Feature importance: {results_dir}/metrics/feature_importance.png\n")
-    #     f.write(f"Confusion matrices: {results_dir}/confusion_matrices/\n")
-    #     f.write(f"ROC curves: {results_dir}/roc_curves/\n")
-    #     f.write(f"Final model: {results_dir}/models/xgboost_final_model.json\n")
+    with open(f"{results_dir}/summary_report.txt", 'w') as f:
+        f.write("=== XGBoost Phage Classification Summary ===\n\n")
+        f.write(f"Timestamp: {timestamp}\n")
+        f.write(f"Training samples: {X_train.shape[0]}\n")
+        f.write(f"Validation samples: {X_val.shape[0]}\n")
+        f.write(f"Feature dimensions: {X_train.shape[1]}\n\n")
+
+        f.write("=== Model Parameters ===\n")
+        for param, value in params.items():
+            f.write(f"{param}: {value}\n")
+        f.write("\n")
+
+        f.write("=== Final Performance ===\n")
+        f.write(f"Training accuracy: {final_metrics['train_acc']:.4f}\n")
+        f.write(f"Validation accuracy: {final_metrics['val_acc']:.4f}\n")
+        f.write(f"Precision: {final_metrics['precision']:.4f}\n")
+        f.write(f"Sensitivity/Recall: {final_metrics['sensitivity']:.4f}\n")
+        f.write(f"Specificity: {final_metrics['specificity']:.4f}\n")
+        f.write(f"F1 Score: {final_metrics['f1']:.4f}\n")
+        f.write(f"ROC AUC: {final_metrics['roc_auc']:.4f}\n\n")
+
+        f.write("=== Confusion Matrix ===\n")
+        f.write("          Predicted       \n")
+        f.write("          Temp    Virulent\n")
+        f.write(f"Actual Temp    {tn}      {fp}\n")
+        f.write(f"       Virulent {fn}      {tp}\n\n")
+
+        f.write("=== Files Generated ===\n")
+        f.write(f"Training history plots: {results_dir}/metrics/training_history.png\n")
+        f.write(f"Feature importance: {results_dir}/metrics/feature_importance.png\n")
+        f.write(f"Confusion matrices: {results_dir}/confusion_matrices/\n")
+        f.write(f"ROC curves: {results_dir}/roc_curves/\n")
+        f.write(f"Final model: {results_dir}/models/xgboost_final_model.json\n")
 
     log.info(f"\nXGBoost training complete! All results saved to {results_dir}/")
     log.info(f"See summary report at {results_dir}/summary_report.txt")
+
+
+def prepare(random_seed):
+    # Create timestamp for this run
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # Set up results directory with timestamp
+    results_dir = f"results_{timestamp}"
+    os.makedirs(results_dir, exist_ok=True)
+    os.makedirs(f"{results_dir}/confusion_matrices", exist_ok=True)
+    os.makedirs(f"{results_dir}/roc_curves", exist_ok=True)
+    os.makedirs(f"{results_dir}/metrics", exist_ok=True)
+    os.makedirs(f"{results_dir}/models", exist_ok=True)
+    log.info(f"Results will be saved to: {results_dir}")
+    undersampler = RandomUnderSampler(sampling_strategy='auto', random_state=random_seed)
+
+    # Load data
+    X_train = np.load("../word2vec_train_vector.npy")
+    y_train = np.load("../y_train.npy")
+    X_val = np.load("../word2vec_val_vector.npy")
+    y_val = np.load("../y_val.npy")
+
+    X_resampled, y_resampled = undersampler.fit_resample(X_train, y_train)
+
+    neg_train_count = np.sum(y_train == 0)
+    pos_train_count = np.sum(y_train == 1)
+    train_ratio = neg_train_count / pos_train_count
+    neg_resampled_count = np.sum(y_resampled == 0)
+    pos_resampled_count = np.sum(y_resampled == 1)
+    resampled_ratio = neg_resampled_count / pos_resampled_count
+
+    log.info(f"Train set shape: {X_train.shape}")
+    log.info(f"Train labels shape: {y_train.shape}")
+    log.info(f"Original training set: {neg_train_count} negative, {pos_train_count} positive, ratio: {train_ratio}")
+    log.info(f"Resampled set shape: {X_resampled.shape}")
+    log.info(f"Resampled labels shape: {y_resampled.shape}")
+    log.info(
+        f"Resampled training set: {neg_resampled_count} negative, {pos_resampled_count} positive, ratio: {resampled_ratio}")
+    log.info(f"Validation set shape: {X_val.shape}")
+    log.info(f"Validation labels shape: {y_val.shape}")
+
+    scale_pos_weight = calculate_scale_pos_weight(y_train)
+
+    return scale_pos_weight, X_resampled, y_resampled, X_val, y_val, timestamp, results_dir
+
+
+def run_fine_tuning():
+    seed = random.randint(0, 100)
+    scale_pos_weight, X_resampled, y_resampled, X_val, y_val, timestamp, results_dir = prepare(random_seed=seed)
+
+    X_sample, y_sample = get_subsample(X_resampled, y_resampled, fraction=0.5)
+    # X_val_sample, y_val_sample = get_subsample(X_val, y_val, fraction=0.5)
+    params, best_model = manual_gpu_tuning_with_balance(X_sample, y_sample, X_val, y_val)
+    model, history = train_xgboost(X_resampled, y_resampled, X_val, y_val, params=params)
+
+    final_evaluation(model, history, X_resampled, y_resampled, results_dir=results_dir, timestamp=timestamp)
+
+
+def run_experiment():
+    used_seeds = set()
+    for i in range(5):
+        seed = random.randint(0, 100)
+        if seed in used_seeds:
+            i -= 1
+            continue
+
+        used_seeds.add(seed)
+        scale_pos_weight, X_resampled, y_resampled, X_val, y_val, timestamp, results_dir = prepare(seed)
+
+        params = {
+            'objective': 'binary:logistic',
+            'max_depth': 9,
+            'learning_rate': 0.1,
+            'subsample': 1.0,
+            'n_estimators': 200,
+            'colsample_bytree': 1.0,
+            'min_child_weight': 3,
+            'gamma': 0,
+            'eval_metric': 'logloss',
+            'device': 'cuda'
+        }
+
+        model, history = train_xgboost(X_train=X_resampled, y_train=y_resampled, X_val=X_val, y_val=y_val,
+                                       params=params, results_dir=results_dir)
+
+        final_evaluation(model=model, history=history, X_train=X_resampled, X_val=X_val, results_dir=results_dir,
+                         timestamp=timestamp, params=params)
+
+
+if __name__ == '__main__':
+    run_experiment()
+    # run_fine_tuning()
