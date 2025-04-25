@@ -200,3 +200,4 @@ cache
 
 experiment/dna_bert_2/processed_train_dataset
 experiment/dna_bert_2/processed_val_dataset
+experiment/custom/xgboost_model/smote_200_800
