@@ -73,7 +73,7 @@ def train_catboost(X_train, y_train, X_val, y_val, params=None, early_stopping_r
         'roc_auc': []
     }
 
-    # Train model with metric evaluation after each iteration
+    # Train model
     model.fit(
         train_pool,
         eval_set=val_pool,
@@ -85,87 +85,86 @@ def train_catboost(X_train, y_train, X_val, y_val, params=None, early_stopping_r
     # Get evaluation results
     eval_results = model.get_evals_result()
 
-    # Calculate and store metrics for each iteration
-    for i in range(1, model.best_iteration_ + 1):
-        # Get predictions for this iteration
-        train_preds_prob = model.predict_proba(X_train, ntree_start=0, ntree_end=i)[:, 1]
-        val_preds_prob = model.predict_proba(X_val, ntree_start=0, ntree_end=i)[:, 1]
+    # Calculate and store metrics for best iteration
+    # Get predictions for best model
+    train_preds_prob = model.predict_proba(X_train)[:, 1]
+    val_preds_prob = model.predict_proba(X_val)[:, 1]
 
-        train_preds = (train_preds_prob > 0.5).astype(int)
-        val_preds = (val_preds_prob > 0.5).astype(int)
+    train_preds = (train_preds_prob > 0.5).astype(int)
+    val_preds = (val_preds_prob > 0.5).astype(int)
 
-        # Calculate metrics
-        train_acc = accuracy_score(y_train, train_preds)
-        val_acc = accuracy_score(y_val, val_preds)
+    # Calculate metrics
+    train_acc = accuracy_score(y_train, train_preds)
+    val_acc = accuracy_score(y_val, val_preds)
 
-        # Calculate confusion matrix
-        cm = confusion_matrix(y_val, val_preds)
-        tn, fp, fn, tp = cm.ravel()
+    # Calculate confusion matrix
+    cm = confusion_matrix(y_val, val_preds)
+    tn, fp, fn, tp = cm.ravel()
 
-        # Calculate precision, recall/sensitivity, specificity
-        precision = precision_score(y_val, val_preds)
-        sensitivity = recall_score(y_val, val_preds)  # Same as recall for positive class
-        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
-        f1 = f1_score(y_val, val_preds)
+    # Calculate precision, recall/sensitivity, specificity
+    precision = precision_score(y_val, val_preds)
+    sensitivity = recall_score(y_val, val_preds)  # Same as recall for positive class
+    specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
+    f1 = f1_score(y_val, val_preds)
 
-        # Calculate ROC and AUC
-        fpr, tpr, _ = roc_curve(y_val, val_preds_prob)
-        roc_auc = auc(fpr, tpr)
+    # Calculate ROC and AUC
+    fpr, tpr, _ = roc_curve(y_val, val_preds_prob)
+    roc_auc = auc(fpr, tpr)
 
-        # Get train and validation loss from evaluation results
-        train_loss = eval_results['learn']['Logloss'][i - 1] if 'learn' in eval_results and 'Logloss' in eval_results[
-            'learn'] else float('nan')
-        val_loss = eval_results['validation']['Logloss'][i - 1] if 'validation' in eval_results and 'Logloss' in \
-                                                                   eval_results['validation'] else float('nan')
+    # Get train and validation loss from evaluation results
+    train_loss = eval_results['learn']['Logloss']
+    val_loss = eval_results['validation']['Logloss']
 
-        # Update history
-        history['train_loss'].append(train_loss)
-        history['val_loss'].append(val_loss)
-        history['train_acc'].append(train_acc)
-        history['val_acc'].append(val_acc)
-        history['confusion_matrices'].append(cm)
-        history['sensitivity'].append(sensitivity)
-        history['specificity'].append(specificity)
-        history['roc_auc'].append(roc_auc)
+    # Update history with full loss arrays
+    history['train_loss'] = train_loss
+    history['val_loss'] = val_loss
 
-        # Display progress at intervals
-        if i == 1 or i % 10 == 0 or i == model.best_iteration_:
-            log.info(f"Epoch {i}/{model.best_iteration_}")
-            log.info(f"Train Loss: {train_loss}, Train Acc: {train_acc:.4f}")
-            log.info(f"Val Loss: {val_loss}, Val Acc: {val_acc:.4f}")
-            log.info(f"Confusion Matrix: TN={tn}, FP={fp}, FN={fn}, TP={tp}")
-            log.info(f"Precision: {precision:.4f}, Sensitivity: {sensitivity:.4f}")
-            log.info(f"Specificity: {specificity:.4f}, F1: {f1:.4f}, AUC: {roc_auc:.4f}")
-            log.info("-" * 50)
+    # Add final metrics to history
+    history['train_acc'].append(train_acc)
+    history['val_acc'].append(val_acc)
+    history['confusion_matrices'].append(cm)
+    history['sensitivity'].append(sensitivity)
+    history['specificity'].append(specificity)
+    history['roc_auc'].append(roc_auc)
 
-            # Plot confusion matrix
-            plt.figure(figsize=(8, 6))
-            disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Temperate', 'Virulent'])
-            disp.plot(cmap='Blues', values_format='d')
-            plt.title(f'Confusion Matrix - Epoch {i}')
-            plt.savefig(f"{results_dir}/confusion_matrices/confusion_matrix_epoch_{i}.png")
-            plt.close()
+    # Display final metrics
+    log.info(f"Training completed in {time.time() - start_time:.2f} seconds")
+    log.info(f"Best iteration: {model.best_iteration_}")
+    log.info(f"Train Loss: {train_loss[-1]}, Train Acc: {train_acc:.4f}")
+    log.info(f"Val Loss: {val_loss[-1]}, Val Acc: {val_acc:.4f}")
+    log.info(f"Confusion Matrix: TN={tn}, FP={fp}, FN={fn}, TP={tp}")
+    log.info(f"Precision: {precision:.4f}, Sensitivity: {sensitivity:.4f}")
+    log.info(f"Specificity: {specificity:.4f}, F1: {f1:.4f}, AUC: {roc_auc:.4f}")
 
-            # Plot ROC curve
-            plt.figure(figsize=(8, 6))
-            plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {roc_auc:.2f})')
-            plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-            plt.xlim([0.0, 1.0])
-            plt.ylim([0.0, 1.05])
-            plt.xlabel('False Positive Rate')
-            plt.ylabel('True Positive Rate')
-            plt.title(f'ROC - Epoch {i}')
-            plt.legend(loc="lower right")
-            plt.savefig(f"{results_dir}/roc_curves/roc_curve_epoch_{i}.png")
-            plt.close()
+    # Plot confusion matrix
+    plt.figure(figsize=(8, 6))
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Temperate', 'Virulent'])
+    disp.plot(cmap='Blues', values_format='d')
+    plt.title(f'Final Confusion Matrix')
+    plt.savefig(f"{results_dir}/confusion_matrices/final_confusion_matrix.png")
+    plt.close()
 
-        # Save metrics to CSV
-        with open(f"{results_dir}/metrics/metrics.csv", 'a') as f:
-            values = f"{i},{float(train_loss)},{float(val_loss)},{train_acc},{val_acc},{precision},{sensitivity},{specificity},{f1},{roc_auc},{tn},{fp},{fn},{tp}\n"
-            f.write(values)
+    # Plot ROC curve
+    plt.figure(figsize=(8, 6))
+    plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (area = {roc_auc:.2f})')
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curve')
+    plt.legend(loc="lower right")
+    plt.savefig(f"{results_dir}/roc_curves/final_roc_curve.png")
+    plt.close()
 
-    training_time = time.time() - start_time
-    log.info(f"Training completed in {training_time:.2f} seconds")
+    # Save final metrics to CSV
+    with open(f"{results_dir}/metrics/final_metrics.csv", 'w') as f:
+        values = f"{model.best_iteration_},{train_loss[-1]},{val_loss[-1]},{train_acc},{val_acc},{precision},{sensitivity},{specificity},{f1},{roc_auc},{tn},{fp},{fn},{tp}\n"
+        f.write(header)
+        f.write(values)
+
+    # Save model
+    model.save_model(f"{results_dir}/models/catboost_model.cbm")
 
     return model, history
 
@@ -442,13 +441,13 @@ def plot_training_history(history, save_dir='results'):
     plt.ylabel('Loss')
     plt.legend()
 
-    plt.subplot(2, 2, 2)
-    plt.plot(history['train_acc'], label='Train Accuracy')
-    plt.plot(history['val_acc'], label='Validation Accuracy')
-    plt.title('Accuracy')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.legend()
+    # plt.subplot(2, 2, 2)
+    # plt.plot(history['train_acc'], label='Train Accuracy')
+    # plt.plot(history['val_acc'], label='Validation Accuracy')
+    # plt.title('Accuracy')
+    # plt.xlabel('Epoch')
+    # plt.ylabel('Accuracy')
+    # plt.legend()
 
     # Plot sensitivity and specificity
     plt.subplot(2, 2, 3)
@@ -608,7 +607,7 @@ def final_evaluation(model, history, X_train, X_val, results_dir, timestamp, par
     save_model(model, path=f"{results_dir}/models/catboost_final_model.cbm")
 
     # Save final performance summary
-    final_epoch = len(history['val_acc'])
+    # final_epoch = len(history['val_acc'])
 
     # Get final confusion matrix
     final_cm = history['confusion_matrices'][-1]
@@ -638,7 +637,7 @@ def final_evaluation(model, history, X_train, X_val, results_dir, timestamp, par
             'fn': int(fn),
             'tp': int(tp)
         },
-        'epochs': final_epoch,
+        'epochs': params.get("iterations"),
         'timestamp': timestamp
     }
 
@@ -759,13 +758,13 @@ def run_experiment():
         class_weights, X_resampled, y_resampled, X_val, y_val, timestamp, results_dir = prepare(seed)
 
         params = {
-            'iterations': 10,
+            'iterations': 200,
             'learning_rate': 0.05,
             'depth': 9,
             'l2_leaf_reg': 3,
             'loss_function': 'Logloss',
             'eval_metric': 'Logloss',
-            'random_seed': 42,
+            'random_seed': seed,
             'task_type': 'GPU',
             'devices': '0',
             'bagging_temperature': 1,

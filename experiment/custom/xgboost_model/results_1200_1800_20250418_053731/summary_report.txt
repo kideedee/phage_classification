@@ -1,0 +1,39 @@
+=== XGBoost Phage Classification Summary ===
+
+Timestamp: 20250418_053731
+Training samples: 98356
+Validation samples: 30060
+Feature dimensions: 300
+
+=== Model Parameters ===
+objective: binary:logistic
+max_depth: 9
+learning_rate: 0.1
+subsample: 0.8
+colsample_bytree: 0.8
+min_child_weight: 3
+gamma: 0
+eval_metric: logloss
+device: cuda
+
+=== Final Performance ===
+Training accuracy: 0.9997
+Validation accuracy: 0.8813
+Precision: 0.9692
+Sensitivity/Recall: 0.8808
+Specificity: 0.8834
+F1 Score: 0.9229
+ROC AUC: 0.9471
+
+=== Confusion Matrix ===
+          Predicted       
+          Temp    Virulent
+Actual Temp    5146      679
+       Virulent 2889      21346
+
+=== Files Generated ===
+Training history plots: results_1200_1800_20250418_053731/metrics/training_history.png
+Feature importance: results_1200_1800_20250418_053731/metrics/feature_importance.png
+Confusion matrices: results_1200_1800_20250418_053731/confusion_matrices/
+ROC curves: results_1200_1800_20250418_053731/roc_curves/
+Final model: results_1200_1800_20250418_053731/models/xgboost_final_model.json

@@ -34,3 +34,6 @@ def setup_logger(script_path):
     log.addHandler(monitor_file_handler)
 
     return log
+
+
+log = setup_logger(inspect.getfile(inspect.currentframe()))

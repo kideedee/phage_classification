@@ -11,6 +11,7 @@ from imblearn.under_sampling import RandomUnderSampler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, roc_curve, auc
 
+from common.env_config import config
 from logger.phg_cls_log import setup_logger
 
 log = setup_logger(__file__)
@@ -728,12 +729,13 @@ def final_evaluation(model, history, X_train, X_val, results_dir, timestamp, par
     log.info(f"See summary report at {results_dir}/summary_report.txt")
 
 
-def prepare(random_seed):
+def prepare(random_seed, range_length, x_train_file, y_train_file, x_val_file, y_val_file):
     # Create timestamp for this run
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
+    length = range_length
     # Set up results directory with timestamp
-    results_dir = f"results_{timestamp}"
+    results_dir = f"results_{length}_{timestamp}"
     os.makedirs(results_dir, exist_ok=True)
     os.makedirs(f"{results_dir}/confusion_matrices", exist_ok=True)
     os.makedirs(f"{results_dir}/roc_curves", exist_ok=True)
@@ -743,10 +745,10 @@ def prepare(random_seed):
     undersampler = RandomUnderSampler(sampling_strategy='auto', random_state=random_seed)
 
     # Load data
-    X_train = np.load("../word2vec_train_vector.npy")
-    y_train = np.load("../y_train.npy")
-    X_val = np.load("../word2vec_val_vector.npy")
-    y_val = np.load("../y_val.npy")
+    X_train = np.load(x_train_file)
+    y_train = np.load(y_train_file)
+    X_val = np.load(x_val_file)
+    y_val = np.load(y_val_file)
 
     X_resampled, y_resampled = undersampler.fit_resample(X_train, y_train)
 
@@ -770,6 +772,7 @@ def prepare(random_seed):
     scale_pos_weight = calculate_scale_pos_weight(y_train)
 
     return scale_pos_weight, X_resampled, y_resampled, X_val, y_val, timestamp, results_dir
+    # return scale_pos_weight, X_train, y_train, X_val, y_val, timestamp, results_dir
 
 
 def run_fine_tuning():
@@ -784,24 +787,28 @@ def run_fine_tuning():
     final_evaluation(model, history, X_resampled, y_resampled, results_dir=results_dir, timestamp=timestamp)
 
 
-def run_experiment():
+def run_experiment(range_length, x_train_file, y_train_file, x_val_file, y_val_file):
     used_seeds = set()
-    for i in range(5):
+    for i in range(1):
         seed = random.randint(0, 100)
         if seed in used_seeds:
             i -= 1
             continue
 
         used_seeds.add(seed)
-        scale_pos_weight, X_resampled, y_resampled, X_val, y_val, timestamp, results_dir = prepare(seed)
+        scale_pos_weight, X_resampled, y_resampled, X_val, y_val, timestamp, results_dir = prepare(seed, range_length,
+                                                                                                   x_train_file,
+                                                                                                   y_train_file,
+                                                                                                   x_val_file,
+                                                                                                   y_val_file)
 
         params = {
             'objective': 'binary:logistic',
             'max_depth': 9,
             'learning_rate': 0.1,
-            'subsample': 1.0,
-            'n_estimators': 200,
-            'colsample_bytree': 1.0,
+            'subsample': 0.8,
+            'n_estimators': 1500,
+            'colsample_bytree': 0.8,
             'min_child_weight': 3,
             'gamma': 0,
             'eval_metric': 'logloss',
@@ -816,5 +823,36 @@ def run_experiment():
 
 
 if __name__ == '__main__':
-    run_experiment()
-    # run_fine_tuning()
+    for i in range(1):
+        if i == 0:
+            range_length = '100_400'
+            x_train_file = config.TRAIN_DNA_BERT_2_EMBEDDING
+            y_train_file = config.TRAIN_DNA_BERT_2_LABELS
+            x_val_file = config.VAL_DNA_BERT_2_EMBEDDING
+            y_val_file = config.VAL_DNA_BERT_2_LABELS
+            run_experiment(range_length, x_train_file, y_train_file, x_val_file, y_val_file)
+            # run_fine_tuning()
+        elif i == 1:
+            range_length = '400_800'
+            x_train_file = config.X_TRAIN_RUS_400_800
+            y_train_file = config.Y_TRAIN_RUS_400_800
+            x_val_file = config.X_VAL_RUS_400_800
+            y_val_file = config.Y_VAL_RUS_400_800
+            run_experiment(range_length, x_train_file, y_train_file, x_val_file, y_val_file)
+            # run_fine_tuning()
+        elif i == 2:
+            range_length = '800_1200'
+            x_train_file = config.X_TRAIN_RUS_800_1200
+            y_train_file = config.Y_TRAIN_RUS_800_1200
+            x_val_file = config.X_VAL_RUS_800_1200
+            y_val_file = config.Y_VAL_RUS_800_1200
+            run_experiment(range_length, x_train_file, y_train_file, x_val_file, y_val_file)
+            # run_fine_tuning()
+        else:
+            range_length = '1200_1800'
+            x_train_file = config.X_TRAIN_RUS_1200_1800
+            y_train_file = config.Y_TRAIN_RUS_1200_1800
+            x_val_file = config.X_VAL_RUS_1200_1800
+            y_val_file = config.Y_VAL_RUS_1200_1800
+            run_experiment(range_length, x_train_file, y_train_file, x_val_file, y_val_file)
+            # run_fine_tuning()

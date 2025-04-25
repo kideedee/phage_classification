@@ -197,3 +197,6 @@ cache
 *.pkl
 *.bin
 *.fasta
+
+experiment/dna_bert_2/processed_train_dataset
+experiment/dna_bert_2/processed_val_dataset

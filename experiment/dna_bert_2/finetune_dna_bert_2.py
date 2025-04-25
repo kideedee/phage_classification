@@ -57,6 +57,8 @@ def compute_metrics(pred):
 
     precision, recall, f1, _ = precision_recall_fscore_support(labels, preds, average='binary')
     acc = accuracy_score(labels, preds)
+    specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
+    sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
 
     # Safely compute ROC AUC with batching for large datasets
     try:
@@ -80,6 +82,8 @@ def compute_metrics(pred):
         'f1': f1,
         'precision': precision,
         'recall': recall,
+        'specificity': specificity,
+        'sensitivity': sensitivity,
         'roc_auc': roc_auc,
         'tn': float(tn),
         'fp': float(fp),
@@ -139,9 +143,6 @@ def main():
 
     # Configure device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    # RTX 5070 Ti specific memory settings
-    # RTX 5070 Ti (Blackwell) comprehensive optimization settings
     if torch.cuda.is_available():
         # Monitor initial GPU memory
         initial_mem = torch.cuda.memory_allocated(0) / (1024 ** 3)
@@ -154,23 +155,10 @@ def main():
         gc.collect()
         torch.cuda.empty_cache()
 
-        torch.backends.cuda.matmul.allow_tf32 = False
-        torch.backends.cudnn.allow_tf32 = False
-        # torch.set_float32_matmul_precision('highest')
-        torch.backends.cudnn.deterministic = False
-
-        # Enable Flash Attention 2.0 optimized for Blackwell architecture
-        try:
-            import flash_attn
-            log.info("Flash Attention is available and optimized for Blackwell architecture")
-
-            # Check for Blackwell-specific optimizations in CUDA version
-            cuda_version = torch.version.cuda.split('.')
-            if int(cuda_version[0]) >= 12 and int(cuda_version[1]) >= 2:
-                log.info("Using CUDA version with Blackwell optimizations")
-        except ImportError:
-            log.info(
-                "Flash Attention not available - consider installing for faster attention computation on Blackwell GPUs")
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+        torch.set_float32_matmul_precision('highest')
+        torch.backends.cudnn.deterministic = True
 
         # Log CUDA information
         log.info(f"CUDA Version: {torch.version.cuda}")
@@ -195,7 +183,7 @@ def main():
     tokenized_val = load_from_disk("processed_val_dataset")
 
     # Set format for training data
-    tokenized_train.set_format("torch", columns=["input_ids", "attention_mask", "label"])
+    # tokenized_train.set_format("torch", columns=["input_ids", "attention_mask", "label"])
 
     # Load model
     log.info("Loading model...")
@@ -203,7 +191,9 @@ def main():
         "zhihan1996/DNABERT-2-117M",
         num_labels=2,
         trust_remote_code=True,
-        ignore_mismatched_sizes=True
+        ignore_mismatched_sizes=True,
+        classifier_dropout=0.2,  # Try different dropout rates
+        problem_type="single_label_classification"
     ).to(device)
 
     # Optimize model for RTX 3070 Ti memory constraints
@@ -234,41 +224,56 @@ def main():
     log.info(f"Memory saving: {(1 - trainable_after / trainable_before) * 100:.1f}%")
     log.info("Frozen embeddings and first 6 encoder layers")
 
-    # Training arguments optimized for RTX 3070 Ti
-    output_dir = f"./dnabert2_phage_classifier_{datetime.now().strftime('%Y%m%d_%H%M')}"
     training_args = TrainingArguments(
-        output_dir=output_dir,
-        learning_rate=3e-5,
-        per_device_train_batch_size=2,
-        per_device_eval_batch_size=1,
-        num_train_epochs=5,
+        output_dir="output",
+        # Learning rate and optimization
+        learning_rate=5e-5,
         weight_decay=0.01,
-        # evaluation_strategy="steps",
-        # eval_steps=5,  # Less frequent evaluation to speed up training
-        # save_strategy="steps",
-        # save_steps=200,
+        max_grad_norm=1.0,
+
+        # Modern optimizer settings
+        optim="adamw_torch_fused",  # Optimized for CUDA
+
+        # Batch size and epochs
+        per_device_train_batch_size=8,  # Increased for RTX 5070 Ti
+        per_device_eval_batch_size=8,
+        gradient_accumulation_steps=2,  # Accumulate for effective larger batch
+        num_train_epochs=5,
+
+        # Precision settings - modern approach
+        bf16=True,  # Better than fp16 on RTX 5070 Ti if supported
+        fp16=False,  # Use either bf16 OR fp16, not both
+
+        # Memory optimization
+        gradient_checkpointing=True,  # Trades compute for memory savings
+
+        # Evaluation and saving
         evaluation_strategy="epoch",
         save_strategy="epoch",
-        save_total_limit=1,  # Keep only best model to save disk space
+        save_total_limit=2,  # Keep best and last
         load_best_model_at_end=True,
-        metric_for_best_model="precision",
-        push_to_hub=False,
-        logging_dir=config.LOG_DIR,
-        # Enable mixed precision training - very effective on RTX 30 series
-        fp16=False,  # Use FP16 for faster training on RTX 3070 Ti
-        fp16_opt_level="O1",  # Conservative mixed precision setting
-        gradient_accumulation_steps=256,
-        logging_steps=50,
-        # Use 2 workers for data loading - RTX 3070 Ti systems typically have enough CPU
-        dataloader_num_workers=0,
-        max_grad_norm=1.0,
-        optim="adamw_torch_fused",
-        # Faster optimizer operations
-        adam_beta1=0.9,
-        adam_beta2=0.999,
-        adam_epsilon=1e-8,
-        # Slightly warm up learning rate
+        metric_for_best_model="f1",  # Assuming classification task
+        greater_is_better=True,
+
+        # Warmup and scheduling
+        lr_scheduler_type="cosine",  # Better convergence
         warmup_ratio=0.1,
+
+        # System utilization
+        dataloader_num_workers=6,  # Better CPU utilization
+        dataloader_pin_memory=True,  # Faster data transfer to GPU
+
+        # Logging
+        logging_dir="logs",
+        logging_steps=200,
+        logging_first_step=True,
+        report_to=None,
+
+        # DeepSpeed optional integration
+        # deepspeed="ds_config.json",    # Uncomment and create config if needed
+
+        # Hub settings
+        push_to_hub=False,
     )
 
     # Create our custom trainer with memory efficiency features
@@ -282,7 +287,7 @@ def main():
     )
 
     # Set format for validation data
-    tokenized_val.set_format("torch", columns=["input_ids", "attention_mask", "label"])
+    # tokenized_val.set_format("torch", columns=["input_ids", "attention_mask", "label"])
 
     # Apply training optimizations specific to RTX 3070 Ti
     log.info("Starting training with RTX 5070 Ti optimizations...")
@@ -305,12 +310,6 @@ def main():
     log.info("Evaluating on validation set...")
     eval_results = trainer.evaluate()
     log.info(f"Validation results: {eval_results}")
-
-    # Evaluate on test set
-    # tokenized_test.set_format("torch", columns=["input_ids", "attention_mask", "label"])
-    # log.info("Evaluating on test set...")
-    # test_results = trainer.evaluate(tokenized_test)
-    # log.info(f"Test results: {test_results}")
 
     # Save model - use half precision to reduce file size
     log.info("Saving model in optimized format...")
