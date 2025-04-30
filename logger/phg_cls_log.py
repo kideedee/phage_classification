@@ -6,13 +6,13 @@ import inspect
 
 from common.env_config import config
 
-def setup_logger(script_path):
+def setup_logger(script_path, log_level=logging.INFO):
     current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
     script_name = os.path.basename(script_path).split('.')[0]
 
     # Logger cho thông tin chung
     logging.basicConfig(
-        level=logging.INFO,
+        level=log_level,
         format='%(asctime)s - %(levelname)s - %(message)s',
         handlers=[
             logging.StreamHandler()  # Console handler
@@ -22,7 +22,7 @@ def setup_logger(script_path):
 
     # Logger riêng cho monitoring
     log = logging.getLogger('monitor')
-    log.setLevel(logging.INFO)
+    log.setLevel(log_level)
 
     # File handler
     log_dir = os.path.join(config.LOG_DIR, script_name)

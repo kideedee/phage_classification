@@ -1,8 +1,9 @@
-import pandas as pd
-import numpy as np
-from functools import partial
-import logging
 import traceback
+from functools import partial
+
+import numpy as np
+import pandas as pd
+from joblib import Parallel, delayed
 
 from logger.phg_cls_log import setup_logger
 
@@ -225,7 +226,6 @@ def window_sequences_parallel(df, distribution_type="normal",
     Returns:
     - DataFrame with windowed sequences and their corresponding targets
     """
-    from joblib import Parallel, delayed
 
     # Preprocess DataFrame
     df = preprocess_dataframe(df)
@@ -234,7 +234,8 @@ def window_sequences_parallel(df, distribution_type="normal",
         log.warning("No valid rows to process after preprocessing")
         return pd.DataFrame()
 
-    log.info(f"Starting parallel processing of {len(df)} sequences with {n_jobs} jobs")
+    log.info(
+        f"Starting parallel processing of {len(df)} sequences with {n_jobs} jobs, min_size: {min_size}, max_size: {max_size}, step_size: {step_size}, overlap_percent: {overlap_percent}")
 
     # Process in parallel with row index included
     results = Parallel(n_jobs=n_jobs, verbose=10)(
@@ -250,7 +251,15 @@ def window_sequences_parallel(df, distribution_type="normal",
     )
 
     # Flatten the list of lists, filtering out empty lists from failed rows
-    all_windows = [window for windows in results if windows for window in windows]
+    # all_windows = [window for windows in results if windows for window in windows]
+    all_windows = []
+    for windows in results:
+        if windows:  # Checks if 'windows' is truthy (not empty, not None, etc.)
+            for window in windows:
+                if window:  # Checks if each 'window' is truthy
+                    log.debug(f"Generating window sequence, window_length: {window['window_size']}")
+                    all_windows.append(window)
+
 
     log.info(f"Generated {len(all_windows)} windows from {len(df)} sequences")
 

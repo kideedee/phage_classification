@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import List, Tuple, Dict, Literal
 
@@ -6,6 +7,7 @@ import pandas as pd
 import torch
 from Bio.Seq import Seq
 from gensim.models import Word2Vec
+from imblearn.under_sampling import RandomUnderSampler
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from torch.utils.data import Dataset
 from tqdm import tqdm
@@ -22,7 +24,7 @@ from common.csv_sequence_windowing import window_sequences_parallel
 from common.env_config import config
 from logger.phg_cls_log import setup_logger
 
-log = setup_logger(__file__)
+log = setup_logger(__file__, logging.DEBUG)
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
@@ -171,7 +173,6 @@ class DNASequenceProcessor:
             dna_bert_model_name: str = "zhihan1996/DNA_bert_6",
             dna_bert_pooling: Literal["cls", "mean"] = "cls",
             dna_bert_batch_size: int = 32,
-            output_dir: str = ".",
             retrain_word2vec: bool = False,
             is_fine_tune_dna_bert: bool = False,
             fine_tune_epochs: int = 3,
@@ -209,7 +210,6 @@ class DNASequenceProcessor:
         self.dna_bert_model_name = dna_bert_model_name
         self.dna_bert_pooling = dna_bert_pooling
         self.dna_bert_batch_size = dna_bert_batch_size
-        self.output_dir = output_dir
         self.retrain_word2vec = retrain_word2vec
         self.is_fine_tune_dna_bert = is_fine_tune_dna_bert
         self.fine_tune_epochs = fine_tune_epochs
@@ -220,6 +220,17 @@ class DNASequenceProcessor:
         self.word2vec_model = None
         self.dna_bert_tokenizer = None
         self.dna_bert_model = None
+
+        if encoding_method == "one_hot":
+            self.output_dir = os.path.join(config.MY_DATA_DIR, f"one_hot/{min_size}_{max_size}")
+        elif encoding_method == "word2vec":
+            self.output_dir = os.path.join(config.MY_DATA_DIR, f"word2vec/{min_size}_{max_size}")
+        elif encoding_method == "dna_bert":
+            self.output_dir = os.path.join(config.MY_DATA_DIR, f"dna_bert/{min_size}_{max_size}")
+        elif encoding_method == "dna_bert_2":
+            self.output_dir = os.path.join(config.MY_DATA_DIR, f"dna_bert_2/{min_size}_{max_size}")
+        else:
+            raise NotImplementedError
 
         # Validate parameters
         self._validate_parameters()
@@ -413,8 +424,7 @@ class DNASequenceProcessor:
 
         return X_train_encoded, X_val_encoded
 
-    def encode_sequences_with_one_hot(self, X_train: np.ndarray, X_val: np.ndarray, y_train: np.ndarray = None,
-                                      y_val: np.ndarray = None) -> Tuple[np.ndarray, np.ndarray]:
+    def encode_sequences_with_one_hot(self, X_train: np.ndarray, X_val: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Mã hóa chuỗi DNA sử dụng phương pháp one-hot encoding từ DeePhage.
         """
@@ -1120,7 +1130,7 @@ class DNASequenceProcessor:
 
                 log.info("Fine-tuning DNA-BERT model...")
                 fine_tuned_model_dir = self.fine_tune_dna_bert(
-                    max_length=1800,
+                    max_length=self.max_size,
                     X_train=X_train,
                     y_train=y_train,
                     X_val=X_val,
@@ -1166,7 +1176,7 @@ class DNASequenceProcessor:
             X_val_vectors = self.convert_sequences_to_dna_bert_2_vectors(sequences=X_val, max_length=self.max_size)
         elif self.encoding_method == "one_hot":
             # Sử dụng one-hot encoding từ DeePhage
-            return self.encode_sequences_with_one_hot(X_train, X_val, y_train, y_val)
+            return self.encode_sequences_with_one_hot(X_train, X_val)
         else:
             raise ValueError(f"Unknown encoding method: {self.encoding_method}")
 
@@ -1200,35 +1210,35 @@ class DNASequenceProcessor:
         # Step 1: Load and clean data
         log.info("Step 1: Loading and cleaning data from %s and %s", train_path, val_path)
         train_df, val_df = self.load_and_clean_data(train_path, val_path)
+        train_df = train_df.sample(100)
+        val_df = val_df.sample(10)
 
         # Step 2: Apply windowing and extract features
         log.info("Step 2: Applying sequence windowing with %s%% overlap", self.overlap_percent)
-        X_train, y_train, X_val, y_val = self.window_and_extract_features(train_df, val_df)
+        x_train, y_train, x_val, y_val = self.window_and_extract_features(train_df, val_df)
 
         # Step 3: Apply data augmentation
         log.info("Step 3: Applying reverse complement augmentation")
-        X_train_aug, y_train_aug = self.reverse_complement_augmentation(X_train, y_train)
-        del X_train, y_train  # Free memory
-
-        # train_indices = np.random.choice(len(X_train_aug), 10000, replace=False)
-        # X_train_aug = X_train_aug[train_indices]
-        # y_train_aug = y_train_aug[train_indices]
-        # val_indices = np.random.choice(len(X_val), 1000, replace=False)
-        # X_val = X_val[val_indices]
-        # y_val = y_val[val_indices]
-
+        X_train_aug, y_train_aug = self.reverse_complement_augmentation(x_train, y_train)
         log.info("Number of phage sequences in training set after augmentation: %s", len(X_train_aug))
 
-        # Step 4 & 5: Encode sequences with optional fine-tuning
-        log.info("Step 4: Encoding sequences using %s method", self.encoding_method)
+        # Step 4: Apply random under-sampling
+        log.info("Step 4: Apply random under-sampling")
+        under_sampler = RandomUnderSampler(sampling_strategy='auto', random_state=42)
+        index_array = np.arange(len(X_train_aug)).reshape(-1, 1)
+        index_resampled, y_train_resampled = under_sampler.fit_resample(index_array, y_train_aug)
+        X_train_resampled = np.array([X_train_aug[i[0]] for i in index_resampled])
+
+        # Step 5: Encode sequences with optional fine-tuning
+        log.info("Step 5: Encoding sequences using %s method", self.encoding_method)
         # Pass labels for fine-tuning
         X_train_vectors, X_val_vectors = self.encode_sequences(
-            X_train_aug, X_val, y_train_aug, y_val
+            X_train_resampled, x_val, y_train_resampled, y_val
         )
 
         # Step 6: Print shape information
         log.info("X_train_vectors shape: %s", X_train_vectors.shape)
-        log.info("y_train shape: %s", y_train_aug.shape)
+        log.info("y_train_resampled shape: %s", y_train_resampled.shape)
         log.info("X_val_vectors shape: %s", X_val_vectors.shape)
         log.info("y_val shape: %s", y_val.shape)
 
@@ -1236,7 +1246,7 @@ class DNASequenceProcessor:
         if self.encoding_method == "word2vec":
             output_prefix = "word2vec"
         elif self.encoding_method == "one_hot":
-            output_prefix = "one_hot"
+            output_prefix = f"one_hot_{self.min_size}_{self.max_size}"
         elif self.encoding_method == "dna_bert":
             output_prefix = f"dna_bert_{self.kmer_size}_{self.dna_bert_pooling}"
             # Add fine-tuned to prefix if model was fine-tuned
@@ -1252,7 +1262,7 @@ class DNASequenceProcessor:
         log.info("Step 7: Saving processed data to %s", self.output_dir)
         processed_data = {
             f"{output_prefix}_train_vector.npy": X_train_vectors,
-            "y_train.npy": y_train_aug,
+            "y_train.npy": y_train_resampled,
             f"{output_prefix}_val_vector.npy": X_val_vectors,
             "y_val.npy": y_val
         }
@@ -1266,11 +1276,11 @@ class DNASequenceProcessor:
 # Example usage
 if __name__ == '__main__':
     # Example with Word2Vec encoding
-    length = "100_400"
-    min_length = 100
-    max_length = 400
-    output_model = f"phage_word2vec_model_{length}.bin"
-    output_dir = f"word2vec_output_{length}"
+    # length = "100_400"
+    # min_length = 1200
+    # max_length = 1800
+    # output_model = f"phage_word2vec_model_{length}.bin"
+    # output_dir = f"word2vec_output_{length}"
 
     # word2vec_processor = DNASequenceProcessor(
     #     encoding_method="word2vec",
@@ -1334,10 +1344,9 @@ if __name__ == '__main__':
     # Khởi tạo với one-hot encoding
     processor = DNASequenceProcessor(
         encoding_method="one_hot",
-        min_size=400,
-        max_size=800,
-        overlap_percent=30,
-        output_dir="one_hot_output_400_800"
+        min_size=1200,
+        max_size=1800,
+        overlap_percent=30
     )
 
     # Xử lý dữ liệu với one-hot encoding

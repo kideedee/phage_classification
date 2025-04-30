@@ -19,9 +19,11 @@ def get_project_root():
 # Configuration
 class Config:
     DATA_DIR = os.path.join(get_project_root(), os.getenv("DATA_DIR"))
+    MY_DATA_DIR = os.path.join(DATA_DIR, "my_data")
     CACHE_FOLDER = os.path.join(get_project_root(), os.getenv("CACHE_FOLDER", "cache"))
     TEMP_FOLDER = os.path.join(get_project_root(), os.getenv("TEMP_FOLDER", "temp"))
     LOG_DIR = os.path.join(get_project_root(), os.getenv("LOG_DIR", "logs"))
+    RESULT_DIR = os.path.join(get_project_root(), os.getenv("RESULT_DIR", "result"))
 
     GEN_BANK_DIR = os.path.join(DATA_DIR, "gen_bank")
     CUSTOM_DATA_DIR = os.path.join(DATA_DIR, "custom")
