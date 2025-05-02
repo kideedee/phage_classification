@@ -9,16 +9,15 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.metrics import confusion_matrix
 from torch.amp import GradScaler, autocast
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm.auto import tqdm
 
+from common import common_log
 from common.env_config import config
-from logger.phg_cls_log import setup_logger
-
-log = setup_logger(__file__)
+from logger.phg_cls_log import log
 
 
 def classification_report_csv(report, path_save, c):
@@ -283,6 +282,7 @@ def eval_step(model, test_loader, criterion, device):
     val_running_acc = 0.0
     val_preds = []
     val_labels = []
+    val_scores = []  # Add this to collect raw probabilities
 
     # Use tqdm for progress bar
     val_loop = tqdm(test_loader, desc=f"[Val]", leave=False)
@@ -298,6 +298,7 @@ def eval_step(model, test_loader, criterion, device):
 
             # Collect predictions and labels for metrics
             score = torch.sigmoid(outputs)
+            val_scores.extend(score.cpu().detach().numpy())  # Add this line
             preds = (score > 0.5).float().cpu().detach().numpy()
             val_preds.extend(preds)
             val_labels.extend(labels.cpu().numpy())
@@ -314,13 +315,17 @@ def eval_step(model, test_loader, criterion, device):
     # Calculate sensitivity and specificity for validation data
     val_metrics = calculate_metrics(np.array(val_labels), np.array(val_preds))
 
+    # Calculate ROC AUC score
+    val_auc = roc_auc_score(np.array(val_labels), np.array(val_scores))
+
     return {
         'loss': val_loss,
         'acc': val_acc,
         'sensitivity': val_metrics['sensitivity'],
         'specificity': val_metrics['specificity'],
         'preds': val_preds,
-        'labels': val_labels
+        'labels': val_labels,
+        'auc': val_auc  # Add AUC to the return dictionary
     }
 
 
@@ -370,18 +375,20 @@ def start_executing(device, model, train_loader, test_loader, num_epochs, optimi
         val_acc = val_results['acc']
         val_sensitivity = val_results['sensitivity']
         val_specificity = val_results['specificity']
+        val_auc = val_results['auc']  # Get AUC value
 
         # Update epoch statistics
         history.update_epoch(
             train_loss, train_acc, val_loss, val_acc,
             train_sensitivity, train_specificity,
-            val_sensitivity, val_specificity
+            val_sensitivity, val_specificity,
+            val_auc  # Add AUC to the history update
         )
 
-        # Print epoch summary
+        # Print epoch summary with AUC
         log.info(f'{epoch_desc} - '
                  f'Train: Loss={train_loss:.4f}, Acc={train_acc:.4f}, Sens={train_sensitivity:.4f}, Spec={train_specificity:.4f} | '
-                 f'Val: Loss={val_loss:.4f}, Acc={val_acc:.4f}, Sens={val_sensitivity:.4f}, Spec={val_specificity:.4f}')
+                 f'Val: Loss={val_loss:.4f}, Acc={val_acc:.4f}, Sens={val_sensitivity:.4f}, Spec={val_specificity:.4f}, AUC={val_auc:.4f}')
 
         # Save best model (optional) - only if training
         if is_training and epoch > 0 and val_acc > max(history.val_acc['epoch'][:-1]):
@@ -391,13 +398,12 @@ def start_executing(device, model, train_loader, test_loader, num_epochs, optimi
     return history
 
 
-def last_evaluation(device, model, train_loader, test_loader, path_save, predict_save_path, model_save_path):
+def last_evaluation(device, model, test_loader, path_save, predict_save_path, model_save_path):
     # Final evaluation
     model.eval()
     all_predictions = []
     all_true_labels = []
-    all_train_predictions = []
-    all_train_true_labels = []
+    all_scores = []  # Add this line to collect raw probabilities
 
     log.info("Performing final evaluation...")
     with torch.no_grad():
@@ -406,22 +412,25 @@ def last_evaluation(device, model, train_loader, test_loader, path_save, predict
         for inputs, labels in test_loop:
             inputs, labels = inputs.to(device), labels.to(device)
             outputs = model(inputs)
+            scores = torch.sigmoid(outputs)  # Get raw probabilities
+            all_scores.append(scores.cpu().numpy())  # Store raw probabilities
             all_predictions.append(outputs.cpu().numpy())
             all_true_labels.append(labels.cpu().numpy())
 
         # Train predictions
-        train_loop = tqdm(train_loader, desc="Evaluating train data")
-        for inputs, labels in train_loop:
-            inputs, labels = inputs.to(device), labels.to(device)
-            outputs = model(inputs)
-            all_train_predictions.append(outputs.cpu().numpy())
-            all_train_true_labels.append(labels.cpu().numpy())
+        # train_loop = tqdm(train_loader, desc="Evaluating train data")
+        # for inputs, labels in train_loop:
+        #     inputs, labels = inputs.to(device), labels.to(device)
+        #     outputs = model(inputs)
+        #     scores = torch.sigmoid(outputs)  # Get raw probabilities
+        #     all_train_scores.append(scores.cpu().numpy())  # Store raw probabilities
+        #     all_train_predictions.append(outputs.cpu().numpy())
+        #     all_train_true_labels.append(labels.cpu().numpy())
 
     # Concatenate predictions and true labels
     predict = np.concatenate(all_predictions).reshape(-1)
     true_labels = np.concatenate(all_true_labels).reshape(-1)
-    predict_train = np.concatenate(all_train_predictions).reshape(-1)
-    true_train_labels = np.concatenate(all_train_true_labels).reshape(-1)
+    scores = np.concatenate(all_scores).reshape(-1)  # Raw probabilities for AUC
 
     # Save predictions
     np.savetxt(predict_save_path, predict)
@@ -432,11 +441,12 @@ def last_evaluation(device, model, train_loader, test_loader, path_save, predict
 
     # Generate binary predictions
     predict_binary = (predict > 0.5).astype(int)
-    predict_train_binary = (predict_train > 0.5).astype(int)
 
     # Calculate final metrics
     test_metrics = calculate_metrics(true_labels, predict_binary)
-    train_metrics = calculate_metrics(true_train_labels, predict_train_binary)
+
+    # Calculate ROC AUC
+    test_auc = roc_auc_score(true_labels, scores)
 
     # Print detailed metrics
     log.info("\nFinal Test Metrics:")
@@ -445,13 +455,7 @@ def last_evaluation(device, model, train_loader, test_loader, path_save, predict
     log.info(f"Specificity: {test_metrics['specificity']:.4f}")
     log.info(f"Precision: {test_metrics['precision']:.4f}")
     log.info(f"F1 Score: {test_metrics['f1_score']:.4f}")
-
-    log.info("\nFinal Train Metrics:")
-    log.info(f"Accuracy: {train_metrics['accuracy']:.4f}")
-    log.info(f"Sensitivity: {train_metrics['sensitivity']:.4f}")
-    log.info(f"Specificity: {train_metrics['specificity']:.4f}")
-    log.info(f"Precision: {train_metrics['precision']:.4f}")
-    log.info(f"F1 Score: {train_metrics['f1_score']:.4f}")
+    log.info(f"ROC AUC: {test_auc:.4f}")  # Add ROC AUC to output
 
     # Generate classification reports
     report_test = classification_report(true_labels, predict_binary, output_dict=False)
@@ -460,35 +464,32 @@ def last_evaluation(device, model, train_loader, test_loader, path_save, predict
     report_dic_test = classification_report_csv(report_test, path_save, 0)
     temp_acc, viru_acc = report_dic_test[0].get('recall'), report_dic_test[1].get('recall')
 
-    report_train = classification_report(true_train_labels, predict_train_binary, output_dict=False)
-    log.info('\nDetailed Train Classification Report:')
-    log.info(report_train)
-    report_dic_train = classification_report_csv(report_train, path_save, 1)
-    train_temp_acc, train_viru_acc = report_dic_train[0].get('recall'), report_dic_train[1].get('recall')
-
     # Create confusion matrix
     test_cm = confusion_matrix(true_labels, predict_binary)
-    train_cm = confusion_matrix(true_train_labels, predict_train_binary)
 
     log.info("\nTest Confusion Matrix:")
     log.info(test_cm)
-    log.info("\nTrain Confusion Matrix:")
-    log.info(train_cm)
 
     # Save confusion matrices to CSV
     pd.DataFrame(test_cm).to_csv(os.path.join(path_save, "test_confusion_matrix.csv"))
-    pd.DataFrame(train_cm).to_csv(os.path.join(path_save, "train_confusion_matrix.csv"))
 
-    # Save additional metrics to CSV
+    # Save additional metrics to CSV including ROC AUC
     metrics_df = pd.DataFrame({
-        'dataset': ['test', 'train'],
-        'accuracy': [test_metrics['accuracy'], train_metrics['accuracy']],
-        'sensitivity': [test_metrics['sensitivity'], train_metrics['sensitivity']],
-        'specificity': [test_metrics['specificity'], train_metrics['specificity']],
-        'precision': [test_metrics['precision'], train_metrics['precision']],
-        'f1_score': [test_metrics['f1_score'], train_metrics['f1_score']]
+        'dataset': ['test'],
+        'accuracy': [test_metrics['accuracy']],
+        'sensitivity': [test_metrics['sensitivity']],
+        'specificity': [test_metrics['specificity']],
+        'precision': [test_metrics['precision']],
+        'f1_score': [test_metrics['f1_score']],
+        'roc_auc': [test_auc]  # Add ROC AUC to metrics dataframe
     })
     metrics_df.to_csv(os.path.join(path_save, "additional_metrics.csv"), index=False)
+
+    # # Also save the raw probabilities for later ROC curve plotting
+    # np.savetxt(os.path.join(path_save, "test_probabilities.csv"), scores)
+    # np.savetxt(os.path.join(path_save, "test_true_labels.csv"), true_labels)
+    # np.savetxt(os.path.join(path_save, "train_probabilities.csv"), train_scores)
+    # np.savetxt(os.path.join(path_save, "train_true_labels.csv"), true_train_labels)
 
 
 def run(device):
@@ -497,7 +498,7 @@ def run(device):
     group = f"{min_length}_{max_length}"
     lr_rate = 0.0001
     b_size = 32
-    num_epochs = 5
+    num_epochs = 100
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     data_dir = os.path.join(config.MY_DATA_DIR, f"one_hot/{group}")
 
@@ -576,7 +577,7 @@ def run(device):
         start_executing(device, model, train_loader, test_loader, 1, optimizer, criterion, scaler,
                         model_save_path, history, is_training=False)
 
-        last_evaluation(device, model, train_loader, test_loader, path_save, predict_save_path, model_save_path)
+        last_evaluation(device, model, test_loader, path_save, predict_save_path, model_save_path)
 
         # Plot and save results
         history.history_plot('epoch', path_save, max_length, lr_rate, b_size)
@@ -585,6 +586,7 @@ def run(device):
 
 
 if __name__ == "__main__":
+    common_log.start_experiment(experiment_name=__file__, timestamp=time.strftime("%Y%m%d-%H%M%S"))
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Check GPU availability (since you have RTX 5070Ti)

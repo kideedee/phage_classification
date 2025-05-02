@@ -5,9 +5,7 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 
-from logger.phg_cls_log import setup_logger
-
-log = setup_logger(__file__)
+from logger.phg_cls_log import log
 
 
 def generate_windows_for_sequence(sequence, target, seq_id, distribution_type="normal",
@@ -259,7 +257,6 @@ def window_sequences_parallel(df, distribution_type="normal",
                 if window:  # Checks if each 'window' is truthy
                     log.debug(f"Generating window sequence, window_length: {window['window_size']}")
                     all_windows.append(window)
-
 
     log.info(f"Generated {len(all_windows)} windows from {len(df)} sequences")
 

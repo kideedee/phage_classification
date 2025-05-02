@@ -1,3 +1,4 @@
+import datetime
 import gc
 import os
 
@@ -13,10 +14,9 @@ from torch.amp import GradScaler, autocast
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm.auto import tqdm
 
+from common import common_log
 from common.env_config import config
-from logger.phg_cls_log import setup_logger
-
-log = setup_logger(__file__)
+from logger.phg_cls_log import log
 
 
 def classification_report_csv(report, path_save, c):
@@ -377,7 +377,7 @@ def run(device):
                     val_running_acc += acc
 
                     # Update progress bar
-                    val_loop.set_postfix(loss=val_running_loss , acc=acc)
+                    val_loop.set_postfix(loss=val_running_loss, acc=acc)
 
             val_loss = val_running_loss / len(test_loader)
             val_acc = val_running_acc / len(test_loader)
@@ -510,6 +510,7 @@ def run(device):
 
 
 if __name__ == "__main__":
+    common_log.start_experiment(experiment_name="deephage", timestamp=datetime.now().strftime("%Y%m%d-%H%M%S"))
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Check GPU availability (since you have RTX 5070Ti)

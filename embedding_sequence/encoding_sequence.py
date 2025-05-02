@@ -1,4 +1,3 @@
-import logging
 import os
 from typing import List, Tuple, Dict, Literal
 
@@ -22,9 +21,7 @@ from transformers import (
 
 from common.csv_sequence_windowing import window_sequences_parallel
 from common.env_config import config
-from logger.phg_cls_log import setup_logger
-
-log = setup_logger(__file__, logging.DEBUG)
+from logger.phg_cls_log import log
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
@@ -1210,8 +1207,8 @@ class DNASequenceProcessor:
         # Step 1: Load and clean data
         log.info("Step 1: Loading and cleaning data from %s and %s", train_path, val_path)
         train_df, val_df = self.load_and_clean_data(train_path, val_path)
-        train_df = train_df.sample(100)
-        val_df = val_df.sample(10)
+        # train_df = train_df.sample(100)
+        # val_df = val_df.sample(10)
 
         # Step 2: Apply windowing and extract features
         log.info("Step 2: Applying sequence windowing with %s%% overlap", self.overlap_percent)
