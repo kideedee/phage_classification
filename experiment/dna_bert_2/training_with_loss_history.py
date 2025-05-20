@@ -327,8 +327,8 @@ def main():
 
     # Load datasets
     print("Loading datasets...")
-    tokenized_train = load_from_disk("processed_train_dataset")
-    tokenized_val = load_from_disk("processed_val_dataset")
+    tokenized_train = load_from_disk("prepared_dataset/processed_train_dataset")
+    tokenized_val = load_from_disk("prepared_dataset/processed_val_dataset")
 
     # Load model
     print("Loading model...")

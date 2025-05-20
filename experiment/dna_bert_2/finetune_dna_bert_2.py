@@ -1,7 +1,7 @@
 import gc
 import os
 import random
-from datetime import datetime
+import time
 
 import numpy as np
 import torch
@@ -14,7 +14,7 @@ from transformers import (
     EarlyStoppingCallback
 )
 
-from common.env_config import config
+from common import utils
 from logger.phg_cls_log import log
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
@@ -138,6 +138,11 @@ class MemoryEfficientTrainer(Trainer):
 
 
 def main():
+    fold = 5
+    output_dir = f"prepared_dataset/{fold}"
+    output_model = os.path.join(output_dir, f"finetune_dna_bert.pt")
+    utils.start_experiment(f"finetune_dna_bert_2_fold_{fold}", time.time())
+
     # Set seed for reproducibility
     set_seed()
 
@@ -179,8 +184,8 @@ def main():
 
     # Load datasets
     log.info("Loading datasets...")
-    tokenized_train = load_from_disk("processed_train_dataset")
-    tokenized_val = load_from_disk("processed_val_dataset")
+    tokenized_train = load_from_disk(os.path.join(output_dir, "processed_train_dataset"))
+    tokenized_val = load_from_disk(os.path.join(output_dir, "processed_val_dataset"))
 
     # Set format for training data
     # tokenized_train.set_format("torch", columns=["input_ids", "attention_mask", "label"])
@@ -235,8 +240,8 @@ def main():
         optim="adamw_torch_fused",  # Optimized for CUDA
 
         # Batch size and epochs
-        per_device_train_batch_size=8,  # Increased for RTX 5070 Ti
-        per_device_eval_batch_size=8,
+        per_device_train_batch_size=32,  # Increased for RTX 5070 Ti
+        per_device_eval_batch_size=32,
         gradient_accumulation_steps=2,  # Accumulate for effective larger batch
         num_train_epochs=5,
 
@@ -298,7 +303,7 @@ def main():
         log.info(f"GPU memory before training: {before_train_mem:.2f} GB")
 
     # Train model
-    trainer.train()
+    # trainer.train()
 
     # Free up memory before evaluation
     if torch.cuda.is_available():
@@ -315,8 +320,9 @@ def main():
     log.info("Saving model in optimized format...")
 
     # Save model
-    model_save_path = "./best_dnabert2_phage_classifier"
-    trainer.save_model(model_save_path)
+    # model_save_path = "./best_dnabert2_phage_classifier"
+    # trainer.save_model(model_save_path)
+    model.save_pretrained(output_model)
 
     # Log final statistics
     if torch.cuda.is_available():

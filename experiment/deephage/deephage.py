@@ -3,6 +3,7 @@ import os
 import time
 from collections import Counter
 
+import h5py
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -11,11 +12,13 @@ import torch.nn as nn
 import torch.optim as optim
 from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.metrics import confusion_matrix
-from torch.amp import GradScaler, autocast
+from torch import autocast, GradScaler
+from torch.optim.lr_scheduler import OneCycleLR, ReduceLROnPlateau
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm.auto import tqdm
 
-from common import common_log
+from common import utils
+from common.early_stopping import EarlyStopping
 from common.env_config import config
 from logger.phg_cls_log import log
 
@@ -131,6 +134,7 @@ class TrainingHistory:
         self.train_acc = {'batch': [], 'epoch': []}
         self.val_loss = {'batch': [], 'epoch': []}
         self.val_acc = {'batch': [], 'epoch': []}
+        self.lr_rates = {'batch': [], 'epoch': []}
         self.val_auc = {'epoch': []}
         self.sensitivity = {'epoch': []}
         self.specificity = {'epoch': []}
@@ -200,6 +204,14 @@ class TrainingHistory:
         plt.ylabel('AUC')
         plt.legend()
 
+        # plt.subplot(2, 3, 5)  # Add a 5th subplot for learning rate
+        # plt.plot(self.lr_rates['epoch'], 'g-', label='Learning Rate')
+        # plt.title('Learning Rate')
+        # plt.xlabel('Epoch')
+        # plt.ylabel('Learning Rate')
+        # plt.yscale('log')  # Use log scale for better visualization
+        # plt.legend()
+
         plt.tight_layout()
         plt.savefig(os.path.join(path_save, f"{max_length}_{lr_rate}_{b_size}.png"))
         plt.show()
@@ -215,16 +227,17 @@ def binary_accuracy(y_pred, y_true):
     return acc.item()
 
 
-def train_step(model, train_loader, optimizer, criterion, scaler, device):
+def train_step(model, train_loader, optimizer, criterion, scaler, scheduler, device):
     """Perform one training epoch step"""
     model.train()
     running_loss = 0.0
     running_acc = 0.0
     train_preds = []
     train_labels = []
+    current_lr = optimizer.param_groups[0]['lr']  # Track current learning rate
 
     # Use tqdm for progress bar
-    train_loop = tqdm(train_loader, desc=f"[Train]", leave=False)
+    train_loop = tqdm(train_loader, desc=f"[Train] LR={current_lr:.6f}", leave=False)
     for inputs, labels in train_loop:
         inputs = inputs.to(device)
         labels = labels.view(-1, 1).to(device)
@@ -241,6 +254,19 @@ def train_step(model, train_loader, optimizer, criterion, scaler, device):
         scaler.scale(loss).backward()
         scaler.step(optimizer)
         scaler.update()
+
+        # Step the scheduler if it's a batch-based scheduler like OneCycleLR
+        if scheduler is not None and isinstance(scheduler, OneCycleLR):
+            scheduler.step()
+            current_lr = optimizer.param_groups[0]['lr']  # Update current LR
+
+        # # Forward pass (không sử dụng autocast)
+        # outputs = model(inputs)
+        # loss = criterion(outputs, labels)
+        #
+        # # Backward pass and optimize (không sử dụng scaler)
+        # loss.backward()
+        # optimizer.step()
 
         # Calculate accuracy
         acc = binary_accuracy(outputs, labels)
@@ -271,7 +297,8 @@ def train_step(model, train_loader, optimizer, criterion, scaler, device):
         'sensitivity': train_metrics['sensitivity'],
         'specificity': train_metrics['specificity'],
         'preds': train_preds,
-        'labels': train_labels
+        'labels': train_labels,
+        'lr': current_lr
     }
 
 
@@ -331,6 +358,8 @@ def eval_step(model, test_loader, criterion, device):
 
 def start_executing(device, model, train_loader, test_loader, num_epochs, optimizer, criterion, scaler, model_save_path,
                     history,
+                    early_stopping,
+                    scheduler,
                     is_training=True):
     """
     Run training or evaluation based on is_training flag
@@ -352,6 +381,17 @@ def start_executing(device, model, train_loader, test_loader, num_epochs, optimi
         history: Training history object
     """
 
+    # Initialize best metric tracking
+    best_metrics = {
+        'val_loss': float('inf'),  # Start with infinity for loss
+        'val_acc': 0.0,
+        'val_auc': 0.0,
+        'val_sensitivity': 0.0,
+        'val_specificity': 0.0,
+        'val_f1': 0.0,
+        'epoch': 0
+    }
+
     # Training loop
     for epoch in range(num_epochs):
         epoch_desc = f"Epoch {epoch + 1}/{num_epochs}"
@@ -359,15 +399,17 @@ def start_executing(device, model, train_loader, test_loader, num_epochs, optimi
 
         # Training phase
         if is_training:
-            train_results = train_step(model, train_loader, optimizer, criterion, scaler, device)
+            train_results = train_step(model, train_loader, optimizer, criterion, scaler, scheduler, device)
             train_loss = train_results['loss']
             train_acc = train_results['acc']
             train_sensitivity = train_results['sensitivity']
             train_specificity = train_results['specificity']
+            current_lr = train_results['lr']
         else:
             # If not training, use placeholder values
             train_loss, train_acc = 0.0, 0.0
             train_sensitivity, train_specificity = 0.0, 0.0
+            current_lr = optimizer.param_groups[0]['lr']
 
         # Validation/Evaluation phase (always run)
         val_results = eval_step(model, test_loader, criterion, device)
@@ -377,6 +419,17 @@ def start_executing(device, model, train_loader, test_loader, num_epochs, optimi
         val_specificity = val_results['specificity']
         val_auc = val_results['auc']  # Get AUC value
 
+        # Step scheduler if it's epoch-based like ReduceLROnPlateau
+        if scheduler is not None and isinstance(scheduler, ReduceLROnPlateau):
+            scheduler.step(val_loss)
+
+        # Calculate F1 score
+        val_precision = val_results.get('precision', 0.0)
+        if val_sensitivity > 0 and val_precision > 0:
+            val_f1 = 2 * (val_precision * val_sensitivity) / (val_precision + val_sensitivity)
+        else:
+            val_f1 = 0.0
+
         # Update epoch statistics
         history.update_epoch(
             train_loss, train_acc, val_loss, val_acc,
@@ -385,15 +438,69 @@ def start_executing(device, model, train_loader, test_loader, num_epochs, optimi
             val_auc  # Add AUC to the history update
         )
 
-        # Print epoch summary with AUC
-        log.info(f'{epoch_desc} - '
+        # Print epoch summary with AUC and learning rate
+        log.info(f'{epoch_desc} - LR={current_lr:.6f} - '
                  f'Train: Loss={train_loss:.4f}, Acc={train_acc:.4f}, Sens={train_sensitivity:.4f}, Spec={train_specificity:.4f} | '
                  f'Val: Loss={val_loss:.4f}, Acc={val_acc:.4f}, Sens={val_sensitivity:.4f}, Spec={val_specificity:.4f}, AUC={val_auc:.4f}')
 
         # Save best model (optional) - only if training
-        if is_training and epoch > 0 and val_acc > max(history.val_acc['epoch'][:-1]):
-            torch.save(model.state_dict(), model_save_path.replace('.pt', '_best.pt'))
-            log.info(f"Saved new best model with validation accuracy: {val_acc:.4f}")
+        # if is_training and epoch > 0 and val_acc > max(history.val_acc['epoch'][:-1]):
+        #     torch.save(model.state_dict(), model_save_path.replace('.pt', '_best.pt'))
+        #     log.info(f"Saved new best model with validation accuracy: {val_acc:.4f}")
+
+        # Save model and metrics only if validation loss improved
+        if is_training and val_loss < best_metrics['val_loss']:
+            best_metrics['val_loss'] = val_loss
+            best_metrics['val_acc'] = val_acc
+            best_metrics['val_auc'] = val_auc
+            best_metrics['val_sensitivity'] = val_sensitivity
+            best_metrics['val_specificity'] = val_specificity
+            best_metrics['val_f1'] = val_f1
+            best_metrics['epoch'] = epoch
+
+            # Save best model
+            best_model_path = model_save_path.replace('.pt', '_best.pt')
+            torch.save(model.state_dict(), best_model_path)
+
+            # Save all metrics to CSV file
+            metrics_df = pd.DataFrame({
+                'epoch': [epoch],
+                'val_loss': [val_loss],
+                'val_accuracy': [val_acc],
+                'val_auc': [val_auc],
+                'val_f1': [val_f1],
+                'val_sensitivity': [val_sensitivity],
+                'val_specificity': [val_specificity],
+                'train_loss': [train_loss],
+                'train_accuracy': [train_acc],
+                'train_sensitivity': [train_sensitivity],
+                'train_specificity': [train_specificity],
+                'learning_rate': [current_lr]  # Add learning rate to metrics
+            })
+
+            metrics_file = os.path.join(os.path.dirname(model_save_path), 'best_metrics.csv')
+            metrics_df.to_csv(metrics_file, index=False)
+
+            log.info(f"New best model saved with validation loss: {val_loss:.4f}")
+            log.info(
+                f"Metrics at best epoch - Acc: {val_acc:.4f}, AUC: {val_auc:.4f}, Sens: {val_sensitivity:.4f}, Spec: {val_specificity:.4f}")
+
+        if is_training:
+            early_stopping(val_loss, model)
+            if early_stopping.early_stop:
+                log.info(f"Early stopping triggered after {epoch + 1} epochs")
+                break
+
+        # At the end of training, report the best metrics
+    if is_training:
+        log.info("\nBest Model Summary (Lowest Validation Loss):")
+        log.info(f"Best Epoch: {best_metrics['epoch']}")
+        log.info(f"Best Val Loss: {best_metrics['val_loss']:.4f}")
+        log.info(f"Acc at Best: {best_metrics['val_acc']:.4f}")
+        log.info(f"AUC at Best: {best_metrics['val_auc']:.4f}")
+        log.info(f"F1 at Best: {best_metrics['val_f1']:.4f}")
+        log.info(f"Sensitivity at Best: {best_metrics['val_sensitivity']:.4f}")
+        log.info(f"Specificity at Best: {best_metrics['val_specificity']:.4f}")
 
     return history
 
@@ -492,101 +599,201 @@ def last_evaluation(device, model, test_loader, path_save, predict_save_path, mo
     # np.savetxt(os.path.join(path_save, "train_true_labels.csv"), true_train_labels)
 
 
-def run(device):
-    min_length = 1200
-    max_length = 1800
-    group = f"{min_length}_{max_length}"
-    lr_rate = 0.0001
-    b_size = 32
-    num_epochs = 100
-    timestamp = time.strftime("%Y%m%d-%H%M%S")
+def load_my_data(group, predict_save_path, model_save_path, fold, max_length, b_size):
     data_dir = os.path.join(config.MY_DATA_DIR, f"one_hot/{group}")
+    log.info(f"Data dir: {data_dir}")
+    log.info(f"Predict save path: {predict_save_path}")
+    log.info(f"Model save path: {model_save_path}")
 
-    num_fold = 1
-    for r in range(num_fold):
-        fold = r + 1
-        log.info(f"\n{'=' * 50}")
-        log.info(f"Starting fold {fold}/5")
-        log.info(f"{'=' * 50}")
+    # Load data from .mat files
+    log.info('Loading data...')
+    x_train_path = os.path.join(data_dir, f'{fold}/one_hot_{group}_train_vector.npy')
+    y_train_path = os.path.join(data_dir, f'{fold}/y_train.npy')
+    x_val_path = os.path.join(data_dir, f'{fold}/one_hot_{group}_val_vector.npy')
+    y_val_path = os.path.join(data_dir, f'{fold}/y_val.npy')
+    log.info(f"x_train_path: {x_train_path}")
+    log.info(f"y_train_path: {y_train_path}")
+    log.info(f"x_val_path: {x_val_path}")
+    log.info(f"y_val_path: {y_val_path}")
 
-        # Path definitions
-        path_save = os.path.join(config.RESULT_DIR, f"dee_phage/{group}/fold_{fold}/{timestamp}")
-        os.makedirs(path_save, exist_ok=True)  # Ensure directory exists
+    train_matrix = np.load(x_train_path)
+    train_label = np.load(y_train_path)
+    test_matrix = np.load(x_val_path)
+    test_label = np.load(y_val_path)
 
-        predict_save_path = os.path.join(path_save, f"{max_length}_{lr_rate}_{b_size}_prediction.csv")
-        model_save_path = os.path.join(path_save, f"{max_length}_{lr_rate}_{b_size}_model.pt")
+    log.info(f"train_matrix shape: {train_matrix.shape}")
+    log.info(f"train_label shape: {train_label.shape}")
+    log.info(f"test_matrix shape: {test_matrix.shape}")
+    log.info(f"test_label shape: {test_label.shape}")
 
-        # Load data from .mat files
-        log.info('Loading data...')
-        train_matrix = np.load(os.path.join(data_dir, f'one_hot_{group}_train_vector.npy'))
-        train_label = np.load(os.path.join(data_dir, f'y_train.npy'))
-        test_matrix = np.load(os.path.join(data_dir, f'one_hot_{group}_val_vector.npy'))
-        test_label = np.load(os.path.join(data_dir, f'y_val.npy'))
+    log.info(f"Training data distribution")
+    label_counts = Counter(train_label)
+    for label, count in label_counts.items():
+        log.info(f"Label {label}: {count} samples")
 
-        log.info(f"train_matrix shape: {train_matrix.shape}")
-        log.info(f"train_label shape: {train_label.shape}")
-        log.info(f"test_matrix shape: {test_matrix.shape}")
-        log.info(f"test_label shape: {test_label.shape}")
+    train_num = train_label.shape[0]
+    test_num = test_label.shape[0]
 
-        log.info(f"Training data distribution")
-        label_counts = Counter(train_label)
-        for label, count in label_counts.items():
-            log.info(f"Label {label}: {count} samples")
+    log.info(f"Train samples: {train_num}, Test samples: {test_num}")
 
-        train_num = train_label.shape[0]
-        test_num = test_label.shape[0]
+    train_matrix = train_matrix.reshape(train_num, max_length, 4)
+    test_matrix = test_matrix.reshape(test_num, max_length, 4)
 
-        log.info(f"Train samples: {train_num}, Test samples: {test_num}")
+    # Convert to PyTorch tensors
+    train_matrix_tensor = torch.FloatTensor(train_matrix)
+    train_label_tensor = torch.FloatTensor(train_label)
+    test_matrix_tensor = torch.FloatTensor(test_matrix)
+    test_label_tensor = torch.FloatTensor(test_label)
 
-        train_matrix = train_matrix.reshape(train_num, max_length, 4)
-        test_matrix = test_matrix.reshape(test_num, max_length, 4)
+    # Create datasets and dataloaders
+    train_dataset = TensorDataset(train_matrix_tensor, train_label_tensor)
+    test_dataset = TensorDataset(test_matrix_tensor, test_label_tensor)
 
-        # Convert to PyTorch tensors
-        train_matrix_tensor = torch.FloatTensor(train_matrix)
-        train_label_tensor = torch.FloatTensor(train_label)
-        test_matrix_tensor = torch.FloatTensor(test_matrix)
-        test_label_tensor = torch.FloatTensor(test_label)
+    train_loader = DataLoader(train_dataset, batch_size=b_size, num_workers=4, prefetch_factor=4, shuffle=True,
+                              persistent_workers=True)
+    test_loader = DataLoader(test_dataset, batch_size=b_size, num_workers=4, prefetch_factor=4, shuffle=False,
+                             persistent_workers=True)
 
-        # Create datasets and dataloaders
-        train_dataset = TensorDataset(train_matrix_tensor, train_label_tensor)
-        test_dataset = TensorDataset(test_matrix_tensor, test_label_tensor)
+    return train_loader, test_loader
 
-        train_loader = DataLoader(train_dataset, batch_size=b_size, num_workers=4, prefetch_factor=4, shuffle=True,
-                                  persistent_workers=True)
-        test_loader = DataLoader(test_dataset, batch_size=b_size, num_workers=4, prefetch_factor=4, shuffle=False,
-                                 persistent_workers=True)
 
-        # Initialize model
-        model = DeePhage(max_length)
-        model.to(device)
+def load_dee_phage_data(group, fold, max_length, b_size):
+    data_dir = os.path.join(config.DATA_DIR, f"deephage_data/prepared_data/{group}")
 
-        # Print model summary
-        log.info(f"Model architecture: {model}")
-        log.info(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
+    # Load data from .mat files
+    log.info('Loading data...')
+    x_train_path = os.path.join(data_dir, f'train/P_train_ds_{group}_{fold}.mat')
+    y_train_path = os.path.join(data_dir, f'train/T_train_ds_{group}_{fold}.mat')
+    x_val_path = os.path.join(data_dir, f'test/P_test_{group}_{fold}.mat')
+    y_val_path = os.path.join(data_dir, f'test/label_{group}_{fold}.mat')
+    log.info(f"x_train_path: {x_train_path}")
+    log.info(f"y_train_path: {y_train_path}")
+    log.info(f"x_val_path: {x_val_path}")
+    log.info(f"y_val_path: {y_val_path}")
 
-        # Define loss function and optimizer
-        criterion = nn.BCEWithLogitsLoss()
-        optimizer = optim.Adam(model.parameters(), lr=lr_rate)
-        scaler = GradScaler('cuda')
+    train_matrix = h5py.File(x_train_path, 'r')['P_train_ds'][:]
+    train_label = h5py.File(y_train_path, 'r')['T_train_ds'][:]
+    test_matrix = h5py.File(x_val_path, 'r')['P_test'][:]
+    test_label = h5py.File(y_val_path, 'r')['T_test'][:]
 
-        # Initialize history logger
-        history = TrainingHistory()
-        start_executing(device, model, train_loader, test_loader, num_epochs, optimizer, criterion, scaler,
-                        model_save_path, history, is_training=True)
+    train_matrix = train_matrix.transpose()
+    train_label = train_label.transpose()
+    test_matrix = test_matrix.transpose()
+    test_label = test_label.transpose()
 
-        start_executing(device, model, train_loader, test_loader, 1, optimizer, criterion, scaler,
-                        model_save_path, history, is_training=False)
+    train_num = train_label.shape[0]
+    test_num = test_label.shape[0]
 
-        last_evaluation(device, model, test_loader, path_save, predict_save_path, model_save_path)
+    log.info(f"Train samples: {train_num}, Test samples: {test_num}")
 
-        # Plot and save results
-        history.history_plot('epoch', path_save, max_length, lr_rate, b_size)
+    train_matrix = train_matrix.reshape(train_num, max_length, 4)
+    test_matrix = test_matrix.reshape(test_num, max_length, 4)
 
-    log.info("\nAll folds completed!")
+    # Convert to PyTorch tensors
+    train_matrix_tensor = torch.FloatTensor(train_matrix)
+    train_label_tensor = torch.FloatTensor(train_label)
+    test_matrix_tensor = torch.FloatTensor(test_matrix)
+    test_label_tensor = torch.FloatTensor(test_label)
+
+    # Create datasets and dataloaders
+    train_dataset = TensorDataset(train_matrix_tensor, train_label_tensor)
+    test_dataset = TensorDataset(test_matrix_tensor, test_label_tensor)
+
+    train_loader = DataLoader(train_dataset, batch_size=b_size, num_workers=8, prefetch_factor=8, shuffle=True,
+                              persistent_workers=True)
+    test_loader = DataLoader(test_dataset, batch_size=b_size, num_workers=8, prefetch_factor=8, shuffle=False,
+                             persistent_workers=True)
+
+    return train_loader, test_loader
+
+
+def run(device):
+    lr_rate = 0.01
+    b_size = 6144
+    num_epochs = 1000
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+    exp_result_dir = "dee_phage_my_data_rerun"
+
+    for i in range(4):
+
+        if i == 0:
+            min_length = 100
+            max_length = 400
+        elif i == 1:
+            min_length = 400
+            max_length = 800
+        elif i == 2:
+            min_length = 800
+            max_length = 1200
+        elif i == 3:
+            min_length = 1200
+            max_length = 1800
+        else:
+            raise ValueError(f"Invalid group: {i + 1}")
+
+        group = f"{min_length}_{max_length}"
+        for r in range(5):
+            fold = r + 1
+            log.info(f"\n{'=' * 50}")
+            log.info(f"Starting fold {fold}/5")
+            log.info(f"{'=' * 50}")
+
+            # Path definitions
+            path_save = os.path.join(config.RESULT_DIR, f"{exp_result_dir}/{group}/fold_{fold}/{timestamp}")
+            os.makedirs(path_save, exist_ok=True)  # Ensure directory exists
+
+            predict_save_path = os.path.join(path_save, f"{max_length}_{lr_rate}_{b_size}_prediction.csv")
+            model_save_path = os.path.join(path_save, f"{max_length}_{lr_rate}_{b_size}_model.pt")
+
+            train_loader, test_loader = load_my_data(group, predict_save_path, model_save_path, fold, max_length, b_size)
+            # train_loader, test_loader = load_dee_phage_data(group, fold, max_length, b_size)
+
+            # Initialize model
+            model = DeePhage(max_length)
+            model.to(device)
+
+            # Print model summary
+            log.info(f"Model architecture: {model}")
+            log.info(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
+
+            # Define loss function and optimizer
+            criterion = nn.BCEWithLogitsLoss()
+            optimizer = optim.Adam(model.parameters(), lr=lr_rate)
+            scaler = GradScaler('cuda')
+            # scaler = None
+
+            # Create a learning rate scheduler
+            total_steps = len(train_loader) * num_epochs
+            scheduler = OneCycleLR(
+                optimizer,
+                max_lr=lr_rate,
+                total_steps=total_steps,
+                pct_start=0.3,  # Spend 30% of training time increasing LR, 70% decreasing
+                div_factor=25,  # initial_lr/div_factor = starting lr
+                final_div_factor=1000,  # final_lr = initial_lr/final_div_factor
+                anneal_strategy='cos'  # Use cosine annealing
+            )
+
+            # Initialize history logger
+            history = TrainingHistory()
+            early_stopping = EarlyStopping(patience=50, verbose=True, path=model_save_path.replace('.pt', '_best.pt'),
+                                           log=log)
+            start_executing(device, model, train_loader, test_loader, num_epochs, optimizer, criterion, scaler,
+                            model_save_path, history, early_stopping, scheduler, is_training=True)
+
+            # start_executing(device, model, train_loader, test_loader, 1, optimizer, criterion, scaler,
+            #                 model_save_path, history, is_training=False)
+
+            # last_evaluation(device, model, test_loader, path_save, predict_save_path, model_save_path)
+
+            # Plot and save results
+            history.history_plot('epoch', path_save, max_length, lr_rate, b_size)
+
+        log.info("\nAll folds completed!")
 
 
 if __name__ == "__main__":
-    common_log.start_experiment(experiment_name=__file__, timestamp=time.strftime("%Y%m%d-%H%M%S"))
+    utils.start_experiment(experiment_name=__file__, timestamp=time.strftime("%Y%m%d-%H%M%S"))
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Check GPU availability (since you have RTX 5070Ti)
@@ -602,8 +809,10 @@ if __name__ == "__main__":
         gc.collect()
         torch.cuda.empty_cache()
 
-        torch.backends.cuda.matmul.allow_tf32 = True
-        torch.backends.cudnn.allow_tf32 = True
+        # torch.backends.cuda.matmul.allow_tf32 = True
+        # torch.backends.cudnn.allow_tf32 = True
+        torch.backends.cuda.matmul.allow_tf32 = False
+        torch.backends.cudnn.allow_tf32 = False
         torch.set_float32_matmul_precision('highest')
         torch.backends.cudnn.deterministic = True
 

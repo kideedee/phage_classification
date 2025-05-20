@@ -191,8 +191,8 @@ def main():
 
     # Load datasets
     log.info("Loading datasets...")
-    tokenized_train = load_from_disk("processed_train_dataset")
-    tokenized_val = load_from_disk("processed_val_dataset")
+    tokenized_train = load_from_disk("prepared_dataset/processed_train_dataset")
+    tokenized_val = load_from_disk("prepared_dataset/processed_val_dataset")
 
     # Set format for training data
     # tokenized_train.set_format("torch", columns=["input_ids", "attention_mask", "label"])

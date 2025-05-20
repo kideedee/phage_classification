@@ -183,7 +183,7 @@ fabric.properties
 
 pre_trained_models
 data
-results
+/result
 dnabert_2/dnabert2*
 dnabert_2/best*/
 dnabert_2/*_dataset/
@@ -198,8 +198,9 @@ cache
 *.bin
 *.fasta
 
-experiment/dna_bert_2/processed_train_dataset
-experiment/dna_bert_2/processed_val_dataset
-experiment/custom/xgboost_model/smote_200_800
+experiment/dna_bert_2/prepared_dataset/processed_train_dataset
+experiment/dna_bert_2/prepared_dataset/processed_val_dataset
+experiment/xgboost_model/smote_200_800
 
 /logs
+/model

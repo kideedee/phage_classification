@@ -1,6 +1,7 @@
 import datetime
 import gc
 import os
+import time
 
 import h5py
 import matplotlib.pyplot as plt
@@ -14,7 +15,7 @@ from torch.amp import GradScaler, autocast
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm.auto import tqdm
 
-from common import common_log
+from common import utils
 from common.env_config import config
 from logger.phg_cls_log import log
 
@@ -230,287 +231,298 @@ def run(device):
     max_length = 400
     group = f"{min_length}_{max_length}"
     lr_rate = 0.0001
-    b_size = 32
-    num_epochs = 100
+    b_size = 8192
+    num_epochs = 1
 
-    for r in range(5):
-        fold = r + 1
-        log.info(f"\n{'=' * 50}")
-        log.info(f"Starting fold {fold}/5")
-        log.info(f"{'=' * 50}")
+    for i in range(4):
+        if i == 0:
+            group = "100_400"
+        elif i == 1:
+            group = "400_800"
+        elif i == 2:
+            group = "800_1200"
+        elif i == 3:
+            group = "1200_1800"
+        else:
+            raise ValueError(f"Invalid group: {group}")
+        for r in range(5):
+            fold = r + 1
+            log.info(f"\n{'=' * 50}")
+            log.info(f"Starting fold {fold}/5")
+            log.info(f"{'=' * 50}")
 
-        # Path definitions
-        path_save = os.path.join(config.RESULT_DIR, f"fold_{fold}/{group}/")
-        os.makedirs(path_save, exist_ok=True)  # Ensure directory exists
+            # Path definitions
+            path_save = os.path.join(config.RESULT_DIR, f"deephage_with_original_data/fold_{fold}/{group}/")
+            os.makedirs(path_save, exist_ok=True)  # Ensure directory exists
 
-        predict_save_path = path_save + str(max_length) + '_' + str(lr_rate) + '_' + str(b_size) + '_prediction.csv'
-        model_save_path = path_save + str(max_length) + '_' + str(lr_rate) + '_' + str(b_size) + '_model.pt'
-        data_dir = os.path.join(config.DATA_DIR, "deephage_data/prepared_data/100_400")
+            predict_save_path = path_save + str(max_length) + '_' + str(lr_rate) + '_' + str(b_size) + '_prediction.csv'
+            model_save_path = path_save + str(max_length) + '_' + str(lr_rate) + '_' + str(b_size) + '_model.pt'
+            data_dir = os.path.join(config.DATA_DIR, "deephage_data/prepared_data/100_400")
 
-        # Load data from .mat files
-        log.info('Loading data...')
-        train_matrix = h5py.File(os.path.join(data_dir, f'train/P_train_ds_{group}_{fold}.mat'), 'r')['P_train_ds'][:]
-        train_label = h5py.File(os.path.join(data_dir, f'train/T_train_ds_{group}_{fold}.mat'), 'r')['T_train_ds'][:]
-        test_matrix = h5py.File(os.path.join(data_dir, f'test/P_test_{group}_{fold}.mat'), 'r')['P_test'][:]
-        test_label = h5py.File(os.path.join(data_dir, f'test/label_{group}_{fold}.mat'), 'r')['T_test'][:]
+            # Load data from .mat files
+            log.info('Loading data...')
+            train_matrix = h5py.File(os.path.join(data_dir, f'train/P_train_ds_{group}_{fold}.mat'), 'r')['P_train_ds'][:]
+            train_label = h5py.File(os.path.join(data_dir, f'train/T_train_ds_{group}_{fold}.mat'), 'r')['T_train_ds'][:]
+            test_matrix = h5py.File(os.path.join(data_dir, f'test/P_test_{group}_{fold}.mat'), 'r')['P_test'][:]
+            test_label = h5py.File(os.path.join(data_dir, f'test/label_{group}_{fold}.mat'), 'r')['T_test'][:]
 
-        train_matrix = train_matrix.transpose()
-        train_label = train_label.transpose()
-        test_matrix = test_matrix.transpose()
-        test_label = test_label.transpose()
+            train_matrix = train_matrix.transpose()
+            train_label = train_label.transpose()
+            test_matrix = test_matrix.transpose()
+            test_label = test_label.transpose()
 
-        train_num = train_label.shape[0]
-        test_num = test_label.shape[0]
+            train_num = train_label.shape[0]
+            test_num = test_label.shape[0]
 
-        log.info(f"Train samples: {train_num}, Test samples: {test_num}")
+            log.info(f"Train samples: {train_num}, Test samples: {test_num}")
 
-        train_matrix = train_matrix.reshape(train_num, max_length, 4)
-        test_matrix = test_matrix.reshape(test_num, max_length, 4)
+            train_matrix = train_matrix.reshape(train_num, max_length, 4)
+            test_matrix = test_matrix.reshape(test_num, max_length, 4)
 
-        # Convert to PyTorch tensors
-        train_matrix_tensor = torch.FloatTensor(train_matrix)
-        train_label_tensor = torch.FloatTensor(train_label)
-        test_matrix_tensor = torch.FloatTensor(test_matrix)
-        test_label_tensor = torch.FloatTensor(test_label)
+            # Convert to PyTorch tensors
+            train_matrix_tensor = torch.FloatTensor(train_matrix)
+            train_label_tensor = torch.FloatTensor(train_label)
+            test_matrix_tensor = torch.FloatTensor(test_matrix)
+            test_label_tensor = torch.FloatTensor(test_label)
 
-        # Create datasets and dataloaders
-        train_dataset = TensorDataset(train_matrix_tensor, train_label_tensor)
-        test_dataset = TensorDataset(test_matrix_tensor, test_label_tensor)
+            # Create datasets and dataloaders
+            train_dataset = TensorDataset(train_matrix_tensor, train_label_tensor)
+            test_dataset = TensorDataset(test_matrix_tensor, test_label_tensor)
 
-        train_loader = DataLoader(train_dataset, batch_size=b_size, num_workers=4, prefetch_factor=4, shuffle=True,
-                                  persistent_workers=True)
-        test_loader = DataLoader(test_dataset, batch_size=b_size, num_workers=4, prefetch_factor=4, shuffle=False,
-                                 persistent_workers=True)
+            train_loader = DataLoader(train_dataset, batch_size=b_size, num_workers=4, prefetch_factor=4, shuffle=True,
+                                      persistent_workers=True)
+            test_loader = DataLoader(test_dataset, batch_size=b_size, num_workers=4, prefetch_factor=4, shuffle=False,
+                                     persistent_workers=True)
 
-        # Initialize model
-        model = DeePhage(max_length)
-        model.to(device)
+            # Initialize model
+            model = DeePhage(max_length)
+            model.to(device)
 
-        # Print model summary
-        log.info(f"Model architecture: {model}")
-        log.info(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
+            # Print model summary
+            log.info(f"Model architecture: {model}")
+            log.info(f"Total parameters: {sum(p.numel() for p in model.parameters())}")
 
-        # Define loss function and optimizer
-        criterion = nn.BCEWithLogitsLoss()
-        optimizer = optim.Adam(model.parameters(), lr=lr_rate)
-        scaler = GradScaler('cuda')
+            # Define loss function and optimizer
+            criterion = nn.BCEWithLogitsLoss()
+            optimizer = optim.Adam(model.parameters(), lr=lr_rate)
+            scaler = GradScaler('cuda')
 
-        # Initialize history logger
-        history = LossHistory()
+            # Initialize history logger
+            history = LossHistory()
 
-        # Training loop
-        for epoch in range(num_epochs):
-            # Training phase
-            model.train()
-            running_loss = 0.0
-            running_acc = 0.0
-            train_preds = []
-            train_labels = []
+            # Training loop
+            for epoch in range(num_epochs):
+                # Training phase
+                model.train()
+                running_loss = 0.0
+                running_acc = 0.0
+                train_preds = []
+                train_labels = []
 
-            # Use tqdm for progress bar
-            train_loop = tqdm(train_loader, desc=f"Epoch {epoch + 1}/{num_epochs} [Train]", leave=False)
-            for inputs, labels in train_loop:
-                inputs, labels = inputs.to(device), labels.to(device)
-
-                # Zero the parameter gradients
-                optimizer.zero_grad()
-
-                # Forward pass
-                with autocast('cuda'):
-                    outputs = model(inputs)
-                    loss = criterion(outputs, labels)
-
-                # Backward pass and optimize
-                scaler.scale(loss).backward()
-                scaler.step(optimizer)
-                scaler.update()
-
-                # Calculate accuracy
-                acc = binary_accuracy(outputs, labels)
-
-                # Collect predictions and labels for metrics
-                preds = (torch.sigmoid(outputs) > 0.5).float().cpu().detach().numpy()
-                train_preds.extend(preds)
-                train_labels.extend(labels.cpu().numpy())
-
-                # Update batch statistics
-                running_loss += loss.detach().item()
-                running_acc += acc
-                history.update_batch(running_loss, acc)
-
-                # Update progress bar
-                train_loop.set_postfix(loss=running_loss, acc=acc)
-
-            # Calculate epoch-level training metrics
-            train_loss = running_loss / len(train_loader)
-            train_acc = running_acc / len(train_loader)
-
-            # Calculate sensitivity and specificity for training data
-            train_metrics = calculate_metrics(np.array(train_labels), np.array(train_preds))
-            train_sensitivity = train_metrics['sensitivity']
-            train_specificity = train_metrics['specificity']
-
-            # Validation phase
-            model.eval()
-            val_running_loss = 0.0
-            val_running_acc = 0.0
-            val_preds = []
-            val_labels = []
-
-            # Use tqdm for progress bar
-            val_loop = tqdm(test_loader, desc=f"Epoch {epoch + 1}/{num_epochs} [Val]", leave=False)
-            with torch.no_grad():
-                for inputs, labels in val_loop:
+                # Use tqdm for progress bar
+                train_loop = tqdm(train_loader, desc=f"Epoch {epoch + 1}/{num_epochs} [Train]", leave=False)
+                for inputs, labels in train_loop:
                     inputs, labels = inputs.to(device), labels.to(device)
 
-                    outputs = model(inputs)
-                    loss = criterion(outputs, labels)
+                    # Zero the parameter gradients
+                    optimizer.zero_grad()
 
+                    # Forward pass
+                    with autocast('cuda'):
+                        outputs = model(inputs)
+                        loss = criterion(outputs, labels)
+
+                    # Backward pass and optimize
+                    scaler.scale(loss).backward()
+                    scaler.step(optimizer)
+                    scaler.update()
+
+                    # Calculate accuracy
                     acc = binary_accuracy(outputs, labels)
 
                     # Collect predictions and labels for metrics
                     preds = (torch.sigmoid(outputs) > 0.5).float().cpu().detach().numpy()
-                    val_preds.extend(preds)
-                    val_labels.extend(labels.cpu().numpy())
+                    train_preds.extend(preds)
+                    train_labels.extend(labels.cpu().numpy())
 
-                    val_running_loss += loss.detach().item()
-                    val_running_acc += acc
+                    # Update batch statistics
+                    running_loss += loss.detach().item()
+                    running_acc += acc
+                    history.update_batch(running_loss, acc)
 
                     # Update progress bar
-                    val_loop.set_postfix(loss=val_running_loss, acc=acc)
+                    train_loop.set_postfix(loss=running_loss, acc=acc)
 
-            val_loss = val_running_loss / len(test_loader)
-            val_acc = val_running_acc / len(test_loader)
+                # Calculate epoch-level training metrics
+                train_loss = running_loss / len(train_loader)
+                train_acc = running_acc / len(train_loader)
 
-            # Calculate sensitivity and specificity for validation data
-            val_metrics = calculate_metrics(np.array(val_labels), np.array(val_preds))
-            val_sensitivity = val_metrics['sensitivity']
-            val_specificity = val_metrics['specificity']
+                # Calculate sensitivity and specificity for training data
+                train_metrics = calculate_metrics(np.array(train_labels), np.array(train_preds))
+                train_sensitivity = train_metrics['sensitivity']
+                train_specificity = train_metrics['specificity']
 
-            # Update epoch statistics
-            history.update_epoch(
-                train_loss, train_acc, val_loss, val_acc,
-                train_sensitivity, train_specificity,
-                val_sensitivity, val_specificity
-            )
+                # Validation phase
+                model.eval()
+                val_running_loss = 0.0
+                val_running_acc = 0.0
+                val_preds = []
+                val_labels = []
 
-            # Print epoch summary
-            log.info(f'Epoch {epoch + 1}/{num_epochs} - '
-                     f'Train: Loss={train_loss:.4f}, Acc={train_acc:.4f}, Sens={train_sensitivity:.4f}, Spec={train_specificity:.4f} | '
-                     f'Val: Loss={val_loss:.4f}, Acc={val_acc:.4f}, Sens={val_sensitivity:.4f}, Spec={val_specificity:.4f}')
+                # Use tqdm for progress bar
+                val_loop = tqdm(test_loader, desc=f"Epoch {epoch + 1}/{num_epochs} [Val]", leave=False)
+                with torch.no_grad():
+                    for inputs, labels in val_loop:
+                        inputs, labels = inputs.to(device), labels.to(device)
 
-            # Save best model (optional)
-            if epoch > 0 and val_acc > max(history.val_acc['epoch'][:-1]):
-                torch.save(model.state_dict(), model_save_path.replace('.pt', '_best.pt'))
-                log.info(f"Saved new best model with validation accuracy: {val_acc:.4f}")
+                        outputs = model(inputs)
+                        loss = criterion(outputs, labels)
 
-        # Final evaluation
-        model.eval()
-        all_predictions = []
-        all_true_labels = []
-        all_train_predictions = []
-        all_train_true_labels = []
+                        acc = binary_accuracy(outputs, labels)
 
-        log.info("Performing final evaluation...")
-        with torch.no_grad():
-            # Test predictions
-            test_loop = tqdm(test_loader, desc="Evaluating test data")
-            for inputs, labels in test_loop:
-                inputs, labels = inputs.to(device), labels.to(device)
-                outputs = model(inputs)
-                all_predictions.append(outputs.cpu().numpy())
-                all_true_labels.append(labels.cpu().numpy())
+                        # Collect predictions and labels for metrics
+                        preds = (torch.sigmoid(outputs) > 0.5).float().cpu().detach().numpy()
+                        val_preds.extend(preds)
+                        val_labels.extend(labels.cpu().numpy())
 
-            # Train predictions
-            train_loop = tqdm(train_loader, desc="Evaluating train data")
-            for inputs, labels in train_loop:
-                inputs, labels = inputs.to(device), labels.to(device)
-                outputs = model(inputs)
-                all_train_predictions.append(outputs.cpu().numpy())
-                all_train_true_labels.append(labels.cpu().numpy())
+                        val_running_loss += loss.detach().item()
+                        val_running_acc += acc
 
-        # Concatenate predictions and true labels
-        predict = np.concatenate(all_predictions).reshape(-1)
-        true_labels = np.concatenate(all_true_labels).reshape(-1)
-        predict_train = np.concatenate(all_train_predictions).reshape(-1)
-        true_train_labels = np.concatenate(all_train_true_labels).reshape(-1)
+                        # Update progress bar
+                        val_loop.set_postfix(loss=val_running_loss, acc=acc)
 
-        # Save predictions
-        np.savetxt(predict_save_path, predict)
+                val_loss = val_running_loss / len(test_loader)
+                val_acc = val_running_acc / len(test_loader)
 
-        # Save model
-        torch.save(model.state_dict(), model_save_path)
-        log.info(f"Model saved to {model_save_path}")
+                # Calculate sensitivity and specificity for validation data
+                val_metrics = calculate_metrics(np.array(val_labels), np.array(val_preds))
+                val_sensitivity = val_metrics['sensitivity']
+                val_specificity = val_metrics['specificity']
 
-        # Generate binary predictions
-        predict_binary = (predict > 0.5).astype(int)
-        predict_train_binary = (predict_train > 0.5).astype(int)
+                # Update epoch statistics
+                history.update_epoch(
+                    train_loss, train_acc, val_loss, val_acc,
+                    train_sensitivity, train_specificity,
+                    val_sensitivity, val_specificity
+                )
 
-        # Calculate final metrics
-        test_metrics = calculate_metrics(true_labels, predict_binary)
-        train_metrics = calculate_metrics(true_train_labels, predict_train_binary)
+                # Print epoch summary
+                log.info(f'Epoch {epoch + 1}/{num_epochs} - '
+                         f'Train: Loss={train_loss:.4f}, Acc={train_acc:.4f}, Sens={train_sensitivity:.4f}, Spec={train_specificity:.4f} | '
+                         f'Val: Loss={val_loss:.4f}, Acc={val_acc:.4f}, Sens={val_sensitivity:.4f}, Spec={val_specificity:.4f}')
 
-        # Print detailed metrics
-        log.info("\nFinal Test Metrics:")
-        log.info(f"Accuracy: {test_metrics['accuracy']:.4f}")
-        log.info(f"Sensitivity: {test_metrics['sensitivity']:.4f}")
-        log.info(f"Specificity: {test_metrics['specificity']:.4f}")
-        log.info(f"Precision: {test_metrics['precision']:.4f}")
-        log.info(f"F1 Score: {test_metrics['f1_score']:.4f}")
+                # Save best model (optional)
+                if epoch > 0 and val_acc > max(history.val_acc['epoch'][:-1]):
+                    torch.save(model.state_dict(), model_save_path.replace('.pt', '_best.pt'))
+                    log.info(f"Saved new best model with validation accuracy: {val_acc:.4f}")
 
-        log.info("\nFinal Train Metrics:")
-        log.info(f"Accuracy: {train_metrics['accuracy']:.4f}")
-        log.info(f"Sensitivity: {train_metrics['sensitivity']:.4f}")
-        log.info(f"Specificity: {train_metrics['specificity']:.4f}")
-        log.info(f"Precision: {train_metrics['precision']:.4f}")
-        log.info(f"F1 Score: {train_metrics['f1_score']:.4f}")
+            # Final evaluation
+            model.eval()
+            all_predictions = []
+            all_true_labels = []
+            all_train_predictions = []
+            all_train_true_labels = []
 
-        # Generate classification reports
-        report_test = classification_report(true_labels, predict_binary, output_dict=False)
-        log.info('\nDetailed Test Classification Report:')
-        log.info(report_test)
-        report_dic_test = classification_report_csv(report_test, path_save, 0)
-        temp_acc, viru_acc = report_dic_test[0].get('recall'), report_dic_test[1].get('recall')
+            log.info("Performing final evaluation...")
+            with torch.no_grad():
+                # Test predictions
+                test_loop = tqdm(test_loader, desc="Evaluating test data")
+                for inputs, labels in test_loop:
+                    inputs, labels = inputs.to(device), labels.to(device)
+                    outputs = model(inputs)
+                    all_predictions.append(outputs.cpu().numpy())
+                    all_true_labels.append(labels.cpu().numpy())
 
-        report_train = classification_report(true_train_labels, predict_train_binary, output_dict=False)
-        log.info('\nDetailed Train Classification Report:')
-        log.info(report_train)
-        report_dic_train = classification_report_csv(report_train, path_save, 1)
-        train_temp_acc, train_viru_acc = report_dic_train[0].get('recall'), report_dic_train[1].get('recall')
+                # Train predictions
+                train_loop = tqdm(train_loader, desc="Evaluating train data")
+                for inputs, labels in train_loop:
+                    inputs, labels = inputs.to(device), labels.to(device)
+                    outputs = model(inputs)
+                    all_train_predictions.append(outputs.cpu().numpy())
+                    all_train_true_labels.append(labels.cpu().numpy())
 
-        # Create confusion matrix
-        test_cm = confusion_matrix(true_labels, predict_binary)
-        train_cm = confusion_matrix(true_train_labels, predict_train_binary)
+            # Concatenate predictions and true labels
+            predict = np.concatenate(all_predictions).reshape(-1)
+            true_labels = np.concatenate(all_true_labels).reshape(-1)
+            predict_train = np.concatenate(all_train_predictions).reshape(-1)
+            true_train_labels = np.concatenate(all_train_true_labels).reshape(-1)
 
-        log.info("\nTest Confusion Matrix:")
-        log.info(test_cm)
-        log.info("\nTrain Confusion Matrix:")
-        log.info(train_cm)
+            # Save predictions
+            np.savetxt(predict_save_path, predict)
 
-        # Save confusion matrices to CSV
-        pd.DataFrame(test_cm).to_csv(path_save + 'test_confusion_matrix.csv')
-        pd.DataFrame(train_cm).to_csv(path_save + 'train_confusion_matrix.csv')
+            # Save model
+            torch.save(model.state_dict(), model_save_path)
+            log.info(f"Model saved to {model_save_path}")
 
-        # Save additional metrics to CSV
-        metrics_df = pd.DataFrame({
-            'dataset': ['test', 'train'],
-            'accuracy': [test_metrics['accuracy'], train_metrics['accuracy']],
-            'sensitivity': [test_metrics['sensitivity'], train_metrics['sensitivity']],
-            'specificity': [test_metrics['specificity'], train_metrics['specificity']],
-            'precision': [test_metrics['precision'], train_metrics['precision']],
-            'f1_score': [test_metrics['f1_score'], train_metrics['f1_score']]
-        })
-        metrics_df.to_csv(path_save + 'additional_metrics.csv', index=False)
+            # Generate binary predictions
+            predict_binary = (predict > 0.5).astype(int)
+            predict_train_binary = (predict_train > 0.5).astype(int)
 
-        # Plot and save results
-        history.loss_plot('epoch', val_acc, viru_acc, temp_acc, train_viru_acc, train_temp_acc,
-                          path_save, max_length, lr_rate, b_size)
+            # Calculate final metrics
+            test_metrics = calculate_metrics(true_labels, predict_binary)
+            train_metrics = calculate_metrics(true_train_labels, predict_train_binary)
 
-    log.info("\nAll folds completed!")
+            # Print detailed metrics
+            log.info("\nFinal Test Metrics:")
+            log.info(f"Accuracy: {test_metrics['accuracy']:.4f}")
+            log.info(f"Sensitivity: {test_metrics['sensitivity']:.4f}")
+            log.info(f"Specificity: {test_metrics['specificity']:.4f}")
+            log.info(f"Precision: {test_metrics['precision']:.4f}")
+            log.info(f"F1 Score: {test_metrics['f1_score']:.4f}")
+
+            log.info("\nFinal Train Metrics:")
+            log.info(f"Accuracy: {train_metrics['accuracy']:.4f}")
+            log.info(f"Sensitivity: {train_metrics['sensitivity']:.4f}")
+            log.info(f"Specificity: {train_metrics['specificity']:.4f}")
+            log.info(f"Precision: {train_metrics['precision']:.4f}")
+            log.info(f"F1 Score: {train_metrics['f1_score']:.4f}")
+
+            # Generate classification reports
+            report_test = classification_report(true_labels, predict_binary, output_dict=False)
+            log.info('\nDetailed Test Classification Report:')
+            log.info(report_test)
+            report_dic_test = classification_report_csv(report_test, path_save, 0)
+            temp_acc, viru_acc = report_dic_test[0].get('recall'), report_dic_test[1].get('recall')
+
+            report_train = classification_report(true_train_labels, predict_train_binary, output_dict=False)
+            log.info('\nDetailed Train Classification Report:')
+            log.info(report_train)
+            report_dic_train = classification_report_csv(report_train, path_save, 1)
+            train_temp_acc, train_viru_acc = report_dic_train[0].get('recall'), report_dic_train[1].get('recall')
+
+            # Create confusion matrix
+            test_cm = confusion_matrix(true_labels, predict_binary)
+            train_cm = confusion_matrix(true_train_labels, predict_train_binary)
+
+            log.info("\nTest Confusion Matrix:")
+            log.info(test_cm)
+            log.info("\nTrain Confusion Matrix:")
+            log.info(train_cm)
+
+            # Save confusion matrices to CSV
+            pd.DataFrame(test_cm).to_csv(path_save + 'test_confusion_matrix.csv')
+            pd.DataFrame(train_cm).to_csv(path_save + 'train_confusion_matrix.csv')
+
+            # Save additional metrics to CSV
+            metrics_df = pd.DataFrame({
+                'dataset': ['test', 'train'],
+                'accuracy': [test_metrics['accuracy'], train_metrics['accuracy']],
+                'sensitivity': [test_metrics['sensitivity'], train_metrics['sensitivity']],
+                'specificity': [test_metrics['specificity'], train_metrics['specificity']],
+                'precision': [test_metrics['precision'], train_metrics['precision']],
+                'f1_score': [test_metrics['f1_score'], train_metrics['f1_score']]
+            })
+            metrics_df.to_csv(path_save + 'additional_metrics.csv', index=False)
+
+            # Plot and save results
+            history.loss_plot('epoch', val_acc, viru_acc, temp_acc, train_viru_acc, train_temp_acc,
+                              path_save, max_length, lr_rate, b_size)
+
+        log.info("\nAll folds completed!")
 
 
 if __name__ == "__main__":
-    common_log.start_experiment(experiment_name="deephage", timestamp=datetime.now().strftime("%Y%m%d-%H%M%S"))
+    utils.start_experiment(experiment_name="deephage", timestamp=time.time())
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Check GPU availability (since you have RTX 5070Ti)

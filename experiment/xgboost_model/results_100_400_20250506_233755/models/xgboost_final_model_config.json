@@ -1,0 +1,10 @@
+{
+    "model_type": "XGBoost",
+    "date_trained": "2025-05-07 01:31:54",
+    "model_path": "results_100_400_20250506_233755/models/xgboost_final_model.json",
+    "best_iteration": 856,
+    "parameters": {
+        "best_iteration": "856",
+        "best_score": "0.49119786629850065"
+    }
+}
