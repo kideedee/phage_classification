@@ -33,6 +33,7 @@ class Config:
 
     CUSTOM_DATA_DIR = os.path.join(MY_DATA_DIR, "custom")  # csv file sequence
     DNA_BERT_2_DATA_DIR = os.path.join(MY_DATA_DIR, "dna_bert_2")
+    DNA_BERT_2_TOKENIZER_DATA_DIR = os.path.join(MY_DATA_DIR, "dna_bert_2_tokenizer")
     ONE_HOT_DATA_DIR = os.path.join(MY_DATA_DIR, "one_hot")
     RESAMPLE_DATA_DIR = os.path.join(MY_DATA_DIR, "resample")
 

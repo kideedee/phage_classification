@@ -3,6 +3,7 @@ import os
 
 from common.env_config import config
 from embedding_sequence.encoding_sequence import DNASequenceProcessor
+from logger.phg_cls_log import log
 
 if __name__ == '__main__':
     # Example with Word2Vec encoding
@@ -32,60 +33,79 @@ if __name__ == '__main__':
     #     val_path=config.VAL_DATA_CSV_FILE
     # )
 
-    for i in range(1):
+    for i in range(5):
         fold_index = i + 1
         overlap_percent = 30
 
         if fold_index == 1:
             train_path = config.TRAIN_DATA_FOLD_1_CSV_FILE
             val_path = config.TEST_DATA_FOLD_1_CSV_FILE
+            tokenizer_path = "../model/dna_bert_2/pretrained_100_400/1/tokenizer"
+            model_path = "../model/dna_bert_2/pretrained_100_400/1/finetune_dna_bert"
         elif fold_index == 2:
             train_path = config.TRAIN_DATA_FOLD_2_CSV_FILE
             val_path = config.TEST_DATA_FOLD_2_CSV_FILE
+            tokenizer_path = "../model/dna_bert_2/pretrained_100_400/2/tokenizer"
+            model_path = "../model/dna_bert_2/pretrained_100_400/2/finetune_dna_bert"
         elif fold_index == 3:
             train_path = config.TRAIN_DATA_FOLD_3_CSV_FILE
             val_path = config.TEST_DATA_FOLD_3_CSV_FILE
+            tokenizer_path = "../model/dna_bert_2/pretrained_100_400/3/tokenizer"
+            model_path = "../model/dna_bert_2/pretrained_100_400/3/finetune_dna_bert"
         elif fold_index == 4:
             train_path = config.TRAIN_DATA_FOLD_4_CSV_FILE
             val_path = config.TEST_DATA_FOLD_4_CSV_FILE
+            tokenizer_path = "../model/dna_bert_2/pretrained_100_400/4/tokenizer"
+            model_path = "../model/dna_bert_2/pretrained_100_400/4/finetune_dna_bert"
         elif fold_index == 5:
             train_path = config.TRAIN_DATA_FOLD_5_CSV_FILE
             val_path = config.TEST_DATA_FOLD_5_CSV_FILE
+            tokenizer_path = "../model/dna_bert_2/pretrained_100_400/5/tokenizer"
+            model_path = "../model/dna_bert_2/pretrained_100_400/5/finetune_dna_bert"
         else:
             raise ValueError(f"Invalid fold_index: {fold_index}")
 
-        for group in range(1,2):
+        for group in range(4):
             if group == 0:
                 min_size = 100
                 max_size = 400
+                batch_size = 128
             elif group == 1:
                 min_size = 400
                 max_size = 800
+                batch_size = 128
             elif group == 2:
                 min_size = 800
                 max_size = 1200
+                batch_size = 96
             elif group == 3:
                 min_size = 1200
                 max_size = 1800
+                batch_size = 96
             else:
                 raise ValueError(f"Invalid group: {group}")
 
             # Example with DNABERT-2 encoding and fine-tuning
             dna_bert_2_processor = DNASequenceProcessor(
-                min_size=100,
-                max_size=400,
+                min_size=min_size,
+                max_size=max_size,
                 encoding_method="dna_bert_2",
                 overlap_percent=30,
-                dna_bert_2_batch_size=196,
-                dna_bert_2_tokenizer_path=os.path.join(config.MODEL_DIR,
-                                                 "/dna_bert_2/pretrained_100_400/1/tokenizer"),
-                dna_bert_2_model_path=os.path.join(config.MODEL_DIR,
-                                                 "/dna_bert_2/pretrained_100_400/1/finetune_dna_bert")
+                fold=fold_index,
+                dna_bert_2_batch_size=batch_size,
+                group=group,
+                dna_bert_2_tokenizer_path=tokenizer_path,
+                dna_bert_2_model_path=model_path
             )
 
+            output_dir = dna_bert_2_processor.output_dir
+            if os.path.exists(output_dir):
+                log.info(f"Output directory {output_dir} already exists, skipping.")
+                continue
+
             dna_bert_2_processor.process(
-                train_path=config.TRAIN_DATA_CSV_FILE,
-                val_path=config.VAL_DATA_CSV_FILE
+                train_path=train_path,
+                val_path=val_path
             )
 
             # # Khởi tạo với one-hot encoding

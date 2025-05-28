@@ -40,35 +40,172 @@ def compute_metrics(pred):
 
 
 class DNABERT2SequenceDataset(Dataset):
-    """Dataset class for DNA sequences for fine-tuning DNABERT-2."""
+    """Dataset class for DNA sequences for fine-tuning DNABERT-2 with chunking support."""
 
-    def __init__(self, sequences, labels, tokenizer, max_length=512):
+    def __init__(self, sequences, labels, tokenizer, max_length=512, group=0):
+        """
+        Initialize the dataset with support for chunking based on group parameter.
+
+        Args:
+            sequences: List of DNA sequences
+            labels: List of corresponding labels
+            tokenizer: DNABERT-2 tokenizer
+            max_length: Maximum sequence length for tokenizer
+            group: Group parameter (0=no chunking, 1=2 chunks, 2=3 chunks, 3=4 chunks)
+        """
         self.sequences = sequences
         self.labels = labels
         self.tokenizer = tokenizer
         self.max_length = max_length
+        self.group = group
+
+        # Determine number of chunks based on group value
+        self.num_chunks = 1
+        if group > 0:
+            self.num_chunks = group + 1
+
+    def split_sequence_into_chunks(self, sequence):
+        """
+        Split a DNA sequence into equal-sized chunks based on self.num_chunks.
+
+        Args:
+            sequence: DNA sequence string
+
+        Returns:
+            List of sequence chunks
+        """
+        seq_len = len(sequence)
+        chunk_size = seq_len // self.num_chunks
+
+        chunks = []
+        for i in range(self.num_chunks):
+            start_idx = i * chunk_size
+            # For the last chunk, include any remaining characters
+            end_idx = start_idx + chunk_size if i < self.num_chunks - 1 else seq_len
+            chunks.append(sequence[start_idx:end_idx])
+
+        return chunks
 
     def __len__(self):
         return len(self.sequences)
 
     def __getitem__(self, idx):
-        # DNABERT-2 can process raw sequences directly without k-mer formatting
+        # Get the original sequence and label
         sequence = self.sequences[idx]
+        label = self.labels[idx]
 
-        # Tokenize
-        encoding = self.tokenizer(
-            sequence,
-            truncation=True,
-            max_length=self.max_length,
-            padding="max_length",
-            return_tensors="pt"
-        )
+        if self.group == 0:
+            # No chunking, process the entire sequence
+            encoding = self.tokenizer(
+                sequence,
+                truncation=True,
+                max_length=self.max_length,
+                padding="max_length",
+                return_tensors="pt"
+            )
 
-        # Convert to correct format for Trainer
-        item = {key: val.squeeze(0) for key, val in encoding.items()}
-        item["labels"] = torch.tensor(self.labels[idx], dtype=torch.long)
+            # Convert to correct format for DataLoader
+            item = {key: val.squeeze(0) for key, val in encoding.items()}
+            item["labels"] = torch.tensor(label, dtype=torch.long)
+            return item
+        else:
+            # Split sequence into chunks
+            chunks = self.split_sequence_into_chunks(sequence)
 
-        return item
+            # Create a list to hold encodings for each chunk
+            chunk_encodings = []
+
+            # Process each chunk
+            for chunk in chunks:
+                encoding = self.tokenizer(
+                    chunk,
+                    truncation=True,
+                    max_length=self.max_length,
+                    padding="max_length",
+                    return_tensors="pt"
+                )
+
+                # Convert to correct format
+                chunk_item = {key: val.squeeze(0) for key, val in encoding.items()}
+                chunk_encodings.append(chunk_item)
+
+            # Add label to the result
+            result = {
+                "chunk_encodings": chunk_encodings,
+                "labels": torch.tensor(label, dtype=torch.long),
+                "num_chunks": self.num_chunks
+            }
+
+            return result
+
+
+class ChunkCollator:
+    """
+    Custom collator for handling chunked sequences in batches.
+    This collator creates batches of individual chunks while maintaining
+    information about which chunks belong to the same original sequence.
+    """
+
+    def __call__(self, batch):
+        if "chunk_encodings" not in batch[0]:
+            # Regular batch without chunking
+            return self._collate_regular(batch)
+        else:
+            # Batch with chunking
+            return self._collate_chunks(batch)
+
+    def _collate_regular(self, batch):
+        # Standard collation for regular batches
+        return {
+            "input_ids": torch.stack([item["input_ids"] for item in batch]),
+            "attention_mask": torch.stack([item["attention_mask"] for item in batch]),
+            "token_type_ids": torch.stack([item["token_type_ids"] for item in batch]) if "token_type_ids" in batch[
+                0] else None,
+            "labels": torch.stack([item["labels"] for item in batch]),
+            "is_chunked": False
+        }
+
+    def _collate_chunks(self, batch):
+        # For chunked sequences, we need to:
+        # 1. Collect all chunks from all sequences
+        # 2. Keep track of which chunks belong to which sequence
+
+        all_chunks = []
+        chunk_to_seq_map = []  # Maps each chunk to its sequence index
+        labels = []
+        num_chunks_per_seq = []
+
+        for seq_idx, item in enumerate(batch):
+            chunks = item["chunk_encodings"]
+            num_chunks = len(chunks)
+            num_chunks_per_seq.append(num_chunks)
+
+            # Add all chunks from this sequence
+            for chunk in chunks:
+                all_chunks.append(chunk)
+                chunk_to_seq_map.append(seq_idx)
+
+            # Add label once per sequence
+            labels.append(item["labels"])
+
+        # Collate all chunks into a single batch
+        input_ids = torch.stack([chunk["input_ids"] for chunk in all_chunks])
+        attention_mask = torch.stack([chunk["attention_mask"] for chunk in all_chunks])
+
+        # Add token_type_ids if they exist
+        token_type_ids = None
+        if "token_type_ids" in all_chunks[0]:
+            token_type_ids = torch.stack([chunk["token_type_ids"] for chunk in all_chunks])
+
+        return {
+            "input_ids": input_ids,
+            "attention_mask": attention_mask,
+            "token_type_ids": token_type_ids,
+            "labels": torch.stack(labels),
+            "chunk_to_seq_map": torch.tensor(chunk_to_seq_map),
+            "num_chunks_per_seq": torch.tensor(num_chunks_per_seq),
+            "is_chunked": True
+        }
 
 
 class DNASequenceProcessor:
@@ -102,6 +239,7 @@ class DNASequenceProcessor:
             fold=1,
             min_size=100,
             max_size=400,
+            group=0,
             dna_bert_2_tokenizer_path: str = "zhihan1996/DNA_bert_6",
             dna_bert_2_model_path: str = "zhihan1996/DNA_bert_6",
             dna_bert_pooling: Literal["cls", "mean"] = "cls",
@@ -137,6 +275,7 @@ class DNASequenceProcessor:
         self.kmer_size = kmer_size
         self.min_size = min_size
         self.max_size = max_size
+        self.group = group
         self.overlap_percent = overlap_percent
         self.dna_bert_2_tokenizer_path = dna_bert_2_tokenizer_path
         self.dna_bert_2_model_path = dna_bert_2_model_path
@@ -528,9 +667,8 @@ class DNASequenceProcessor:
         """
         log.info("Loading DNABERT-2 tokenizer: %s", self.dna_bert_2_tokenizer_path)
         log.info("Loading DNABERT-2 model: %s", self.dna_bert_2_model_path)
-        self.dna_bert_2_tokenizer = AutoTokenizer.from_pretrained("../model/dna_bert_2/pretrained_100_400/1/tokenizer",
-                                                                  trust_remote_code=True)
-        self.dna_bert_2_model = BertForSequenceClassification.from_pretrained("../model/dna_bert_2/pretrained_100_400/1/finetune_dna_bert")
+        self.dna_bert_2_tokenizer = AutoTokenizer.from_pretrained(self.dna_bert_2_tokenizer_path, trust_remote_code=True)
+        self.dna_bert_2_model = BertForSequenceClassification.from_pretrained(self.dna_bert_2_model_path)
 
         # Use GPU if available
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -605,139 +743,47 @@ class DNASequenceProcessor:
 
         return embeddings[0]
 
-    def dna_bert_2_encode_sequence(
-            self, sequence: str, max_length: int = 512
-    ) -> np.ndarray:
+    def split_sequence_into_chunks(self, sequence, num_chunks):
         """
-        Encode a DNA sequence using DNABERT-2.
+        Split a DNA sequence into equal-sized chunks.
 
         Args:
             sequence: DNA sequence string
-            max_length: Maximum sequence length for tokenizer
+            num_chunks: Number of chunks to split into
 
         Returns:
-            Feature vector (numpy array)
+            List of sequence chunks
         """
-        if self.dna_bert_tokenizer is None or self.dna_bert_model is None:
-            raise ValueError("DNABERT-2 model not loaded. Call load_dna_bert_2_model first.")
+        seq_len = len(sequence)
+        chunk_size = seq_len // num_chunks
 
-        # DNABERT-2 processes raw sequences directly
-        # Tokenize sequence
-        inputs = self.dna_bert_tokenizer(
-            sequence,
-            return_tensors="pt",
-            truncation=True,
-            max_length=max_length,
-            padding="max_length"
-        )
+        chunks = []
+        for i in range(num_chunks):
+            start_idx = i * chunk_size
+            # For the last chunk, include any remaining characters
+            end_idx = start_idx + chunk_size if i < num_chunks - 1 else seq_len
+            chunks.append(sequence[start_idx:end_idx])
 
-        # Move inputs to the same device as model
-        device = next(self.dna_bert_model.parameters()).device
-        inputs = {key: val.to(device) for key, val in inputs.items()}
-
-        # Get model outputs
-        with torch.no_grad():
-            outputs = self.dna_bert_model(**inputs)
-
-        # Extract embeddings based on pooling strategy
-        if self.dna_bert_2_pooling == "cls":
-            # Use [CLS] token embedding
-            embeddings = outputs.last_hidden_state[:, 0, :].cpu().numpy()
-        else:  # mean pooling
-            # Use mean of all token embeddings (excluding padding)
-            attention_mask = inputs["attention_mask"]
-            last_hidden = outputs.last_hidden_state
-
-            # Apply attention mask to get mean of non-padding tokens
-            input_mask_expanded = attention_mask.unsqueeze(-1).expand(last_hidden.size()).float()
-            sum_embeddings = torch.sum(last_hidden * input_mask_expanded, 1)
-            sum_mask = torch.clamp(input_mask_expanded.sum(1), min=1e-9)
-            embeddings = (sum_embeddings / sum_mask).cpu().numpy()
-
-        return embeddings[0]
-
-    def convert_sequences_to_dna_bert_vectors(
-            self, sequences: np.ndarray, batch_size: int = None, max_length: int = 512
-    ) -> np.ndarray:
-        """
-        Convert all sequences to feature vectors using DNA-BERT in batches.
-
-        Args:
-            sequences: Array of DNA sequences
-            batch_size: Batch size for processing (if None, use self.dna_bert_batch_size)
-            max_length: Maximum sequence length for tokenizer
-
-        Returns:
-            Array of feature vectors
-        """
-        if self.dna_bert_tokenizer is None or self.dna_bert_model is None:
-            raise ValueError("DNA-BERT model not loaded. Call load_dna_bert_model first.")
-
-        # Use instance batch size if not explicitly provided
-        if batch_size is None:
-            batch_size = self.dna_bert_2_batch_size
-
-        result = []
-        device = next(self.dna_bert_model.parameters()).device
-        log.info("Using device for batch processing: %s", device)
-        log.info("Processing %s sequences with batch size %s", len(sequences), batch_size)
-
-        for i in tqdm(range(0, len(sequences), batch_size), desc="Encoding sequences with DNA-BERT"):
-            batch_seqs = sequences[i:i + batch_size]
-            formatted_seqs = [self.format_sequence_for_dna_bert(seq) for seq in batch_seqs]
-
-            # Tokenize batch
-            inputs = self.dna_bert_tokenizer(
-                formatted_seqs,
-                return_tensors="pt",
-                truncation=True,
-                max_length=max_length,
-                padding="max_length"
-            )
-
-            # Move inputs to the same device as model
-            inputs = {key: val.to(device) for key, val in inputs.items()}
-
-            # Get model outputs
-            with torch.no_grad():
-                outputs = self.dna_bert_model(**inputs)
-
-            # DNABERT-2 returns a tuple instead of an object with attributes
-            # The first element in the tuple is typically the hidden states
-            # Extract embeddings based on pooling strategy
-            if self.dna_bert_2_pooling == "cls":
-                # Use [CLS] token embedding (index 0)
-                if isinstance(outputs, tuple):
-                    last_hidden = outputs[0]  # First element of tuple contains hidden states
-                else:
-                    last_hidden = outputs.last_hidden_state
-                batch_embeddings = last_hidden[:, 0, :].cpu().numpy()
-            else:  # mean pooling
-                # Use mean of all token embeddings (excluding padding)
-                attention_mask = inputs["attention_mask"]
-                if isinstance(outputs, tuple):
-                    last_hidden = outputs[0]  # First element of tuple contains hidden states
-                else:
-                    last_hidden = outputs.last_hidden_state
-
-                # Apply attention mask to get mean of non-padding tokens
-                input_mask_expanded = attention_mask.unsqueeze(-1).expand(last_hidden.size()).float()
-                sum_embeddings = torch.sum(last_hidden * input_mask_expanded, 1)
-                sum_mask = torch.clamp(input_mask_expanded.sum(1), min=1e-9)
-                batch_embeddings = (sum_embeddings / sum_mask).cpu().numpy()
-
-            result.append(batch_embeddings)
-
-            # Log progress after every 10 batches
-            if (i // batch_size) % 10 == 0 and i > 0:
-                log.info("Processed %s/%s sequences", min(i + batch_size, len(sequences)), len(sequences))
-
-        return np.vstack(result)
+        return chunks
 
     def convert_sequences_to_dna_bert_2_vectors(
             self, sequences: np.ndarray, labels: np.ndarray, batch_size: int = None, max_length: int = 512
     ) -> (np.ndarray, np.ndarray):
-        """Convert sequences to vectors using DNABERT-2 with preservation of all embedding dimensions."""
+        """
+        Convert sequences to vectors using DNABERT-2 with GPU-optimized chunking.
+
+        This implementation uses a custom dataset and collator to handle chunking efficiently,
+        processing all chunks in batches to maximize GPU utilization.
+
+        Args:
+            sequences: Array of DNA sequences
+            labels: Array of corresponding labels
+            batch_size: Batch size for processing
+            max_length: Maximum sequence length for tokenizer
+
+        Returns:
+            Tuple of (embeddings, labels)
+        """
         if self.dna_bert_2_tokenizer is None or self.dna_bert_2_model is None:
             raise ValueError("DNABERT-2 model not loaded.")
 
@@ -747,34 +793,36 @@ class DNASequenceProcessor:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         log.info("Using device: %s, batch size: %s", device, batch_size)
 
-        # Create dataset
+        # Create dataset with chunking support
         dataset = DNABERT2SequenceDataset(
             sequences=sequences,
             labels=labels,
             tokenizer=self.dna_bert_2_tokenizer,
-            max_length=max_length,
+            max_length=400,
+            group=self.group
         )
 
-        # Optimize DataLoader
+        # Create DataLoader with custom collator for handling chunks
         dataloader = torch.utils.data.DataLoader(
             dataset,
-            batch_size=batch_size,
+            batch_size=batch_size if self.group == 0 else max(1, batch_size // (self.group + 1)),  # Adjust batch size
             shuffle=False,
             num_workers=self.num_workers,
             pin_memory=torch.cuda.is_available(),
             prefetch_factor=self.prefetch_factor,
-            persistent_workers=True,
-            drop_last=False
+            persistent_workers=True if self.num_workers > 0 else False,
+            drop_last=False,
+            collate_fn=ChunkCollator()
         )
 
-        # Khởi tạo mảng để lưu kết quả
-        # Đầu tiên tìm kích thước embedding bằng cách chạy một mẫu
+        # First find embedding dimension by running a sample
         with torch.no_grad():
+            # Create a minimal single input to get embedding dimension
             sample_inputs = self.dna_bert_2_tokenizer(
-                sequences[0],
+                sequences[0][:min(len(sequences[0]), max_length)],
                 return_tensors="pt",
                 truncation=True,
-                max_length=max_length,
+                max_length=400,
                 padding="max_length"
             ).to(device)
 
@@ -788,37 +836,99 @@ class DNASequenceProcessor:
 
             embedding_dim = sample_emb.shape[1]
 
-        # Khởi tạo mảng kết quả với kích thước đầy đủ
+        # Initialize results array
         all_embeddings = np.zeros((len(sequences), embedding_dim), dtype=np.float32)
         all_labels = np.zeros(len(sequences), dtype=np.int32)
 
-        # Xử lý từng batch và điền vào mảng kết quả
-        current_idx = 0
+        log.info(f"Processing {len(sequences)} sequences with {self.group + 1} chunks per sequence")
+
+        # Process all batches
         with tqdm(total=len(sequences), desc="Embedding sequences") as pbar:
             with torch.no_grad():
                 for batch in dataloader:
-                    batch = {k: v.to(device) for k, v in batch.items()}
-                    batch_labels = batch.pop('labels')
-                    batch_size = batch_labels.size(0)
+                    # Move batch to device
+                    batch_labels = batch.pop("labels").to(device)
+                    is_chunked = batch.pop("is_chunked")
 
-                    outputs = self.dna_bert_2_model(**batch, output_hidden_states=True)
-                    last_hidden = outputs.hidden_states[-1]
+                    if not is_chunked:
+                        # Standard processing for non-chunked sequences
+                        batch = {k: v.to(device) if v is not None else None for k, v in batch.items()}
+                        outputs = self.dna_bert_2_model(**batch, output_hidden_states=True)
+                        last_hidden = outputs.hidden_states[-1]
 
-                    if self.dna_bert_2_pooling == "cls":
-                        batch_emb = last_hidden[:, 0, :].cpu().numpy()
-                    elif self.dna_bert_2_pooling == "mean":
-                        batch_emb = torch.mean(last_hidden, dim=1).cpu().numpy()
-                    elif self.dna_bert_2_pooling == "max":
-                        batch_emb = torch.max(last_hidden, dim=1).values.cpu().numpy()
+                        # Get embeddings based on pooling strategy
+                        if self.dna_bert_2_pooling == "cls":
+                            batch_emb = last_hidden[:, 0, :].cpu().numpy()
+                        elif self.dna_bert_2_pooling == "mean":
+                            batch_emb = torch.mean(last_hidden, dim=1).cpu().numpy()
+                        elif self.dna_bert_2_pooling == "max":
+                            batch_emb = torch.max(last_hidden, dim=1).values.cpu().numpy()
+                        else:
+                            batch_emb = torch.mean(last_hidden, dim=1).cpu().numpy()
+
+                        # Store embeddings and labels
+                        batch_size = len(batch_labels)
+                        seq_indices = list(range(pbar.n, pbar.n + batch_size))
+                        all_embeddings[seq_indices] = batch_emb
+                        all_labels[seq_indices] = batch_labels.cpu().numpy()
+
+                        # Update progress
+                        pbar.update(batch_size)
+
                     else:
-                        batch_emb = torch.min(last_hidden, dim=1).values.cpu().numpy()
+                        # Chunk processing
+                        # Get mapping and metadata for chunks
+                        chunk_to_seq_map = batch.pop("chunk_to_seq_map").cpu().numpy()
+                        num_chunks_per_seq = batch.pop("num_chunks_per_seq").cpu().numpy()
 
-                    # Điền kết quả vào mảng đã được khởi tạo trước
-                    all_embeddings[current_idx:current_idx + batch_size] = batch_emb
-                    all_labels[current_idx:current_idx + batch_size] = batch_labels.cpu().numpy()
+                        # Move remaining inputs to device
+                        inputs = {k: v.to(device) if v is not None else None for k, v in batch.items()}
 
-                    current_idx += batch_size
-                    pbar.update(batch_size)
+                        # Get embeddings for all chunks
+                        outputs = self.dna_bert_2_model(**inputs, output_hidden_states=True)
+                        last_hidden = outputs.hidden_states[-1]
+
+                        # Get embeddings based on pooling strategy
+                        if self.dna_bert_2_pooling == "cls":
+                            chunk_embeddings = last_hidden[:, 0, :].cpu()
+                        elif self.dna_bert_2_pooling == "mean":
+                            chunk_embeddings = torch.mean(last_hidden, dim=1).cpu()
+                        elif self.dna_bert_2_pooling == "max":
+                            chunk_embeddings = torch.max(last_hidden, dim=1).values.cpu()
+                        else:
+                            chunk_embeddings = torch.mean(last_hidden, dim=1).cpu()
+
+                        # Group chunk embeddings by original sequence
+                        unique_seq_indices = np.unique(chunk_to_seq_map)
+                        seq_indices = []
+
+                        for seq_idx in unique_seq_indices:
+                            # Get all chunks for this sequence
+                            chunk_indices = np.where(chunk_to_seq_map == seq_idx)[0]
+                            seq_chunks = chunk_embeddings[chunk_indices]
+
+                            # Combine chunk embeddings based on pooling strategy
+                            if self.dna_bert_2_pooling == "mean":
+                                # Use mean pooling for combining chunks
+                                combined_embedding = torch.mean(seq_chunks, dim=0).numpy()
+                            elif self.dna_bert_2_pooling == "max":
+                                # Use max pooling for combining chunks
+                                combined_embedding = torch.max(seq_chunks, dim=0).values.numpy()
+                            elif self.dna_bert_2_pooling == "min":
+                                # Use min pooling for combining chunks
+                                combined_embedding = torch.min(seq_chunks, dim=0).values.numpy()
+                            else:
+                                # Default to mean pooling
+                                combined_embedding = torch.mean(seq_chunks, dim=0).numpy()
+
+                            # Store in the right position
+                            actual_idx = pbar.n + len(seq_indices)
+                            all_embeddings[actual_idx] = combined_embedding
+                            all_labels[actual_idx] = batch_labels[seq_idx].cpu().numpy()
+                            seq_indices.append(actual_idx)
+
+                        # Update progress
+                        pbar.update(len(unique_seq_indices))
 
         # Free GPU memory
         if torch.cuda.is_available():
@@ -910,9 +1020,10 @@ class DNASequenceProcessor:
         """
         # Step 1: Load and clean data
         log.info("Step 1: Loading and cleaning data from %s and %s", train_path, val_path)
+        log.info(f"Max sequence length: {self.max_size}")
         train_df, val_df = self.load_and_clean_data(train_path, val_path)
-        train_df = train_df.sample(10) # for testing
-        val_df = val_df.sample(10) # for testing
+        # train_df = train_df.sample(10)  # for testing
+        # val_df = val_df.sample(10)  # for testing
 
         # Step 2: Apply windowing and extract features
         log.info("Step 2: Applying sequence windowing with %s%% overlap", self.overlap_percent)

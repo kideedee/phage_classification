@@ -1,7 +1,7 @@
 import gc
 import os
 import random
-from datetime import datetime
+import time
 
 import numpy as np
 import torch
@@ -11,20 +11,10 @@ from transformers import (
     AutoModelForSequenceClassification,
     TrainingArguments,
     Trainer,
-    EarlyStoppingCallback,
-    BertConfig
+    EarlyStoppingCallback
 )
 
-# Import flash attention if available
-try:
-    import flash_attn
-
-    HAS_FLASH_ATTN = True
-    print("Flash Attention is available!")
-except ImportError:
-    HAS_FLASH_ATTN = False
-    print("Flash Attention is not installed. Please install with: pip install flash-attn")
-
+from common import utils
 from common.env_config import config
 from logger.phg_cls_log import log
 
@@ -148,7 +138,171 @@ class MemoryEfficientTrainer(Trainer):
         return (loss, logits, labels)
 
 
-def main():
+def run():
+    fold = 1
+    min_size = 100
+    max_size = 400
+    group = f"{min_size}_{max_size}"
+
+    data_dir = os.path.join(config.DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
+    output_model_path = os.path.join(data_dir, f"finetune_dna_bert.pt")
+    utils.start_experiment(f"finetune_dna_bert_2_group_{group}_fold_{fold}", time.time())
+
+    log.info(f"Data directory: {data_dir}")
+
+    # Load datasets
+    log.info("Loading datasets...")
+    tokenized_train = load_from_disk(os.path.join(data_dir, "processed_train_dataset"))
+    tokenized_val = load_from_disk(os.path.join(data_dir, "processed_val_dataset"))
+
+    # Set format for training data
+    # tokenized_train.set_format("torch", columns=["input_ids", "attention_mask", "label"])
+
+    # Load model
+    log.info("Loading model...")
+    model = AutoModelForSequenceClassification.from_pretrained(
+        "zhihan1996/DNABERT-2-117M",
+        num_labels=2,
+        trust_remote_code=True,
+        ignore_mismatched_sizes=True,
+        classifier_dropout=0.2,  # Try different dropout rates
+        problem_type="single_label_classification"
+    ).to(device)
+
+    # Optimize model for RTX 3070 Ti memory constraints
+    # Adaptive layer freezing based on memory usage
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_before = sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+    # Freeze embedding layer and a few encoder layers
+    # for param in model.bert.embeddings.parameters():
+    #     param.requires_grad = False
+
+    # For RTX 3070 Ti, freeze first 6 layers instead of 8 for better fine-tuning
+    # while still keeping memory usage reasonable
+    # for i in range(6):
+    #     for param in model.bert.encoder.layer[i].parameters():
+    #         param.requires_grad = False
+
+    # Apply gradient checkpointing for remaining trainable layers
+    # This significantly reduces memory usage with minimal performance impact
+    # if hasattr(model.bert, "encoder") and hasattr(model.bert.encoder, "gradient_checkpointing"):
+    #     model.bert.encoder.gradient_checkpointing = True
+    #     log.info("Enabled gradient checkpointing for encoder")
+
+    # Log memory savings
+    trainable_after = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    log.info(f"Total model parameters: {total_params:,}")
+    log.info(f"Trainable parameters reduced from {trainable_before:,} to {trainable_after:,}")
+    log.info(f"Memory saving: {(1 - trainable_after / trainable_before) * 100:.1f}%")
+    log.info("Frozen embeddings and first 6 encoder layers")
+
+    training_args = TrainingArguments(
+        output_dir="output",
+        # Learning rate and optimization
+        learning_rate=5e-5,
+        weight_decay=0.01,
+        max_grad_norm=1.0,
+
+        # Modern optimizer settings
+        optim="adamw_torch_fused",  # Optimized for CUDA
+
+        # Batch size and epochs
+        per_device_train_batch_size=32,  # Increased for RTX 5070 Ti
+        per_device_eval_batch_size=32,
+        gradient_accumulation_steps=2,  # Accumulate for effective larger batch
+        num_train_epochs=5,
+
+        # Precision settings - modern approach
+        bf16=True,  # Better than fp16 on RTX 5070 Ti if supported
+        fp16=False,  # Use either bf16 OR fp16, not both
+
+        # Memory optimization
+        gradient_checkpointing=True,  # Trades compute for memory savings
+
+        # Evaluation and saving
+        evaluation_strategy="epoch",
+        save_strategy="epoch",
+        save_total_limit=2,  # Keep best and last
+        load_best_model_at_end=True,
+        metric_for_best_model="f1",  # Assuming classification task
+        greater_is_better=True,
+
+        # Warmup and scheduling
+        lr_scheduler_type="cosine",  # Better convergence
+        warmup_ratio=0.1,
+
+        # System utilization
+        dataloader_num_workers=6,  # Better CPU utilization
+        dataloader_pin_memory=True,  # Faster data transfer to GPU
+
+        # Logging
+        logging_dir="logs",
+        logging_steps=200,
+        logging_first_step=True,
+        report_to=None,
+
+        # DeepSpeed optional integration
+        # deepspeed="ds_config.json",    # Uncomment and create config if needed
+
+        # Hub settings
+        push_to_hub=False,
+    )
+
+    # Create our custom trainer with memory efficiency features
+    trainer = MemoryEfficientTrainer(
+        model=model,
+        args=training_args,
+        train_dataset=tokenized_train,
+        eval_dataset=tokenized_val,
+        compute_metrics=compute_metrics,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=2)]
+    )
+
+    # Set format for validation data
+    # tokenized_val.set_format("torch", columns=["input_ids", "attention_mask", "label"])
+
+    # Apply training optimizations specific to RTX 3070 Ti
+    log.info("Starting training with RTX 5070 Ti optimizations...")
+
+    # Monitor GPU memory before training
+    if torch.cuda.is_available():
+        before_train_mem = torch.cuda.memory_allocated(0) / (1024 ** 3)
+        log.info(f"GPU memory before training: {before_train_mem:.2f} GB")
+
+    # Train model
+    # trainer.train()
+
+    # Free up memory before evaluation
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        current_mem = torch.cuda.memory_allocated(0) / (1024 ** 3)
+        log.info(f"GPU memory after training: {current_mem:.2f} GB")
+
+    # Evaluate on validation set
+    log.info("Evaluating on validation set...")
+    eval_results = trainer.evaluate()
+    log.info(f"Validation results: {eval_results}")
+
+    # Save model - use half precision to reduce file size
+    log.info("Saving model in optimized format...")
+
+    # Save model
+    # model_save_path = "./best_dnabert2_phage_classifier"
+    # trainer.save_model(model_save_path)
+    model.save_pretrained(output_model_path)
+
+    # Log final statistics
+    if torch.cuda.is_available():
+        peak_mem = torch.cuda.max_memory_allocated(0) / (1024 ** 3)
+        final_mem = torch.cuda.memory_allocated(0) / (1024 ** 3)
+        log.info(f"Peak GPU memory usage: {peak_mem:.2f} GB")
+        log.info(f"Final GPU memory usage: {final_mem:.2f} GB")
+
+    log.info("Training completed and model saved!")
+
+
+if __name__ == "__main__":
     # Set seed for reproducibility
     set_seed()
 
@@ -161,7 +315,6 @@ def main():
         device_name = torch.cuda.get_device_name(0)
         gpu_memory = torch.cuda.get_device_properties(0).total_memory / (1024 ** 3)
         log.info(f"Training on GPU: {device_name} with {gpu_memory:.2f} GB memory")
-        log.info(f"Flash Attention available: {HAS_FLASH_ATTN}")
 
         # Clear memory and cache before training
         gc.collect()
@@ -189,168 +342,4 @@ def main():
     else:
         log.info("No GPU available, training on CPU")
 
-    # Load datasets
-    log.info("Loading datasets...")
-    tokenized_train = load_from_disk("prepared_dataset/processed_train_dataset")
-    tokenized_val = load_from_disk("prepared_dataset/processed_val_dataset")
-
-    # Set format for training data
-    # tokenized_train.set_format("torch", columns=["input_ids", "attention_mask", "label"])
-
-    # Load model with Flash Attention configuration
-    log.info("Loading model with Flash Attention support...")
-
-    # Get model configuration to modify it
-    config = AutoModelForSequenceClassification.from_pretrained(
-        "zhihan1996/DNABERT-2-117M",
-        num_labels=2,
-        trust_remote_code=True,
-        return_dict=True
-    ).config
-
-    # Enable Flash Attention in the config
-    if HAS_FLASH_ATTN:
-        # Enable Flash Attention by setting the appropriate config flags
-        config.attention_implementation = "flash_attention_2"  # Enable Flash Attention 2
-        config.use_flash_attention = True  # Legacy flag for compatibility
-
-        # Set additional flash attention parameters
-        config.flash_attention_dropout = 0.1  # Set dropout rate for flash attention
-        config.flash_attention_block_size = 128  # Optimal for RTX 5070Ti
-        log.info("Enabled Flash Attention in model configuration")
-
-    # Load model with modified config
-    model = AutoModelForSequenceClassification.from_pretrained(
-        "zhihan1996/DNABERT-2-117M",
-        config=config,
-        ignore_mismatched_sizes=True,
-        classifier_dropout=0.2,
-        problem_type="single_label_classification"
-    ).to(device)
-
-    # Verify Flash Attention is enabled by checking attention modules
-    if HAS_FLASH_ATTN:
-        # Check if model has flash attention enabled
-        try:
-            for layer in model.bert.encoder.layer:
-                attn_impl = getattr(layer.attention.self, "_attn_implementation", "None")
-                log.info(f"Attention implementation: {attn_impl}")
-                if "flash" in str(attn_impl).lower():
-                    log.info("Flash Attention confirmed in model layers")
-                    break
-        except:
-            log.info("Could not verify Flash Attention in model structure")
-
-    # Optimize model for RTX 5070 Ti memory constraints
-    total_params = sum(p.numel() for p in model.parameters())
-    trainable_before = sum(p.numel() for p in model.parameters() if p.requires_grad)
-
-    # Apply gradient checkpointing for remaining trainable layers
-    if hasattr(model.bert, "encoder") and hasattr(model.bert.encoder, "gradient_checkpointing_enable"):
-        model.bert.encoder.gradient_checkpointing_enable()
-        log.info("Enabled gradient checkpointing for encoder")
-
-    # Log memory savings
-    trainable_after = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    log.info(f"Total model parameters: {total_params:,}")
-    log.info(f"Trainable parameters: {trainable_after:,}")
-
-    # For RTX 5070 Ti - optimized training arguments
-    training_args = TrainingArguments(
-        output_dir="output",
-        # Learning rate and optimization
-        learning_rate=5e-5,
-        weight_decay=0.01,
-        max_grad_norm=1.0,
-
-        # Modern optimizer settings for RTX 5070 Ti
-        optim="adamw_torch_fused",  # Optimized for CUDA
-
-        # Batch size and epochs - increased for RTX 5070 Ti + Flash Attention
-        per_device_train_batch_size=12,  # Increased with Flash Attention
-        per_device_eval_batch_size=12,
-        gradient_accumulation_steps=2,
-        num_train_epochs=5,
-
-        # Precision settings - modern approach for RTX 5070 Ti
-        bf16=True,  # Better than fp16 on RTX 5070 Ti
-        fp16=False,  # Use either bf16 OR fp16, not both
-
-        # Memory optimization
-        gradient_checkpointing=True,  # Trades compute for memory savings
-
-        # Evaluation and saving
-        evaluation_strategy="epoch",
-        save_strategy="epoch",
-        save_total_limit=2,
-        load_best_model_at_end=True,
-        metric_for_best_model="f1",
-        greater_is_better=True,
-
-        # Warmup and scheduling
-        lr_scheduler_type="cosine",
-        warmup_ratio=0.1,
-
-        # System utilization
-        dataloader_num_workers=6,
-        dataloader_pin_memory=True,
-
-        # Logging
-        logging_dir="logs",
-        logging_steps=200,
-        logging_first_step=True,
-        report_to=None,
-
-        # Hub settings
-        push_to_hub=False,
-    )
-
-    # Create our custom trainer with memory efficiency features
-    trainer = MemoryEfficientTrainer(
-        model=model,
-        args=training_args,
-        train_dataset=tokenized_train,
-        eval_dataset=tokenized_val,
-        compute_metrics=compute_metrics,
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=2)]
-    )
-
-    # Apply training optimizations specific to RTX 5070 Ti
-    log.info("Starting training with RTX 5070 Ti optimizations and Flash Attention...")
-
-    # Monitor GPU memory before training
-    if torch.cuda.is_available():
-        before_train_mem = torch.cuda.memory_allocated(0) / (1024 ** 3)
-        log.info(f"GPU memory before training: {before_train_mem:.2f} GB")
-
-    # Train model
-    trainer.train()
-
-    # Free up memory before evaluation
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
-        current_mem = torch.cuda.memory_allocated(0) / (1024 ** 3)
-        log.info(f"GPU memory after training: {current_mem:.2f} GB")
-
-    # Evaluate on validation set
-    log.info("Evaluating on validation set...")
-    eval_results = trainer.evaluate()
-    log.info(f"Validation results: {eval_results}")
-
-    # Save model
-    log.info("Saving model in optimized format...")
-    model_save_path = "./best_dnabert2_phage_classifier_flash_attn"
-    trainer.save_model(model_save_path)
-
-    # Log final statistics
-    if torch.cuda.is_available():
-        peak_mem = torch.cuda.max_memory_allocated(0) / (1024 ** 3)
-        final_mem = torch.cuda.memory_allocated(0) / (1024 ** 3)
-        log.info(f"Peak GPU memory usage: {peak_mem:.2f} GB")
-        log.info(f"Final GPU memory usage: {final_mem:.2f} GB")
-
-    log.info("Training completed and model saved!")
-
-
-if __name__ == "__main__":
-    main()
+    run()
