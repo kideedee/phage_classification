@@ -11,9 +11,7 @@ from imblearn.under_sampling import RandomUnderSampler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, roc_curve, auc
 
-from logger.phg_cls_log import setup_logger
-
-log = setup_logger(__file__)
+from logger.phg_cls_log import log
 
 
 def train_catboost(X_train, y_train, X_val, y_val, params=None, early_stopping_rounds=20,

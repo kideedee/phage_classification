@@ -1,34 +1,25 @@
 import logging
 import os
-from datetime import datetime
-from pathlib import Path
-import inspect
 
 from common.env_config import config
 
-def setup_logger(script_path):
-    current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-    script_name = os.path.basename(script_path).split('.')[0]
 
-    # Logger cho thông tin chung
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.StreamHandler()  # Console handler
-        ]
-    )
-    # log = logging.getLogger(__name__)
-
+def setup_logger(log_name="phg_cls_log"):
     # Logger riêng cho monitoring
-    log = logging.getLogger('monitor')
-    log.setLevel(logging.INFO)
+    log = logging.getLogger(log_name)
+    if config.DEBUGGING == 1:
+        log.setLevel(logging.DEBUG)
+    else:
+        log.setLevel(logging.INFO)
+
+    stream_handler = logging.StreamHandler()
+    log.addHandler(stream_handler)
 
     # File handler
-    log_dir = os.path.join(config.LOG_DIR, script_name)
+    log_dir = os.path.join(config.LOG_DIR)
     if not os.path.exists(log_dir):
         os.mkdir(log_dir)
-    monitor_file_handler = logging.FileHandler(os.path.join(log_dir, f"{script_name}_{current_time}.log"), mode='w')
+    monitor_file_handler = logging.FileHandler(os.path.join(log_dir, f"{log_name}.log"), mode='a')
     monitor_file_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
 
     log.addHandler(monitor_file_handler)
@@ -36,4 +27,6 @@ def setup_logger(script_path):
     return log
 
 
-log = setup_logger(inspect.getfile(inspect.currentframe()))
+log = setup_logger()
+experiment_log = setup_logger(log_name="experiment_log")
+embedding_log = setup_logger(log_name="embedding_log")

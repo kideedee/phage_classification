@@ -1,4 +1,5 @@
 import os
+from collections import Counter
 from typing import List, Tuple, Dict, Literal
 
 import numpy as np
@@ -6,23 +7,20 @@ import pandas as pd
 import torch
 from Bio.Seq import Seq
 from gensim.models import Word2Vec
+from imblearn.under_sampling import RandomUnderSampler
+from joblib import Parallel, delayed
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from torch.utils.data import Dataset
 from tqdm import tqdm
 from transformers import (
     AutoTokenizer,
-    AutoModel,
-    AutoModelForSequenceClassification,
-    TrainingArguments,
-    Trainer,
-    DataCollatorWithPadding
+    AutoModel, BertForSequenceClassification
 )
 
 from common.csv_sequence_windowing import window_sequences_parallel
 from common.env_config import config
-from logger.phg_cls_log import setup_logger
-
-log = setup_logger(__file__)
+from embedding_sequence import dna2vec
+from logger.phg_cls_log import embedding_log as log
 
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
@@ -41,96 +39,173 @@ def compute_metrics(pred):
     }
 
 
-class DNASequenceDataset(Dataset):
-    """Dataset class for DNA sequences for fine-tuning DNA-BERT."""
-
-    def __init__(self, sequences, labels, tokenizer, max_length=512, kmer_size=6):
-        self.sequences = sequences
-        self.labels = labels
-        self.tokenizer = tokenizer
-        self.max_length = max_length
-        self.kmer_size = kmer_size
-
-    def __len__(self):
-        return len(self.sequences)
-
-    def __getitem__(self, idx):
-        # Format sequence as space-separated k-mers
-        sequence = self.sequences[idx]
-        kmers = [sequence[i:i + self.kmer_size] for i in range(len(sequence) - self.kmer_size + 1)]
-        formatted_seq = " ".join(kmers)
-
-        # Tokenize
-        encoding = self.tokenizer(
-            formatted_seq,
-            truncation=True,
-            max_length=self.max_length,
-            padding="max_length",
-            return_tensors="pt"
-        )
-
-        # Convert to correct format for Trainer
-        item = {key: val.squeeze(0) for key, val in encoding.items()}
-        item["labels"] = torch.tensor(self.labels[idx], dtype=torch.long)
-
-        return item
-
-
 class DNABERT2SequenceDataset(Dataset):
-    """Dataset class for DNA sequences for fine-tuning DNABERT-2."""
+    """Dataset class for DNA sequences for fine-tuning DNABERT-2 with chunking support."""
 
-    def __init__(self, sequences, labels, tokenizer, max_length=512):
+    def __init__(self, sequences, labels, tokenizer, max_length=512, group=0):
+        """
+        Initialize the dataset with support for chunking based on group parameter.
+
+        Args:
+            sequences: List of DNA sequences
+            labels: List of corresponding labels
+            tokenizer: DNABERT-2 tokenizer
+            max_length: Maximum sequence length for tokenizer
+            group: Group parameter (0=no chunking, 1=2 chunks, 2=3 chunks, 3=4 chunks)
+        """
         self.sequences = sequences
         self.labels = labels
         self.tokenizer = tokenizer
         self.max_length = max_length
+        self.group = group
+
+        # Determine number of chunks based on group value
+        self.num_chunks = 1
+        if group > 0:
+            self.num_chunks = group + 1
+
+    def split_sequence_into_chunks(self, sequence):
+        """
+        Split a DNA sequence into equal-sized chunks based on self.num_chunks.
+
+        Args:
+            sequence: DNA sequence string
+
+        Returns:
+            List of sequence chunks
+        """
+        seq_len = len(sequence)
+        chunk_size = seq_len // self.num_chunks
+
+        chunks = []
+        for i in range(self.num_chunks):
+            start_idx = i * chunk_size
+            # For the last chunk, include any remaining characters
+            end_idx = start_idx + chunk_size if i < self.num_chunks - 1 else seq_len
+            chunks.append(sequence[start_idx:end_idx])
+
+        return chunks
 
     def __len__(self):
         return len(self.sequences)
 
     def __getitem__(self, idx):
-        # DNABERT-2 can process raw sequences directly without k-mer formatting
+        # Get the original sequence and label
         sequence = self.sequences[idx]
+        label = self.labels[idx]
 
-        # Tokenize
-        encoding = self.tokenizer(
-            sequence,
-            truncation=True,
-            max_length=self.max_length,
-            padding="max_length",
-            return_tensors="pt"
-        )
+        if self.group == 0:
+            # No chunking, process the entire sequence
+            encoding = self.tokenizer(
+                sequence,
+                truncation=True,
+                max_length=self.max_length,
+                padding="max_length",
+                return_tensors="pt"
+            )
 
-        # Convert to correct format for Trainer
-        item = {key: val.squeeze(0) for key, val in encoding.items()}
-        item["labels"] = torch.tensor(self.labels[idx], dtype=torch.long)
+            # Convert to correct format for DataLoader
+            item = {key: val.squeeze(0) for key, val in encoding.items()}
+            item["labels"] = torch.tensor(label, dtype=torch.long)
+            return item
+        else:
+            # Split sequence into chunks
+            chunks = self.split_sequence_into_chunks(sequence)
 
-        return item
+            # Create a list to hold encodings for each chunk
+            chunk_encodings = []
+
+            # Process each chunk
+            for chunk in chunks:
+                encoding = self.tokenizer(
+                    chunk,
+                    truncation=True,
+                    max_length=self.max_length,
+                    padding="max_length",
+                    return_tensors="pt"
+                )
+
+                # Convert to correct format
+                chunk_item = {key: val.squeeze(0) for key, val in encoding.items()}
+                chunk_encodings.append(chunk_item)
+
+            # Add label to the result
+            result = {
+                "chunk_encodings": chunk_encodings,
+                "labels": torch.tensor(label, dtype=torch.long),
+                "num_chunks": self.num_chunks
+            }
+
+            return result
 
 
-class DNASequenceEmbeddingDataset(Dataset):
-    """Dataset cho việc embedding sequences với DNABERT-2."""
+class ChunkCollator:
+    """
+    Custom collator for handling chunked sequences in batches.
+    This collator creates batches of individual chunks while maintaining
+    information about which chunks belong to the same original sequence.
+    """
 
-    def __init__(self, sequences, tokenizer, max_length=512):
-        self.sequences = sequences
-        self.tokenizer = tokenizer
-        self.max_length = max_length
+    def __call__(self, batch):
+        if "chunk_encodings" not in batch[0]:
+            # Regular batch without chunking
+            return self._collate_regular(batch)
+        else:
+            # Batch with chunking
+            return self._collate_chunks(batch)
 
-    def __len__(self):
-        return len(self.sequences)
+    def _collate_regular(self, batch):
+        # Standard collation for regular batches
+        return {
+            "input_ids": torch.stack([item["input_ids"] for item in batch]),
+            "attention_mask": torch.stack([item["attention_mask"] for item in batch]),
+            "token_type_ids": torch.stack([item["token_type_ids"] for item in batch]) if "token_type_ids" in batch[
+                0] else None,
+            "labels": torch.stack([item["labels"] for item in batch]),
+            "is_chunked": False
+        }
 
-    def __getitem__(self, idx):
-        sequence = self.sequences[idx]
-        # Thực hiện tokenize ngay trong __getitem__ để tận dụng đa luồng
-        inputs = self.tokenizer(
-            sequence,
-            truncation=True,
-            max_length=self.max_length,
-            padding="max_length",
-            return_tensors="pt"
-        )
-        # Loại bỏ chiều batch
-        return {k: v.squeeze(0) for k, v in inputs.items()}
+    def _collate_chunks(self, batch):
+        # For chunked sequences, we need to:
+        # 1. Collect all chunks from all sequences
+        # 2. Keep track of which chunks belong to which sequence
+
+        all_chunks = []
+        chunk_to_seq_map = []  # Maps each chunk to its sequence index
+        labels = []
+        num_chunks_per_seq = []
+
+        for seq_idx, item in enumerate(batch):
+            chunks = item["chunk_encodings"]
+            num_chunks = len(chunks)
+            num_chunks_per_seq.append(num_chunks)
+
+            # Add all chunks from this sequence
+            for chunk in chunks:
+                all_chunks.append(chunk)
+                chunk_to_seq_map.append(seq_idx)
+
+            # Add label once per sequence
+            labels.append(item["labels"])
+
+        # Collate all chunks into a single batch
+        input_ids = torch.stack([chunk["input_ids"] for chunk in all_chunks])
+        attention_mask = torch.stack([chunk["attention_mask"] for chunk in all_chunks])
+
+        # Add token_type_ids if they exist
+        token_type_ids = None
+        if "token_type_ids" in all_chunks[0]:
+            token_type_ids = torch.stack([chunk["token_type_ids"] for chunk in all_chunks])
+
+        return {
+            "input_ids": input_ids,
+            "attention_mask": attention_mask,
+            "token_type_ids": token_type_ids,
+            "labels": torch.stack(labels),
+            "chunk_to_seq_map": torch.tensor(chunk_to_seq_map),
+            "num_chunks_per_seq": torch.tensor(num_chunks_per_seq),
+            "is_chunked": True
+        }
 
 
 class DNASequenceProcessor:
@@ -145,52 +220,46 @@ class DNASequenceProcessor:
     5. Saving processed data
 
     Attributes:
-        encoding_method: Method to encode DNA sequences ('word2vec', 'dna_bert', or 'dna_bert_2')
+        encoding_method: Method to encode DNA sequences ('word2vec', 'dna_bert', 'dna2vec', or 'dna_bert_2')
         kmer_size: Size of k-mers for sequence processing (for DNA-BERT)
         overlap_percent: Percentage of overlap for sequence windowing
         word2vec_model_path: Path to Word2Vec model file (if using word2vec)
-        dna_bert_model_name: Name of pre-trained DNA-BERT or DNABERT-2 model
-        dna_bert_pooling: Pooling strategy for DNA-BERT/DNABERT-2 ('cls' or 'mean')
-        dna_bert_batch_size: Batch size for DNA-BERT/DNABERT-2 processing
+        dna_bert_2_tokenizer: Name of pre-trained DNA-BERT or DNABERT-2 model
+        dna_bert_2_pooling: Pooling strategy for DNA-BERT/DNABERT-2 ('cls' or 'mean')
+        dna_bert_2_batch_size: Batch size for DNA-BERT/DNABERT-2 processing
         output_dir: Directory to save output files
         retrain_word2vec: Whether to force retraining of Word2Vec model
-        is_fine_tune_dna_bert: Whether to fine-tune DNA-BERT/DNABERT-2 before embedding
-        fine_tune_epochs: Number of epochs for fine-tuning
-        fine_tune_batch_size: Batch size for fine-tuning
-        fine_tune_learning_rate: Learning rate for fine-tuning
     """
 
     def __init__(
             self,
-            encoding_method: Literal["word2vec", "dna_bert", "dna_bert_2", "one_hot"] = "word2vec",
+            encoding_method: Literal["word2vec", "dna_bert_2", "dna2vec", "one_hot"] = "word2vec",
             kmer_size: int = 6,
             overlap_percent: int = 50,
+            fold=1,
             min_size=100,
             max_size=400,
-            word2vec_model_path: str = "phage_word2vec_model.bin",
-            dna_bert_model_name: str = "zhihan1996/DNA_bert_6",
+            group=0,
+            dna_bert_2_tokenizer_path: str = "zhihan1996/DNA_bert_6",
+            dna_bert_2_model_path: str = "zhihan1996/DNA_bert_6",
             dna_bert_pooling: Literal["cls", "mean"] = "cls",
-            dna_bert_batch_size: int = 32,
-            output_dir: str = ".",
+            dna_bert_2_batch_size: int = 32,
             retrain_word2vec: bool = False,
-            is_fine_tune_dna_bert: bool = False,
-            fine_tune_epochs: int = 3,
-            fine_tune_batch_size: int = 16,
-            fine_tune_learning_rate: float = 5e-5,
             num_workers=2,
-            prefetch_factor=2
+            prefetch_factor=2,
+
+            dna2vec_method: Literal["average", "sum", "concat"] = "average",
     ):
         """
         Initialize the DNA sequence processor.
 
         Args:
-            encoding_method: Method to encode DNA sequences ('word2vec', 'dna_bert', 'dna_bert_2', one_hot)
+            encoding_method: Method to encode DNA sequences ('word2vec', 'dna_bert_2', one_hot)
             kmer_size: Size of k-mers (note: for DNA-BERT should be 3, 4, 5, or 6)
             overlap_percent: Percentage of overlap for sequence windowing
-            word2vec_model_path: Path to Word2Vec model file (if using word2vec)
             dna_bert_model_name: Name of pre-trained DNA-BERT or DNABERT-2 model
             dna_bert_pooling: Pooling strategy for DNA-BERT/DNABERT-2 ('cls' or 'mean')
-            dna_bert_batch_size: Batch size for DNA-BERT/DNABERT-2 processing
+            dna_bert_2_batch_size: Batch size for DNA-BERT/DNABERT-2 processing
             output_dir: Directory to save output files
             retrain_word2vec: Whether to force retraining of Word2Vec model
             is_fine_tune_dna_bert: Whether to fine-tune DNA-BERT/DNABERT-2 before embedding
@@ -198,55 +267,105 @@ class DNASequenceProcessor:
             fine_tune_batch_size: Batch size for fine-tuning
             fine_tune_learning_rate: Learning rate for fine-tuning
         """
+        self.dna2vec_model = None
         self.prefetch_factor = prefetch_factor
+        self.fold = fold
         self.num_workers = num_workers
         self.encoding_method = encoding_method
         self.kmer_size = kmer_size
         self.min_size = min_size
         self.max_size = max_size
+        self.group = group
         self.overlap_percent = overlap_percent
-        self.word2vec_model_path = word2vec_model_path
-        self.dna_bert_model_name = dna_bert_model_name
-        self.dna_bert_pooling = dna_bert_pooling
-        self.dna_bert_batch_size = dna_bert_batch_size
-        self.output_dir = output_dir
+        self.dna_bert_2_tokenizer_path = dna_bert_2_tokenizer_path
+        self.dna_bert_2_model_path = dna_bert_2_model_path
+        self.dna_bert_2_pooling = dna_bert_pooling
+        self.dna_bert_2_batch_size = dna_bert_2_batch_size
         self.retrain_word2vec = retrain_word2vec
-        self.is_fine_tune_dna_bert = is_fine_tune_dna_bert
-        self.fine_tune_epochs = fine_tune_epochs
-        self.fine_tune_batch_size = fine_tune_batch_size
-        self.fine_tune_learning_rate = fine_tune_learning_rate
+
+        self.dna2vec_method = dna2vec_method
 
         # Will be initialized when needed
         self.word2vec_model = None
         self.dna_bert_tokenizer = None
         self.dna_bert_model = None
+        self.dna_bert_2_model = None
+        self.dna_bert_2_tokenizer = None
+
+        if encoding_method == "one_hot":
+            self.output_dir = os.path.join(config.MY_DATA_DIR, f"one_hot/{min_size}_{max_size}/{self.fold}")
+        elif encoding_method == "word2vec":
+            self.output_dir = os.path.join(config.MY_DATA_DIR, f"word2vec/{min_size}_{max_size}/{self.fold}")
+            self.word2vec_model_path = os.path.join(config.MODEL_DIR,
+                                                    f"word2vec/group_{min_size}_{max_size}/fold_{self.fold}/model.bin")
+        elif encoding_method == "dna_bert":
+            self.output_dir = os.path.join(config.MY_DATA_DIR, f"dna_bert/{min_size}_{max_size}/{self.fold}")
+        elif encoding_method == "dna_bert_2":
+            self.output_dir = os.path.join(config.MY_DATA_DIR, f"dna_bert_2/{min_size}_{max_size}/{self.fold}")
+        elif encoding_method == "dna2vec":
+            self.output_dir = os.path.join(config.MY_DATA_DIR, f"dna2vec/{min_size}_{max_size}/{self.fold}")
+        else:
+            raise NotImplementedError
+
+        self.log_config()
 
         # Validate parameters
         self._validate_parameters()
 
+    def log_config(self):
+        """Log all configuration parameters."""
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        logger.info("============ Configuration Parameters ============")
+        logger.info(f"Encoding Method: {self.encoding_method}")
+        logger.info(f"K-mer Size: {self.kmer_size}")
+        logger.info(f"Overlap Percent: {self.overlap_percent}%")
+        logger.info(f"Fold: {self.fold}")
+        logger.info(f"Min Size: {self.min_size}")
+        logger.info(f"Max Size: {self.max_size}")
+
+        if self.encoding_method == "word2vec":
+            logger.info(f"Word2Vec Model Path: {self.word2vec_model_path}")
+            logger.info(f"Retrain Word2Vec: {self.retrain_word2vec}")
+
+        elif self.encoding_method in ["dna_bert", "dna_bert_2"]:
+            logger.info(f"DNA-BERT Model Name: {self.dna_bert_2_tokenizer}")
+            logger.info(f"DNA-BERT Pooling: {self.dna_bert_2_pooling}")
+            logger.info(f"DNA-BERT Batch Size: {self.dna_bert_2_batch_size}")
+
+        elif self.encoding_method == "dna2vec":
+            logger.info(f"DNA2Vec Method: {self.dna2vec_method}")
+
+        logger.info(f"Number of Workers: {self.num_workers}")
+        logger.info(f"Prefetch Factor: {self.prefetch_factor}")
+        logger.info(f"Output Directory: {self.output_dir}")
+        logger.info("================================================")
+
     def _validate_parameters(self) -> None:
         """Validate initialization parameters."""
-        if self.encoding_method not in ["word2vec", "dna_bert", "dna_bert_2", "one_hot"]:
+        if self.encoding_method not in ["word2vec", "dna_bert", "dna_bert_2", "dna2vec", "one_hot"]:
             raise ValueError(
-                f"Unknown encoding method: {self.encoding_method}. Choose 'word2vec', 'dna_bert', 'dna_bert_2', or 'one_hot'.")
+                f"Unknown encoding method: {self.encoding_method}. Choose 'word2vec', 'dna_bert', 'dna_bert_2', 'dna2vec', or 'one_hot'.")
 
         if self.encoding_method == "dna_bert" and self.kmer_size not in [3, 4, 5, 6]:
             raise ValueError("For DNA-BERT, kmer_size must be 3, 4, 5, or 6")
 
         # Ensure DNA-BERT model name matches kmer_size
-        if self.encoding_method == "dna_bert" and str(self.kmer_size) not in self.dna_bert_model_name:
+        if self.encoding_method == "dna_bert" and str(self.kmer_size) not in self.dna_bert_2_tokenizer:
             log.info("Warning: kmer_size (%s) doesn't match DNA-BERT model name (%s)",
-                     self.kmer_size, self.dna_bert_model_name)
+                     self.kmer_size, self.dna_bert_2_tokenizer)
             log.info("Updating model name to 'zhihan1996/DNA_bert_%s'", self.kmer_size)
-            self.dna_bert_model_name = f"zhihan1996/DNA_bert_{self.kmer_size}"
+            self.dna_bert_2_tokenizer = f"zhihan1996/DNA_bert_{self.kmer_size}"
 
         # For DNABERT-2, we keep the model name as specified
-        if self.encoding_method == "dna_bert_2" and self.dna_bert_model_name != "zhihan1996/DNABERT-2-117M":
-            log.info("Warning: Using custom DNABERT-2 model: %s", self.dna_bert_model_name)
+        if self.encoding_method == "dna_bert_2" and self.dna_bert_2_tokenizer != "zhihan1996/DNABERT-2-117M":
+            log.info("Warning: Using custom DNABERT-2 model: %s", self.dna_bert_2_tokenizer)
 
         # Validate batch size
-        if self.dna_bert_batch_size <= 0:
-            raise ValueError(f"DNA-BERT/DNABERT-2 batch size must be positive, got {self.dna_bert_batch_size}")
+        if self.dna_bert_2_batch_size <= 0:
+            raise ValueError(f"DNA-BERT/DNABERT-2 batch size must be positive, got {self.dna_bert_2_batch_size}")
 
     def load_and_clean_data(self, train_path: str, val_path: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
@@ -413,8 +532,7 @@ class DNASequenceProcessor:
 
         return X_train_encoded, X_val_encoded
 
-    def encode_sequences_with_one_hot(self, X_train: np.ndarray, X_val: np.ndarray, y_train: np.ndarray = None,
-                                      y_val: np.ndarray = None) -> Tuple[np.ndarray, np.ndarray]:
+    def encode_sequences_with_one_hot(self, X_train: np.ndarray, X_val: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """
         Mã hóa chuỗi DNA sử dụng phương pháp one-hot encoding từ DeePhage.
         """
@@ -529,9 +647,9 @@ class DNASequenceProcessor:
         Returns:
             Tuple of (tokenizer, model)
         """
-        log.info("Loading DNA-BERT model: %s", self.dna_bert_model_name)
-        self.dna_bert_tokenizer = AutoTokenizer.from_pretrained(self.dna_bert_model_name)
-        self.dna_bert_model = AutoModel.from_pretrained(self.dna_bert_model_name)
+        log.info("Loading DNA-BERT model: %s", self.dna_bert_2_tokenizer)
+        self.dna_bert_tokenizer = AutoTokenizer.from_pretrained(self.dna_bert_2_tokenizer)
+        self.dna_bert_model = AutoModel.from_pretrained(self.dna_bert_2_tokenizer)
 
         # Use GPU if available
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -547,223 +665,17 @@ class DNASequenceProcessor:
         Returns:
             Tuple of (tokenizer, model)
         """
-        log.info("Loading DNABERT-2 model: %s", self.dna_bert_model_name)
-        self.dna_bert_tokenizer = AutoTokenizer.from_pretrained(self.dna_bert_model_name)
-        self.dna_bert_model = AutoModel.from_pretrained(self.dna_bert_model_name, trust_remote_code=True)
+        log.info("Loading DNABERT-2 tokenizer: %s", self.dna_bert_2_tokenizer_path)
+        log.info("Loading DNABERT-2 model: %s", self.dna_bert_2_model_path)
+        self.dna_bert_2_tokenizer = AutoTokenizer.from_pretrained(self.dna_bert_2_tokenizer_path, trust_remote_code=True)
+        self.dna_bert_2_model = BertForSequenceClassification.from_pretrained(self.dna_bert_2_model_path)
 
         # Use GPU if available
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         log.info("Using device for DNABERT-2: %s", device)
-        self.dna_bert_model = self.dna_bert_model.to(device)
+        self.dna_bert_2_model = self.dna_bert_2_model.to(device)
 
-        return self.dna_bert_tokenizer, self.dna_bert_model
-
-    def fine_tune_dna_bert(
-            self,
-            X_train: np.ndarray,
-            y_train: np.ndarray,
-            X_val: np.ndarray,
-            y_val: np.ndarray,
-            output_model_dir: str = "fine_tuned_dna_bert",
-            num_train_epochs: int = 3,
-            per_device_train_batch_size: int = 16,
-            weight_decay: float = 0.01,
-            max_length: int = 512,
-    ) -> str:
-        """
-        Fine-tune DNA-BERT for sequence classification.
-
-        Args:
-            X_train: Training sequences
-            y_train: Training labels
-            X_val: Validation sequences
-            y_val: Validation labels
-            output_model_dir: Directory to save fine-tuned model
-            num_train_epochs: Number of training epochs
-            per_device_train_batch_size: Batch size for training
-            weight_decay: Weight decay for AdamW optimizer
-            max_length: Maximum sequence length
-
-        Returns:
-            Path to fine-tuned model
-        """
-        if self.dna_bert_tokenizer is None or self.dna_bert_model is None:
-            log.info("Loading DNA-BERT model for fine-tuning")
-            self.load_dna_bert_model()
-
-        # Add classification head to the model
-        num_labels = len(np.unique(y_train))
-        model = AutoModelForSequenceClassification.from_pretrained(
-            self.dna_bert_model_name,
-            num_labels=num_labels
-        )
-
-        # Move model to device
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model = model.to(device)
-
-        # Create datasets
-        train_dataset = DNASequenceDataset(X_train, y_train, self.dna_bert_tokenizer, max_length, self.kmer_size)
-        val_dataset = DNASequenceDataset(X_val, y_val, self.dna_bert_tokenizer, max_length, self.kmer_size)
-
-        # Data collator
-        data_collator = DataCollatorWithPadding(tokenizer=self.dna_bert_tokenizer)
-
-        # Training arguments
-        training_args = TrainingArguments(
-            output_dir=output_model_dir,
-            num_train_epochs=num_train_epochs,
-            per_device_train_batch_size=per_device_train_batch_size,
-            per_device_eval_batch_size=per_device_train_batch_size * 2,
-            warmup_steps=500,
-            weight_decay=weight_decay,
-            learning_rate=self.fine_tune_learning_rate,
-            logging_dir=f"{output_model_dir}/logs",
-            logging_steps=10,
-            evaluation_strategy="epoch",
-            save_strategy="epoch",
-            load_best_model_at_end=True,
-            metric_for_best_model="f1",
-            fp16=torch.cuda.is_available(),  # Use mixed precision if available
-        )
-
-        # Initialize Trainer
-        trainer = Trainer(
-            model=model,
-            args=training_args,
-            train_dataset=train_dataset,
-            eval_dataset=val_dataset,
-            tokenizer=self.dna_bert_tokenizer,
-            data_collator=data_collator,
-            compute_metrics=compute_metrics
-        )
-
-        # Train the model
-        log.info("Starting fine-tuning DNA-BERT")
-        trainer.train()
-
-        # Evaluate the model
-        log.info("Evaluating fine-tuned model")
-        eval_result = trainer.evaluate()
-        log.info("Evaluation results: %s", eval_result)
-
-        # Save model
-        log.info("Saving fine-tuned model to %s", output_model_dir)
-        trainer.save_model(output_model_dir)
-        self.dna_bert_tokenizer.save_pretrained(output_model_dir)
-
-        # Update model path
-        self.dna_bert_model_name = output_model_dir
-
-        # Reload model for embedding
-        self.dna_bert_model = AutoModel.from_pretrained(output_model_dir)
-        self.dna_bert_model = self.dna_bert_model.to(device)
-
-        return output_model_dir
-
-    def fine_tune_dna_bert_2(
-            self,
-            X_train: np.ndarray,
-            y_train: np.ndarray,
-            X_val: np.ndarray,
-            y_val: np.ndarray,
-            output_model_dir: str = "fine_tuned_dna_bert_2",
-            num_train_epochs: int = 3,
-            per_device_train_batch_size: int = 16,
-            weight_decay: float = 0.01,
-            max_length: int = 512,
-    ) -> str:
-        """
-        Fine-tune DNABERT-2 for sequence classification.
-
-        Args:
-            X_train: Training sequences
-            y_train: Training labels
-            X_val: Validation sequences
-            y_val: Validation labels
-            output_model_dir: Directory to save fine-tuned model
-            num_train_epochs: Number of training epochs
-            per_device_train_batch_size: Batch size for training
-            weight_decay: Weight decay for AdamW optimizer
-            max_length: Maximum sequence length
-
-        Returns:
-            Path to fine-tuned model
-        """
-        if self.dna_bert_tokenizer is None or self.dna_bert_model is None:
-            log.info("Loading DNABERT-2 model for fine-tuning")
-            self.load_dna_bert_2_model()
-
-        # Add classification head to the model
-        num_labels = len(np.unique(y_train))
-        model = AutoModelForSequenceClassification.from_pretrained(
-            self.dna_bert_model_name,
-            num_labels=num_labels,
-            trust_remote_code=True
-        )
-
-        # Move model to device
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model = model.to(device)
-
-        # Create datasets - DNABERT-2 directly uses sequences without k-mer formatting
-        train_dataset = DNABERT2SequenceDataset(X_train, y_train, self.dna_bert_tokenizer, max_length)
-        val_dataset = DNABERT2SequenceDataset(X_val, y_val, self.dna_bert_tokenizer, max_length)
-
-        # Data collator
-        data_collator = DataCollatorWithPadding(tokenizer=self.dna_bert_tokenizer)
-
-        # Training arguments
-        training_args = TrainingArguments(
-            output_dir=output_model_dir,
-            num_train_epochs=num_train_epochs,
-            per_device_train_batch_size=per_device_train_batch_size,
-            per_device_eval_batch_size=per_device_train_batch_size * 2,
-            warmup_steps=500,
-            weight_decay=weight_decay,
-            learning_rate=self.fine_tune_learning_rate,
-            logging_dir=f"{output_model_dir}/logs",
-            logging_steps=10,
-            evaluation_strategy="epoch",
-            save_strategy="epoch",
-            load_best_model_at_end=True,
-            metric_for_best_model="f1",
-            fp16=torch.cuda.is_available(),  # Use mixed precision if available
-        )
-
-        # Initialize Trainer
-        trainer = Trainer(
-            model=model,
-            args=training_args,
-            train_dataset=train_dataset,
-            eval_dataset=val_dataset,
-            processing_class=self.dna_bert_tokenizer,
-            data_collator=data_collator,
-            compute_metrics=compute_metrics
-        )
-
-        # Train the model
-        log.info("Starting fine-tuning DNABERT-2")
-        trainer.train()
-
-        # Evaluate the model
-        log.info("Evaluating fine-tuned model")
-        eval_result = trainer.evaluate()
-        log.info("Evaluation results: %s", eval_result)
-
-        # Save model
-        log.info("Saving fine-tuned model to %s", output_model_dir)
-        trainer.save_model(output_model_dir)
-        self.dna_bert_tokenizer.save_pretrained(output_model_dir)
-
-        # Update model path
-        self.dna_bert_model_name = output_model_dir
-
-        # Reload model for embedding
-        self.dna_bert_model = AutoModel.from_pretrained(output_model_dir)
-        self.dna_bert_model = self.dna_bert_model.to(device)
-
-        return output_model_dir
+        return self.dna_bert_2_tokenizer, self.dna_bert_2_model
 
     def format_sequence_for_dna_bert(self, sequence: str) -> str:
         """
@@ -815,7 +727,7 @@ class DNASequenceProcessor:
             outputs = self.dna_bert_model(**inputs)
 
         # Extract embeddings based on pooling strategy
-        if self.dna_bert_pooling == "cls":
+        if self.dna_bert_2_pooling == "cls":
             # Use [CLS] token embedding
             embeddings = outputs.last_hidden_state[:, 0, :].cpu().numpy()
         else:  # mean pooling
@@ -831,259 +743,202 @@ class DNASequenceProcessor:
 
         return embeddings[0]
 
-    def dna_bert_2_encode_sequence(
-            self, sequence: str, max_length: int = 512
-    ) -> np.ndarray:
+    def split_sequence_into_chunks(self, sequence, num_chunks):
         """
-        Encode a DNA sequence using DNABERT-2.
+        Split a DNA sequence into equal-sized chunks.
 
         Args:
             sequence: DNA sequence string
-            max_length: Maximum sequence length for tokenizer
+            num_chunks: Number of chunks to split into
 
         Returns:
-            Feature vector (numpy array)
+            List of sequence chunks
         """
-        if self.dna_bert_tokenizer is None or self.dna_bert_model is None:
-            raise ValueError("DNABERT-2 model not loaded. Call load_dna_bert_2_model first.")
+        seq_len = len(sequence)
+        chunk_size = seq_len // num_chunks
 
-        # DNABERT-2 processes raw sequences directly
-        # Tokenize sequence
-        inputs = self.dna_bert_tokenizer(
-            sequence,
-            return_tensors="pt",
-            truncation=True,
-            max_length=max_length,
-            padding="max_length"
-        )
+        chunks = []
+        for i in range(num_chunks):
+            start_idx = i * chunk_size
+            # For the last chunk, include any remaining characters
+            end_idx = start_idx + chunk_size if i < num_chunks - 1 else seq_len
+            chunks.append(sequence[start_idx:end_idx])
 
-        # Move inputs to the same device as model
-        device = next(self.dna_bert_model.parameters()).device
-        inputs = {key: val.to(device) for key, val in inputs.items()}
+        return chunks
 
-        # Get model outputs
-        with torch.no_grad():
-            outputs = self.dna_bert_model(**inputs)
-
-        # Extract embeddings based on pooling strategy
-        if self.dna_bert_pooling == "cls":
-            # Use [CLS] token embedding
-            embeddings = outputs.last_hidden_state[:, 0, :].cpu().numpy()
-        else:  # mean pooling
-            # Use mean of all token embeddings (excluding padding)
-            attention_mask = inputs["attention_mask"]
-            last_hidden = outputs.last_hidden_state
-
-            # Apply attention mask to get mean of non-padding tokens
-            input_mask_expanded = attention_mask.unsqueeze(-1).expand(last_hidden.size()).float()
-            sum_embeddings = torch.sum(last_hidden * input_mask_expanded, 1)
-            sum_mask = torch.clamp(input_mask_expanded.sum(1), min=1e-9)
-            embeddings = (sum_embeddings / sum_mask).cpu().numpy()
-
-        return embeddings[0]
-
-    def convert_sequences_to_dna_bert_vectors(
-            self, sequences: np.ndarray, batch_size: int = None, max_length: int = 512
-    ) -> np.ndarray:
+    def convert_sequences_to_dna_bert_2_vectors(
+            self, sequences: np.ndarray, labels: np.ndarray, batch_size: int = None, max_length: int = 512
+    ) -> (np.ndarray, np.ndarray):
         """
-        Convert all sequences to feature vectors using DNA-BERT in batches.
+        Convert sequences to vectors using DNABERT-2 with GPU-optimized chunking.
+
+        This implementation uses a custom dataset and collator to handle chunking efficiently,
+        processing all chunks in batches to maximize GPU utilization.
 
         Args:
             sequences: Array of DNA sequences
-            batch_size: Batch size for processing (if None, use self.dna_bert_batch_size)
+            labels: Array of corresponding labels
+            batch_size: Batch size for processing
             max_length: Maximum sequence length for tokenizer
 
         Returns:
-            Array of feature vectors
+            Tuple of (embeddings, labels)
         """
-        if self.dna_bert_tokenizer is None or self.dna_bert_model is None:
-            raise ValueError("DNA-BERT model not loaded. Call load_dna_bert_model first.")
-
-        # Use instance batch size if not explicitly provided
-        if batch_size is None:
-            batch_size = self.dna_bert_batch_size
-
-        result = []
-        device = next(self.dna_bert_model.parameters()).device
-        log.info("Using device for batch processing: %s", device)
-        log.info("Processing %s sequences with batch size %s", len(sequences), batch_size)
-
-        for i in tqdm(range(0, len(sequences), batch_size), desc="Encoding sequences with DNA-BERT"):
-            batch_seqs = sequences[i:i + batch_size]
-            formatted_seqs = [self.format_sequence_for_dna_bert(seq) for seq in batch_seqs]
-
-            # Tokenize batch
-            inputs = self.dna_bert_tokenizer(
-                formatted_seqs,
-                return_tensors="pt",
-                truncation=True,
-                max_length=max_length,
-                padding="max_length"
-            )
-
-            # Move inputs to the same device as model
-            inputs = {key: val.to(device) for key, val in inputs.items()}
-
-            # Get model outputs
-            with torch.no_grad():
-                outputs = self.dna_bert_model(**inputs)
-
-            # DNABERT-2 returns a tuple instead of an object with attributes
-            # The first element in the tuple is typically the hidden states
-            # Extract embeddings based on pooling strategy
-            if self.dna_bert_pooling == "cls":
-                # Use [CLS] token embedding (index 0)
-                if isinstance(outputs, tuple):
-                    last_hidden = outputs[0]  # First element of tuple contains hidden states
-                else:
-                    last_hidden = outputs.last_hidden_state
-                batch_embeddings = last_hidden[:, 0, :].cpu().numpy()
-            else:  # mean pooling
-                # Use mean of all token embeddings (excluding padding)
-                attention_mask = inputs["attention_mask"]
-                if isinstance(outputs, tuple):
-                    last_hidden = outputs[0]  # First element of tuple contains hidden states
-                else:
-                    last_hidden = outputs.last_hidden_state
-
-                # Apply attention mask to get mean of non-padding tokens
-                input_mask_expanded = attention_mask.unsqueeze(-1).expand(last_hidden.size()).float()
-                sum_embeddings = torch.sum(last_hidden * input_mask_expanded, 1)
-                sum_mask = torch.clamp(input_mask_expanded.sum(1), min=1e-9)
-                batch_embeddings = (sum_embeddings / sum_mask).cpu().numpy()
-
-            result.append(batch_embeddings)
-
-            # Log progress after every 10 batches
-            if (i // batch_size) % 10 == 0 and i > 0:
-                log.info("Processed %s/%s sequences", min(i + batch_size, len(sequences)), len(sequences))
-
-        return np.vstack(result)
-
-    def convert_sequences_to_dna_bert_2_vectors(
-            self, sequences: np.ndarray, batch_size: int = None, max_length: int = 512
-    ) -> np.ndarray:
-        """Convert sequences to vectors using DNABERT-2 with explicit prefetching."""
-        if self.dna_bert_tokenizer is None or self.dna_bert_model is None:
+        if self.dna_bert_2_tokenizer is None or self.dna_bert_2_model is None:
             raise ValueError("DNABERT-2 model not loaded.")
 
         if batch_size is None:
-            batch_size = self.dna_bert_batch_size
+            batch_size = self.dna_bert_2_batch_size
 
-        device = next(self.dna_bert_model.parameters()).device
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         log.info("Using device: %s, batch size: %s", device, batch_size)
 
-        # Create dataset
-        dataset = DNASequenceEmbeddingDataset(
+        # Create dataset with chunking support
+        dataset = DNABERT2SequenceDataset(
             sequences=sequences,
-            tokenizer=self.dna_bert_tokenizer,
-            max_length=max_length,
+            labels=labels,
+            tokenizer=self.dna_bert_2_tokenizer,
+            max_length=400,
+            group=self.group
         )
 
-        # Optimize DataLoader with explicit prefetch_factor
+        # Create DataLoader with custom collator for handling chunks
         dataloader = torch.utils.data.DataLoader(
             dataset,
-            batch_size=batch_size,
+            batch_size=batch_size if self.group == 0 else max(1, batch_size // (self.group + 1)),  # Adjust batch size
             shuffle=False,
             num_workers=self.num_workers,
             pin_memory=torch.cuda.is_available(),
             prefetch_factor=self.prefetch_factor,
-            persistent_workers=True,
-            drop_last=False
+            persistent_workers=True if self.num_workers > 0 else False,
+            drop_last=False,
+            collate_fn=ChunkCollator()
         )
 
-        # Store embedding dimension to ensure consistency
-        embedding_dim = None
-        result = []
-
-        # Use tqdm to display progress
-        pbar = tqdm(total=len(sequences), desc="Embedding sequences")
-
-        # Set model to evaluation mode
-        self.dna_bert_model.eval()
-
-        # Use no_grad and autocast (if available) to optimize performance
+        # First find embedding dimension by running a sample
         with torch.no_grad():
-            if hasattr(torch.cuda, 'amp') and torch.cuda.is_available():
-                from torch.cuda.amp import autocast
-                context_manager = autocast()
+            # Create a minimal single input to get embedding dimension
+            sample_inputs = self.dna_bert_2_tokenizer(
+                sequences[0][:min(len(sequences[0]), max_length)],
+                return_tensors="pt",
+                truncation=True,
+                max_length=400,
+                padding="max_length"
+            ).to(device)
+
+            sample_outputs = self.dna_bert_2_model(**sample_inputs, output_hidden_states=True)
+            sample_hidden = sample_outputs.hidden_states[-1]
+
+            if self.dna_bert_2_pooling == "cls":
+                sample_emb = sample_hidden[:, 0, :].cpu().numpy()
             else:
-                from contextlib import nullcontext
-                context_manager = nullcontext()
+                sample_emb = torch.mean(sample_hidden, dim=1).cpu().numpy()
 
-            with context_manager:
-                for batch_idx, batch_inputs in enumerate(dataloader):
-                    # Move inputs to device
-                    batch_inputs = {k: v.to(device) for k, v in batch_inputs.items()}
+            embedding_dim = sample_emb.shape[1]
 
-                    outputs = self.dna_bert_model(**batch_inputs, output_hidden_states=True)
+        # Initialize results array
+        all_embeddings = np.zeros((len(sequences), embedding_dim), dtype=np.float32)
+        all_labels = np.zeros(len(sequences), dtype=np.int32)
 
-                    # Handle different output formats consistently
-                    if isinstance(outputs, tuple):
-                        # Handle tuple output format (may contain hidden states)
-                        if len(outputs) > 1 and hasattr(outputs, 'hidden_states'):
-                            hidden_states = outputs.hidden_states[-1]
+        log.info(f"Processing {len(sequences)} sequences with {self.group + 1} chunks per sequence")
+
+        # Process all batches
+        with tqdm(total=len(sequences), desc="Embedding sequences") as pbar:
+            with torch.no_grad():
+                for batch in dataloader:
+                    # Move batch to device
+                    batch_labels = batch.pop("labels").to(device)
+                    is_chunked = batch.pop("is_chunked")
+
+                    if not is_chunked:
+                        # Standard processing for non-chunked sequences
+                        batch = {k: v.to(device) if v is not None else None for k, v in batch.items()}
+                        outputs = self.dna_bert_2_model(**batch, output_hidden_states=True)
+                        last_hidden = outputs.hidden_states[-1]
+
+                        # Get embeddings based on pooling strategy
+                        if self.dna_bert_2_pooling == "cls":
+                            batch_emb = last_hidden[:, 0, :].cpu().numpy()
+                        elif self.dna_bert_2_pooling == "mean":
+                            batch_emb = torch.mean(last_hidden, dim=1).cpu().numpy()
+                        elif self.dna_bert_2_pooling == "max":
+                            batch_emb = torch.max(last_hidden, dim=1).values.cpu().numpy()
                         else:
-                            # First element is typically the last hidden state
-                            hidden_states = outputs[0]
+                            batch_emb = torch.mean(last_hidden, dim=1).cpu().numpy()
+
+                        # Store embeddings and labels
+                        batch_size = len(batch_labels)
+                        seq_indices = list(range(pbar.n, pbar.n + batch_size))
+                        all_embeddings[seq_indices] = batch_emb
+                        all_labels[seq_indices] = batch_labels.cpu().numpy()
+
+                        # Update progress
+                        pbar.update(batch_size)
+
                     else:
-                        # Handle object output format with hidden_states attribute
-                        if hasattr(outputs, 'hidden_states') and outputs.hidden_states is not None:
-                            hidden_states = outputs.hidden_states[-1]  # Get the last layer
+                        # Chunk processing
+                        # Get mapping and metadata for chunks
+                        chunk_to_seq_map = batch.pop("chunk_to_seq_map").cpu().numpy()
+                        num_chunks_per_seq = batch.pop("num_chunks_per_seq").cpu().numpy()
+
+                        # Move remaining inputs to device
+                        inputs = {k: v.to(device) if v is not None else None for k, v in batch.items()}
+
+                        # Get embeddings for all chunks
+                        outputs = self.dna_bert_2_model(**inputs, output_hidden_states=True)
+                        last_hidden = outputs.hidden_states[-1]
+
+                        # Get embeddings based on pooling strategy
+                        if self.dna_bert_2_pooling == "cls":
+                            chunk_embeddings = last_hidden[:, 0, :].cpu()
+                        elif self.dna_bert_2_pooling == "mean":
+                            chunk_embeddings = torch.mean(last_hidden, dim=1).cpu()
+                        elif self.dna_bert_2_pooling == "max":
+                            chunk_embeddings = torch.max(last_hidden, dim=1).values.cpu()
                         else:
-                            hidden_states = outputs.last_hidden_state
+                            chunk_embeddings = torch.mean(last_hidden, dim=1).cpu()
 
-                    # Apply pooling strategy
-                    if self.dna_bert_pooling == 'cls':
-                        # Use [CLS] token embedding
-                        batch_embeddings = hidden_states[:, 0].cpu().numpy()
-                    elif self.dna_bert_pooling == 'mean':
-                        # Average all token embeddings, ignoring padding
-                        attention_mask = batch_inputs['attention_mask'].unsqueeze(-1)
-                        batch_embeddings = torch.sum(hidden_states * attention_mask, 1) / torch.clamp(
-                            torch.sum(attention_mask, 1), min=1e-9)
-                        batch_embeddings = batch_embeddings.cpu().numpy()
-                    elif self.dna_bert_pooling == 'max':
-                        # Max pooling of token embeddings, ignoring padding
-                        attention_mask = batch_inputs['attention_mask'].unsqueeze(-1)
-                        masked_hidden = hidden_states * attention_mask
-                        # Replace padding with large negative values
-                        masked_hidden = masked_hidden.masked_fill((1 - attention_mask).bool(), -1e9)
-                        batch_embeddings = torch.max(masked_hidden, dim=1)[0].cpu().numpy()
+                        # Group chunk embeddings by original sequence
+                        unique_seq_indices = np.unique(chunk_to_seq_map)
+                        seq_indices = []
 
-                    # Check and store embedding dimension on first batch
-                    if embedding_dim is None:
-                        embedding_dim = batch_embeddings.shape[1]
-                        log.info(f"Embedding dimension: {embedding_dim}")
+                        for seq_idx in unique_seq_indices:
+                            # Get all chunks for this sequence
+                            chunk_indices = np.where(chunk_to_seq_map == seq_idx)[0]
+                            seq_chunks = chunk_embeddings[chunk_indices]
 
-                    # Verify consistency with expected embedding dimensions
-                    if batch_embeddings.shape[1] != embedding_dim:
-                        log.warning(
-                            f"Dimension mismatch at batch {batch_idx}: expected {embedding_dim}, got {batch_embeddings.shape[1]}")
-                        # Ensure consistent dimensions by padding or truncating if necessary
-                        if batch_embeddings.shape[1] < embedding_dim:
-                            pad_width = ((0, 0), (0, embedding_dim - batch_embeddings.shape[1]))
-                            batch_embeddings = np.pad(batch_embeddings, pad_width, mode='constant', constant_values=0)
-                        else:
-                            batch_embeddings = batch_embeddings[:, :embedding_dim]
+                            # Combine chunk embeddings based on pooling strategy
+                            if self.dna_bert_2_pooling == "mean":
+                                # Use mean pooling for combining chunks
+                                combined_embedding = torch.mean(seq_chunks, dim=0).numpy()
+                            elif self.dna_bert_2_pooling == "max":
+                                # Use max pooling for combining chunks
+                                combined_embedding = torch.max(seq_chunks, dim=0).values.numpy()
+                            elif self.dna_bert_2_pooling == "min":
+                                # Use min pooling for combining chunks
+                                combined_embedding = torch.min(seq_chunks, dim=0).values.numpy()
+                            else:
+                                # Default to mean pooling
+                                combined_embedding = torch.mean(seq_chunks, dim=0).numpy()
 
-                    # Add batch result to list
-                    result.append(batch_embeddings)
+                            # Store in the right position
+                            actual_idx = pbar.n + len(seq_indices)
+                            all_embeddings[actual_idx] = combined_embedding
+                            all_labels[actual_idx] = batch_labels[seq_idx].cpu().numpy()
+                            seq_indices.append(actual_idx)
 
-                    # Update progress bar
-                    pbar.update(batch_inputs["input_ids"].size(0))
-
-        pbar.close()
+                        # Update progress
+                        pbar.update(len(unique_seq_indices))
 
         # Free GPU memory
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
-        # Stack all results
-        return np.vstack(result)
+        log.info(f"Final embedding shape: {all_embeddings.shape}")
+        return all_embeddings, all_labels
 
     def encode_sequences(self, X_train: np.ndarray, X_val: np.ndarray, y_train: np.ndarray = None,
-                         y_val: np.ndarray = None) -> Tuple[np.ndarray, np.ndarray]:
+                         y_val: np.ndarray = None):
         """
         Encode sequences using the selected method (Word2Vec, DNA-BERT, or DNABERT-2).
         Optionally fine-tune DNA-BERT/DNABERT-2 before encoding.
@@ -1107,34 +962,16 @@ class DNASequenceProcessor:
             X_train_vectors = self.convert_sequences_to_word2vec_vectors(X_train)
             X_val_vectors = self.convert_sequences_to_word2vec_vectors(X_val)
 
-        elif self.encoding_method == "dna_bert":
-            log.info("Using DNA-BERT encoding method")
-
-            # Load DNA-BERT model
-            self.load_dna_bert_model()
-
-            # Fine-tune DNA-BERT if requested
-            if self.is_fine_tune_dna_bert:
-                if y_train is None or y_val is None:
-                    raise ValueError("Labels (y_train and y_val) are required for fine-tuning")
-
-                log.info("Fine-tuning DNA-BERT model...")
-                fine_tuned_model_dir = self.fine_tune_dna_bert(
-                    max_length=1800,
-                    X_train=X_train,
-                    y_train=y_train,
-                    X_val=X_val,
-                    y_val=y_val,
-                    output_model_dir=os.path.join(self.output_dir, "fine_tuned_dna_bert"),
-                    num_train_epochs=self.fine_tune_epochs,
-                    per_device_train_batch_size=self.fine_tune_batch_size
-                )
-                log.info("Fine-tuning complete! Model saved to %s", fine_tuned_model_dir)
-
-            # Convert sequences to vectors using the batch_size from instance
-            log.info("Using batch size of %s for DNA-BERT encoding", self.dna_bert_batch_size)
-            X_train_vectors = self.convert_sequences_to_dna_bert_vectors(X_train)
-            X_val_vectors = self.convert_sequences_to_dna_bert_vectors(X_val)
+        elif self.encoding_method == "dna2vec":
+            # log.info("Using DNA2Vec encoding method")
+            # self.load_or_train_dna2vec(X_train)
+            #
+            # log.info("Start encoding sequences by dna2vec")
+            # X_train_vectors, y_train_vectors = self.convert_sequences_to_dna2vec_vectors(X_train, y_train)
+            # X_val_vectors, y_val_vectors = self.convert_sequences_to_dna2vec_vectors(X_val, y_val)
+            # y_train = y_train_vectors
+            # y_val = y_val_vectors
+            raise NotImplementedError("Not implemented yet.")
 
         elif self.encoding_method == "dna_bert_2":
             log.info("Using DNABERT-2 encoding method")
@@ -1142,35 +979,19 @@ class DNASequenceProcessor:
             # Load DNABERT-2 model
             self.load_dna_bert_2_model()
 
-            # Fine-tune DNABERT-2 if requested
-            if self.is_fine_tune_dna_bert:
-                if y_train is None or y_val is None:
-                    raise ValueError("Labels (y_train and y_val) are required for fine-tuning")
-
-                log.info("Fine-tuning DNABERT-2 model...")
-                fine_tuned_model_dir = self.fine_tune_dna_bert_2(
-                    max_length=self.max_size,
-                    X_train=X_train,
-                    y_train=y_train,
-                    X_val=X_val,
-                    y_val=y_val,
-                    output_model_dir=os.path.join(self.output_dir, "fine_tuned_dna_bert_2"),
-                    num_train_epochs=self.fine_tune_epochs,
-                    per_device_train_batch_size=self.fine_tune_batch_size
-                )
-                log.info("Fine-tuning complete! Model saved to %s", fine_tuned_model_dir)
-
             # Convert sequences to vectors using the batch_size from instance
-            log.info("Using batch size of %s for DNABERT-2 encoding", self.dna_bert_batch_size)
-            X_train_vectors = self.convert_sequences_to_dna_bert_2_vectors(sequences=X_train, max_length=self.max_size)
-            X_val_vectors = self.convert_sequences_to_dna_bert_2_vectors(sequences=X_val, max_length=self.max_size)
+            log.info("Using batch size of %s for DNABERT-2 encoding", self.dna_bert_2_batch_size)
+            X_train_vectors, y_train = self.convert_sequences_to_dna_bert_2_vectors(sequences=X_train, labels=y_train,
+                                                                                    max_length=self.max_size)
+            X_val_vectors, y_val = self.convert_sequences_to_dna_bert_2_vectors(sequences=X_val, labels=y_val,
+                                                                                max_length=self.max_size)
         elif self.encoding_method == "one_hot":
             # Sử dụng one-hot encoding từ DeePhage
-            return self.encode_sequences_with_one_hot(X_train, X_val, y_train, y_val)
+            X_train_vectors, X_val_vectors = self.encode_sequences_with_one_hot(X_train, X_val)
         else:
             raise ValueError(f"Unknown encoding method: {self.encoding_method}")
 
-        return X_train_vectors, X_val_vectors
+        return X_train_vectors, y_train, X_val_vectors, y_val
 
     def save_processed_data(self, data_dict: dict) -> None:
         """
@@ -1199,60 +1020,63 @@ class DNASequenceProcessor:
         """
         # Step 1: Load and clean data
         log.info("Step 1: Loading and cleaning data from %s and %s", train_path, val_path)
+        log.info(f"Max sequence length: {self.max_size}")
         train_df, val_df = self.load_and_clean_data(train_path, val_path)
+        # train_df = train_df.sample(10)  # for testing
+        # val_df = val_df.sample(10)  # for testing
 
         # Step 2: Apply windowing and extract features
         log.info("Step 2: Applying sequence windowing with %s%% overlap", self.overlap_percent)
-        X_train, y_train, X_val, y_val = self.window_and_extract_features(train_df, val_df)
+        x_train, y_train, x_val, y_val = self.window_and_extract_features(train_df, val_df)
+        counter = Counter(y_train)
+        for k, v in counter.items():
+            per = v / len(y_train) * 100
+            log.info('Class=%d, Count=%d, Percentage=%.3f%%' % (k, v, per))
+        log.info(f"x_val shape: {x_val.shape}")
+        log.info(f"y_val shape: {y_val.shape}")
 
         # Step 3: Apply data augmentation
         log.info("Step 3: Applying reverse complement augmentation")
-        X_train_aug, y_train_aug = self.reverse_complement_augmentation(X_train, y_train)
-        del X_train, y_train  # Free memory
-
-        # train_indices = np.random.choice(len(X_train_aug), 10000, replace=False)
-        # X_train_aug = X_train_aug[train_indices]
-        # y_train_aug = y_train_aug[train_indices]
-        # val_indices = np.random.choice(len(X_val), 1000, replace=False)
-        # X_val = X_val[val_indices]
-        # y_val = y_val[val_indices]
-
+        X_train_aug, y_train_aug = self.reverse_complement_augmentation(x_train, y_train)
         log.info("Number of phage sequences in training set after augmentation: %s", len(X_train_aug))
 
-        # Step 4 & 5: Encode sequences with optional fine-tuning
-        log.info("Step 4: Encoding sequences using %s method", self.encoding_method)
+        # Step 4: Apply random under-sampling
+        log.info("Step 4: Apply random under-sampling")
+        under_sampler = RandomUnderSampler(sampling_strategy='auto', random_state=42)
+        index_array = np.arange(len(X_train_aug)).reshape(-1, 1)
+        index_resampled, y_train_resampled = under_sampler.fit_resample(index_array, y_train_aug)
+        X_train_resampled = np.array([X_train_aug[i[0]] for i in index_resampled])
+
+        # Step 5: Encode sequences with optional fine-tuning
+        log.info("Step 5: Encoding sequences using %s method", self.encoding_method)
         # Pass labels for fine-tuning
-        X_train_vectors, X_val_vectors = self.encode_sequences(
-            X_train_aug, X_val, y_train_aug, y_val
+        X_train_vectors, y_train, X_val_vectors, y_val = self.encode_sequences(
+            X_train_resampled, x_val, y_train_resampled, y_val
         )
 
         # Step 6: Print shape information
         log.info("X_train_vectors shape: %s", X_train_vectors.shape)
-        log.info("y_train shape: %s", y_train_aug.shape)
+        log.info("y_train_resampled shape: %s", y_train_resampled.shape)
         log.info("X_val_vectors shape: %s", X_val_vectors.shape)
         log.info("y_val shape: %s", y_val.shape)
 
         # Create output filename prefix
         if self.encoding_method == "word2vec":
-            output_prefix = "word2vec"
+            output_prefix = f"word2vec"
+        elif self.encoding_method == "dna2vec":
+            output_prefix = f"dna2vec_{self.min_size}_{self.max_size}"
         elif self.encoding_method == "one_hot":
-            output_prefix = "one_hot"
+            output_prefix = f"one_hot_{self.min_size}_{self.max_size}"
         elif self.encoding_method == "dna_bert":
-            output_prefix = f"dna_bert_{self.kmer_size}_{self.dna_bert_pooling}"
-            # Add fine-tuned to prefix if model was fine-tuned
-            if self.is_fine_tune_dna_bert:
-                output_prefix = f"fine_tuned_{output_prefix}"
+            output_prefix = f"dna_bert_{self.kmer_size}_{self.dna_bert_2_pooling}"
         else:  # dna_bert_2
-            output_prefix = f"dna_bert_2_{self.dna_bert_pooling}"
-            # Add fine-tuned to prefix if model was fine-tuned
-            if self.is_fine_tune_dna_bert:
-                output_prefix = f"fine_tuned_{output_prefix}"
+            output_prefix = f"dna_bert_2_{self.dna_bert_2_pooling}"
 
         # Step 7: Save processed data
         log.info("Step 7: Saving processed data to %s", self.output_dir)
         processed_data = {
             f"{output_prefix}_train_vector.npy": X_train_vectors,
-            "y_train.npy": y_train_aug,
+            "y_train.npy": y_train_resampled,
             f"{output_prefix}_val_vector.npy": X_val_vectors,
             "y_val.npy": y_val
         }
@@ -1262,86 +1086,111 @@ class DNASequenceProcessor:
 
         return processed_data
 
+    def load_or_train_dna2vec(self, X_train):
+        self.dna2vec_model = dna2vec.MultiKModel(config.DNA2VEC_MODEL_PATH)
 
-# Example usage
-if __name__ == '__main__':
-    # Example with Word2Vec encoding
-    length = "100_400"
-    min_length = 100
-    max_length = 400
-    output_model = f"phage_word2vec_model_{length}.bin"
-    output_dir = f"word2vec_output_{length}"
+    def convert_sequences_to_dna2vec_vectors(self, sequences: np.ndarray, label: np.array) -> tuple:
+        """Chuyển đổi các chuỗi DNA thành các vector sử dụng dna2vec với xử lý song song.
+        Trả về vectors và labels đã được lọc (loại bỏ các None)."""
 
-    # word2vec_processor = DNASequenceProcessor(
-    #     encoding_method="word2vec",
-    #     kmer_size=6,
-    #     min_size=min_length,
-    #     max_size=max_length,
-    #     overlap_percent=30,
-    #     word2vec_model_path=output_model,
-    #     output_dir=output_dir,
-    #     retrain_word2vec=False
-    # )
-    #
-    # word2vec_processor.process(
-    #     train_path=config.TRAIN_DATA_CSV_FILE,
-    #     val_path=config.VAL_DATA_CSV_FILE
-    # )
+        # Tạo một bản sao của model để tránh chia sẻ đối tượng phức tạp giữa các quy trình
+        # Đặt làm giá trị mặc định cho tham số của hàm bên trong
+        dna2vec_model = self.dna2vec_model
+        dna2vec_method = self.dna2vec_method
 
-    # Example with DNA-BERT encoding and fine-tuning
-    # dna_bert_processor = DNASequenceProcessor(
-    #     encoding_method="dna_bert",
-    #     kmer_size=6,  # Must be 3, 4, 5, or 6 for DNA-BERT
-    #     overlap_percent=50,
-    #     dna_bert_model_name="zhihan1996/DNA_bert_6",
-    #     dna_bert_pooling="cls",
-    #     dna_bert_batch_size=64,  # Reduced batch size due to GPU memory constraints during fine-tuning
-    #     output_dir="../dna_bert_output",
-    #     is_fine_tune_dna_bert=True,  # Enable fine-tuning
-    #     fine_tune_epochs=3,
-    #     fine_tune_batch_size=16,
-    #     fine_tune_learning_rate=5e-5
-    # )
-    #
-    # dna_bert_processor.process(
-    #     train_path=config.TRAIN_DATA_CSV_FILE,
-    #     val_path=config.VAL_DATA_CSV_FILE
-    # )
+        # Tính số lượng batch dựa trên số lõi CPU
+        num_cores = os.cpu_count()
+        batch_size = max(1, len(sequences) // (num_cores * 4))  # Đảm bảo mỗi CPU xử lý nhiều batch
 
-    # Example with DNABERT-2 encoding and fine-tuning
-    # dna_bert_2_processor = DNASequenceProcessor(
-    #     min_size=100,
-    #     max_size=400,
-    #     encoding_method="dna_bert_2",
-    #     overlap_percent=30,
-    #     dna_bert_model_name="zhihan1996/DNABERT-2-117M",
-    #     dna_bert_pooling="cls",
-    #     dna_bert_batch_size=64,  # Adjust based on your GPU memory
-    #     output_dir=f"dna_bert_2_output_{length}",
-    #     is_fine_tune_dna_bert=True,  # Enable fine-tuning
-    #     fine_tune_epochs=3,
-    #     fine_tune_batch_size=16,
-    #     fine_tune_learning_rate=5e-5,
-    #     num_workers=2,
-    #     prefetch_factor=2
-    # )
-    #
-    # dna_bert_2_processor.process(
-    #     train_path=config.TRAIN_DATA_CSV_FILE,
-    #     val_path=config.VAL_DATA_CSV_FILE
-    # )
+        # Chia dữ liệu thành các batch để giảm chi phí xử lý song song
+        # Lưu lại các index gốc để phân biệt sequences nào là None
+        batches = []
+        batch_indices = []
+        for i in range(0, len(sequences), batch_size):
+            batch = sequences[i:i + batch_size]
+            indices = list(range(i, min(i + batch_size, len(sequences))))
+            batches.append(batch)
+            batch_indices.append(indices)
 
-    # Khởi tạo với one-hot encoding
-    processor = DNASequenceProcessor(
-        encoding_method="one_hot",
-        min_size=400,
-        max_size=800,
-        overlap_percent=30,
-        output_dir="one_hot_output_400_800"
-    )
+        # Hàm xử lý một batch sequences, với context và tham số được truyền vào
+        def process_batch(batch, indices, model=dna2vec_model, method=dna2vec_method):
+            batch_results = []
+            valid_indices = []
+            for i, seq in enumerate(batch):
+                result = embed_sequence_by_dna2vec(seq, model, method)
+                if result is not None:
+                    batch_results.append(result)
+                    valid_indices.append(indices[i])
+            return batch_results, valid_indices
 
-    # Xử lý dữ liệu với one-hot encoding
-    processor.process(
-        train_path=config.TRAIN_DATA_CSV_FILE,
-        val_path=config.VAL_DATA_CSV_FILE
-    )
+        # Hàm embedding tách ra khỏi class để tránh truyền self vào quá trình song song
+        def embed_sequence_by_dna2vec(sequence, model, method, k_min=3, k_max=8):
+            try:
+                # Bỏ log debug cho mỗi sequence để tăng hiệu suất
+                sequence = ''.join([c for c in sequence.upper() if c in 'ACGT'])
+
+                # Tạo các k-mer từ chuỗi DNA
+                kmers = []
+                for k in range(k_min, k_max + 1):
+                    if k > len(sequence):
+                        continue
+                    kmers.extend([sequence[i:i + k] for i in range(len(sequence) - k + 1)])
+
+                # Lấy vector cho từng k-mer
+                kmer_vectors = []
+                for kmer in kmers:
+                    try:
+                        vec = model.vector(kmer)
+                        kmer_vectors.append(vec)
+                    except KeyError:
+                        continue
+
+                # Tổng hợp các vector
+                if not kmer_vectors:
+                    return None
+
+                if method == 'average':
+                    return np.mean(kmer_vectors, axis=0)
+                elif method == 'sum':
+                    return np.sum(kmer_vectors, axis=0)
+                elif method == 'concat':
+                    max_kmers = 100
+                    selected_kmers = kmer_vectors[:max_kmers]
+                    return np.concatenate(selected_kmers)
+                else:
+                    return None
+            except Exception:
+                # Bỏ log lỗi chi tiết để tránh tranh chấp khi ghi log
+                return None
+
+        # Sử dụng tqdm bên ngoài Parallel để hiển thị tiến trình tổng thể
+        log.info(f"Processing {len(sequences)} sequences with {len(batches)} batches by {num_cores} cores")
+
+        # Cấu hình Joblib để tối ưu hóa cho CPU
+        results = Parallel(
+            n_jobs=num_cores,  # Sử dụng số lõi tối đa
+            verbose=10,  # Tăng verbosity để thấy tiến trình rõ hơn
+            batch_size=1,  # Mỗi worker xử lý 1 batch một lần
+            prefer="threads",  # Sử dụng thread thay vì processes nếu model có thể chia sẻ
+            backend="loky",  # Backend hiệu quả cho Python object serialization
+            timeout=None,  # Không giới hạn thời gian
+            max_nbytes=None  # Không giới hạn mem_map cho dữ liệu lớn
+        )(delayed(process_batch)(batch, indices) for batch, indices in zip(batches, batch_indices))
+
+        # Làm phẳng các kết quả từ các batch và lưu lại các chỉ số hợp lệ
+        all_results = []
+        valid_indices = []
+        for batch_result, batch_valid_indices in results:
+            all_results.extend(batch_result)
+            valid_indices.extend(batch_valid_indices)
+
+        log.info(f"Completed embedding: {len(all_results)}/{len(sequences)} sequences")
+
+        # Trả về numpy array vectors và labels tương ứng
+        if not all_results:
+            return np.array([]), np.array([])
+
+        # Lọc labels dựa trên các chỉ số hợp lệ
+        filtered_labels = label[valid_indices] if label is not None else None
+
+        return np.array(all_results), filtered_labels

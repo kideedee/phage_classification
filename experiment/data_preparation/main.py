@@ -21,7 +21,7 @@ if __name__ == '__main__':
         overlap_percent=30,
         dna_bert_model_name="zhihan1996/DNABERT-2-117M",
         dna_bert_pooling="cls",
-        dna_bert_batch_size=64,  # Adjust based on your GPU memory
+        dna_bert_2_batch_size=64,  # Adjust based on your GPU memory
         output_dir=f"dna_bert_2_output",
         is_fine_tune_dna_bert=True,  # Enable fine-tuning
         fine_tune_epochs=3,

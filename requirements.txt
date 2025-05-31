@@ -23,3 +23,4 @@ numpy~=1.26.4
 torch~=2.8.0.dev20250406+cu128
 cuml-cu12==25.2.1
 cudf-cu12==25.2.2
+tensorflow==2.14.0
