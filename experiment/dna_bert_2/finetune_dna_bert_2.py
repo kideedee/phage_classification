@@ -166,7 +166,7 @@ def run():
         else:
             raise ValueError
 
-        if i != 2 and i != 3:
+        if i < 2:
             continue
 
         group = f"{min_size}_{max_size}"
@@ -205,7 +205,7 @@ def run():
                 num_labels=2,
                 trust_remote_code=True,
                 ignore_mismatched_sizes=True,
-                # classifier_dropout=0.2,  # Try different dropout rates
+                classifier_dropout=0.2,  # Try different dropout rates
                 # problem_type="single_label_classification"
             ).to(device)
 
@@ -237,7 +237,7 @@ def run():
             training_args = TrainingArguments(
                 output_dir="output",
                 # Learning rate and optimization
-                learning_rate=5e-5,
+                learning_rate=1e-5,
                 weight_decay=0.01,
                 max_grad_norm=1.0,
 
@@ -247,7 +247,7 @@ def run():
                 # Batch size and epochs
                 per_device_train_batch_size=batch_size,  # Increased for RTX 5070 Ti
                 per_device_eval_batch_size=batch_size,
-                gradient_accumulation_steps=2,  # Accumulate for effective larger batch
+                gradient_accumulation_steps=16,  # Accumulate for effective larger batch
                 num_train_epochs=5,
 
                 # Precision settings - modern approach

@@ -48,22 +48,28 @@ if __name__ == '__main__':
                 min_size = 100
                 max_size = 400
                 overlap = 30
+                max_length_tokenizer = int(max_size * 0.25)
             elif j == 1:
                 min_size = 400
                 max_size = 800
                 overlap = 30
+                max_length_tokenizer = int(max_size * 0.25)
             elif j == 2:
                 min_size = 800
                 max_size = 1200
                 overlap = 50
+                max_length_tokenizer = 512
             elif j == 3:
                 min_size = 1200
                 max_size = 1800
                 overlap = 70
+                max_length_tokenizer = 512
             else:
                 raise ValueError
 
-            max_length_tokenizer = int(max_size * 0.25)
+            if j < 2:
+                continue
+
             group = f"{min_size}_{max_size}"
             log.info(f"Fold: {fold}, group: {group}")
 

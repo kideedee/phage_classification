@@ -1,16 +1,20 @@
-from typing import List, Tuple
+from typing import List, Tuple, Any, Union
 
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
 from matplotlib import pyplot as plt
+from numpy import ndarray, dtype, floating, complexfloating
+from numpy._typing import _64Bit
 
 from embedding_sequence.abstract_embedding import AbstractEmbedding
 
 
 class FCGREmbedding(AbstractEmbedding):
 
-    def __init__(self, min_size, max_size, overlap_percent, kmer, resolution):
-        super().__init__(min_size=min_size, max_size=max_size, overlap_percent=overlap_percent)
+    def __init__(self, embedding_type, min_size, max_size, overlap_percent, kmer, resolution, fold, is_train):
+        super().__init__(embedding_type=embedding_type, min_size=min_size, max_size=max_size,
+                         overlap_percent=overlap_percent, fold=fold, is_train=is_train)
         self.kmer = kmer
         self.resolution = resolution
         self.nucleotide_map = {
@@ -20,24 +24,46 @@ class FCGREmbedding(AbstractEmbedding):
             'C': (1, 1)  # Top-right
         }
 
-        self.embeddings = None
+    def encode_sequences(self, sequences: List[str], labels: List[str]) -> tuple[
+        ndarray[Any, dtype[Any]], ndarray[Any, dtype[Any]]
+    ]:
 
-    def encode_sequences(self, sequences: List[str]) -> pd.DataFrame:
         fcgr_representations = []
+        result_labels = []
 
-        for i, sequence in enumerate(sequences):
-            if i % 100 == 0:
-                print(f"Processing sequence {i + 1}/{len(sequences)}")
+        # for i, sequence in enumerate(sequences):
+        #     if i % 100 == 0:
+        #         print(f"Processing sequence {i + 1}/{len(sequences)}")
+        #
+        #     fcgr_matrix = self._sequence_to_fcgr(sequence)
+        #     fcgr_representations.append(fcgr_matrix)
+        #     result_labels.append(labels[i])
 
-            fcgr_matrix = self._sequence_to_fcgr(sequence)
-            fcgr_representations.append(fcgr_matrix)
+        df = pd.DataFrame(zip(sequences, labels), columns=['sequence', 'label'])
+        results = Parallel(n_jobs=10)(
+            delayed(self._sequence_to_fcgr)(
+                (idx, row)
+            ) for idx, row in df.iterrows()
+        )
 
-        self.embeddings = np.array(fcgr_representations)
+        for result in results:
+            if result:
+                fcgr_representations.append(result[0])
+                result_labels.append(result[1])
 
-    def _sequence_to_fcgr(self, sequence: str) -> np.ndarray:
+        return np.array(fcgr_representations), np.array(result_labels)
+
+    def _sequence_to_fcgr(self, row_tuple) -> Union[ndarray[Any, dtype[floating[_64Bit]]], tuple[Union[Union[
+        ndarray[Any, dtype[floating[Any]]], ndarray[Any, dtype[complexfloating[Any, Any]]], ndarray[
+            Any, dtype[floating[_64Bit]]]], Any], Any]]:
         """
         Chuyển đổi một chuỗi DNA thành ma trận FCGR
         """
+
+        idx, row = row_tuple
+        sequence = row['sequence']
+        label = row['label']
+
         # Loại bỏ các ký tự không phải nucleotide
         clean_sequence = ''.join([c for c in sequence.upper() if c in 'ATGC'])
 
@@ -79,7 +105,7 @@ class FCGREmbedding(AbstractEmbedding):
         if fcgr_matrix.sum() > 0:
             fcgr_matrix = fcgr_matrix / fcgr_matrix.sum()
 
-        return fcgr_matrix
+        return fcgr_matrix, label
 
     def _get_cgr_coordinates(self, sequence: str) -> List[Tuple[float, float]]:
         """
