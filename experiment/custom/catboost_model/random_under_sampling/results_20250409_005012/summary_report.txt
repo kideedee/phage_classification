@@ -1,0 +1,41 @@
+=== CatBoost Phage Classification Summary ===
+
+Timestamp: 20250409_005012
+Training samples: 418324
+Validation samples: 127237
+Feature dimensions: 300
+
+=== Model Parameters ===
+learning_rate: 0.05
+depth: 9
+l2_leaf_reg: 3
+loss_function: Logloss
+eval_metric: Logloss
+random_seed: 54
+task_type: GPU
+devices: 0
+bagging_temperature: 1
+verbose: 1
+early_stopping_rounds: 20
+
+=== Final Performance ===
+Training accuracy: 0.7907
+Validation accuracy: 0.7544
+Precision: 0.9381
+Sensitivity/Recall: 0.7440
+Specificity: 0.7972
+F1 Score: 0.8299
+ROC AUC: 0.8476
+
+=== Confusion Matrix ===
+          Predicted       
+          Temp    Virulent
+Actual Temp    19760      5028
+       Virulent 26224      76225
+
+=== Files Generated ===
+Training history plots: results_20250409_005012/metrics/training_history.png
+Feature importance: results_20250409_005012/metrics/feature_importance.png
+Confusion matrices: results_20250409_005012/confusion_matrices/
+ROC curves: results_20250409_005012/roc_curves/
+Final model: results_20250409_005012/models/catboost_final_model.cbm

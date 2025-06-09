@@ -1,0 +1,20 @@
+{
+    "model_type": "CatBoost",
+    "date_trained": "2025-04-09 00:50:12",
+    "model_path": "results_20250409_004927/models/catboost_final_model.cbm",
+    "best_iteration": 199,
+    "parameters": {
+        "iterations": 200,
+        "learning_rate": 0.05,
+        "depth": 9,
+        "l2_leaf_reg": 3,
+        "loss_function": "Logloss",
+        "random_seed": 63,
+        "verbose": 1,
+        "eval_metric": "Logloss",
+        "bagging_temperature": 1,
+        "task_type": "GPU",
+        "devices": "0",
+        "early_stopping_rounds": 20
+    }
+}

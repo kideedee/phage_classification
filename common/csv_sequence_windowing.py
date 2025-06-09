@@ -4,13 +4,9 @@ from functools import partial
 import logging
 import traceback
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    filename='windowing_process.log'
-)
-logger = logging.getLogger('sequence_windowing')
+from logger.phg_cls_log import setup_logger
+
+log = setup_logger(__file__)
 
 
 def generate_windows_for_sequence(sequence, target, seq_id, distribution_type="normal",
@@ -23,7 +19,7 @@ def generate_windows_for_sequence(sequence, target, seq_id, distribution_type="n
     # Validate sequence is a string
     if not isinstance(sequence, str):
         error_msg = f"Row ID {seq_id}: Expected sequence to be a string, got {type(sequence)} with value {sequence}"
-        logger.error(error_msg)
+        log.error(error_msg)
         raise TypeError(error_msg)
 
     # Continue with processing if sequence is valid
@@ -129,8 +125,8 @@ def window_sequences_with_distribution(df, distribution_type="normal",
             )
             all_windows.extend(windows)
         except Exception as e:
-            logger.error(f"Error processing row {idx}: {str(e)}")
-            logger.error(traceback.format_exc())
+            log.error(f"Error processing row {idx}: {str(e)}")
+            log.error(traceback.format_exc())
             continue
 
     # Convert to DataFrame
@@ -138,7 +134,7 @@ def window_sequences_with_distribution(df, distribution_type="normal",
         windowed_df = pd.DataFrame(all_windows)
         return windowed_df
     else:
-        logger.warning("No windows were generated!")
+        log.warning("No windows were generated!")
         return pd.DataFrame()
 
 
@@ -160,8 +156,8 @@ def process_row(row_tuple, distribution_type="normal",
             overlap_percent=overlap_percent
         )
     except Exception as e:
-        logger.error(f"Error processing row {idx}: {str(e)}")
-        logger.error(traceback.format_exc())
+        log.error(f"Error processing row {idx}: {str(e)}")
+        log.error(traceback.format_exc())
         return []  # Return empty list for failed rows
 
 
@@ -175,15 +171,15 @@ def preprocess_dataframe(df):
     # Check for missing values
     if df['sequence'].isna().any():
         missing_rows = df[df['sequence'].isna()].index.tolist()
-        logger.warning(f"Found {len(missing_rows)} rows with missing sequences at indices: {missing_rows}")
+        log.warning(f"Found {len(missing_rows)} rows with missing sequences at indices: {missing_rows}")
 
     # Check for non-string types in sequence column
     non_string_rows = df[~df['sequence'].apply(lambda x: isinstance(x, str) if pd.notna(x) else True)].index.tolist()
     if non_string_rows:
-        logger.warning(
+        log.warning(
             f"Found {len(non_string_rows)} rows with non-string sequence types at indices: {non_string_rows}")
         for idx in non_string_rows:
-            logger.warning(
+            log.warning(
                 f"Row {idx}: sequence = {df.loc[idx, 'sequence']} (type: {type(df.loc[idx, 'sequence']).__name__})")
 
     # Convert sequences to strings where possible (handles int/float types)
@@ -192,18 +188,18 @@ def preprocess_dataframe(df):
             try:
                 # Try to convert to string
                 df.loc[idx, 'sequence'] = str(df.loc[idx, 'sequence'])
-                logger.info(f"Converted sequence at row {idx} to string")
+                log.info(f"Converted sequence at row {idx} to string")
             except:
                 # If conversion fails, mark as NaN
                 df.loc[idx, 'sequence'] = np.nan
-                logger.warning(f"Could not convert sequence at row {idx} to string, setting to NaN")
+                log.warning(f"Could not convert sequence at row {idx} to string, setting to NaN")
 
     # Drop rows with missing sequences after conversion attempts
     original_count = len(df)
     df = df.dropna(subset=['sequence'])
     dropped_count = original_count - len(df)
     if dropped_count > 0:
-        logger.warning(f"Dropped {dropped_count} rows with invalid sequences")
+        log.warning(f"Dropped {dropped_count} rows with invalid sequences")
 
     return df
 
@@ -235,10 +231,10 @@ def window_sequences_parallel(df, distribution_type="normal",
     df = preprocess_dataframe(df)
 
     if len(df) == 0:
-        logger.warning("No valid rows to process after preprocessing")
+        log.warning("No valid rows to process after preprocessing")
         return pd.DataFrame()
 
-    logger.info(f"Starting parallel processing of {len(df)} sequences with {n_jobs} jobs")
+    log.info(f"Starting parallel processing of {len(df)} sequences with {n_jobs} jobs")
 
     # Process in parallel with row index included
     results = Parallel(n_jobs=n_jobs, verbose=10)(
@@ -256,10 +252,10 @@ def window_sequences_parallel(df, distribution_type="normal",
     # Flatten the list of lists, filtering out empty lists from failed rows
     all_windows = [window for windows in results if windows for window in windows]
 
-    logger.info(f"Generated {len(all_windows)} windows from {len(df)} sequences")
+    log.info(f"Generated {len(all_windows)} windows from {len(df)} sequences")
 
     if not all_windows:
-        logger.warning("No windows were generated!")
+        log.warning("No windows were generated!")
         return pd.DataFrame()
 
     # Convert to DataFrame
