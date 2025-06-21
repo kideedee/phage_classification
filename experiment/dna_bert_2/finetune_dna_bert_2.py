@@ -146,7 +146,7 @@ class MemoryEfficientTrainer(Trainer):
 
 
 def run():
-    for i in range(1, 4):
+    for i in range(4):
         if i == 0:
             min_size = 100
             max_size = 400
@@ -166,7 +166,7 @@ def run():
         else:
             raise ValueError
 
-        if i < 2:
+        if i != 2:
             continue
 
         group = f"{min_size}_{max_size}"
@@ -184,6 +184,9 @@ def run():
                 data_dir = os.path.join(config.DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
             else:
                 raise ValueError
+
+            if fold < 2:
+                continue
 
             output_model_path = os.path.join(data_dir, f"finetune_dna_bert.pt")
             utils.start_experiment(f"finetune_dna_bert_2_group_{group}_fold_{fold}", time.time())
@@ -248,7 +251,7 @@ def run():
                 per_device_train_batch_size=batch_size,  # Increased for RTX 5070 Ti
                 per_device_eval_batch_size=batch_size,
                 gradient_accumulation_steps=16,  # Accumulate for effective larger batch
-                num_train_epochs=5,
+                num_train_epochs=10,
 
                 # Precision settings - modern approach
                 bf16=True,  # Better than fp16 on RTX 5070 Ti if supported

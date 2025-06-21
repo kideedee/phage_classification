@@ -5,15 +5,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def get_project_root():
-    # Tìm vị trí của file .git hoặc requirements.txt để xác định root
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    while current_dir != os.path.dirname(current_dir):  # Không phải root của ổ đĩa
-        if os.path.exists(os.path.join(current_dir, '.git')) or \
-                os.path.exists(os.path.join(current_dir, 'requirements.txt')):
-            return current_dir
-        current_dir = os.path.dirname(current_dir)
-    return current_dir  # Fallback
+# def get_project_root():
+#     # Tìm vị trí của file .git hoặc requirements.txt để xác định root
+#     current_dir = os.path.dirname(os.path.abspath(__file__))
+#     while current_dir != os.path.dirname(current_dir):  # Không phải root của ổ đĩa
+#         if os.path.exists(os.path.join(current_dir, '.git')) or \
+#                 os.path.exists(os.path.join(current_dir, 'requirements.txt')):
+#             return current_dir
+#         current_dir = os.path.dirname(current_dir)
+#     return current_dir  # Fallback
 
 
 # Configuration
@@ -23,19 +23,28 @@ class Config:
     ROOT_DIR = os.getenv("ROOT_DIR")
     CACHE_FOLDER = os.path.join(ROOT_DIR, os.getenv("CACHE_FOLDER", "cache"))
     TEMP_FOLDER = os.path.join(ROOT_DIR, os.getenv("TEMP_FOLDER", "temp"))
-    LOG_DIR = os.path.join(get_project_root(), os.getenv("LOG_DIR", "logs"))
-    RESULT_DIR = os.path.join(get_project_root(), os.getenv("RESULT_DIR", "result"))
-    MODEL_DIR = os.path.join(get_project_root(), os.getenv("MODEL_DIR", "model"))
+    LOG_DIR = os.path.join(ROOT_DIR, os.getenv("LOG_DIR", "logs"))
+    RESULT_DIR = os.path.join(ROOT_DIR, os.getenv("RESULT_DIR", "result"))
+    MODEL_DIR = os.path.join(ROOT_DIR, os.getenv("MODEL_DIR", "model"))
 
     DATA_DIR = os.path.join(ROOT_DIR, os.getenv("DATA_DIR"))
     MY_DATA_DIR = os.path.join(DATA_DIR, "my_data")
     GEN_BANK_DIR = os.path.join(DATA_DIR, "gen_bank")
-
     CUSTOM_DATA_DIR = os.path.join(MY_DATA_DIR, "custom")  # csv file sequence
     DNA_BERT_2_DATA_DIR = os.path.join(MY_DATA_DIR, "dna_bert_2")
     DNA_BERT_2_TOKENIZER_DATA_DIR = os.path.join(MY_DATA_DIR, "dna_bert_2_tokenizer")
     ONE_HOT_DATA_DIR = os.path.join(MY_DATA_DIR, "one_hot")
     RESAMPLE_DATA_DIR = os.path.join(MY_DATA_DIR, "resample")
+    TRAIN_DATA_FOLD_1_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TRAIN_DATA_FOLD_1_CSV_FILE"))
+    TEST_DATA_FOLD_1_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TEST_DATA_FOLD_1_CSV_FILE"))
+    TRAIN_DATA_FOLD_2_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TRAIN_DATA_FOLD_2_CSV_FILE"))
+    TEST_DATA_FOLD_2_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TEST_DATA_FOLD_2_CSV_FILE"))
+    TRAIN_DATA_FOLD_3_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TRAIN_DATA_FOLD_3_CSV_FILE"))
+    TEST_DATA_FOLD_3_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TEST_DATA_FOLD_3_CSV_FILE"))
+    TRAIN_DATA_FOLD_4_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TRAIN_DATA_FOLD_4_CSV_FILE"))
+    TEST_DATA_FOLD_4_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TEST_DATA_FOLD_4_CSV_FILE"))
+    TRAIN_DATA_FOLD_5_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TRAIN_DATA_FOLD_5_CSV_FILE"))
+    TEST_DATA_FOLD_5_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TEST_DATA_FOLD_5_CSV_FILE"))
 
     DNA2VEC_MODEL_PATH = os.path.join(MODEL_DIR, "dna2vec-20161219-0153-k3to8-100d-10c-29320Mbp-sliding-Xat.w2v")
 
@@ -45,17 +54,6 @@ class Config:
     VAL_DATA_FASTA_FILE = os.path.join(ROOT_DIR, os.getenv("TEST_DATA_FASTA_FILE"))
     TRAIN_DATA_CSV_FILE = os.path.join(ROOT_DIR, os.getenv("TRAIN_DATA_CSV_FILE"))
     VAL_DATA_CSV_FILE = os.path.join(ROOT_DIR, os.getenv("VAL_DATA_CSV_FILE"))
-
-    TRAIN_DATA_FOLD_1_CSV_FILE = os.path.join(ROOT_DIR, os.getenv("TRAIN_DATA_FOLD_1_CSV_FILE"))
-    TEST_DATA_FOLD_1_CSV_FILE = os.path.join(ROOT_DIR, os.getenv("TEST_DATA_FOLD_1_CSV_FILE"))
-    TRAIN_DATA_FOLD_2_CSV_FILE = os.path.join(ROOT_DIR, os.getenv("TRAIN_DATA_FOLD_2_CSV_FILE"))
-    TEST_DATA_FOLD_2_CSV_FILE = os.path.join(ROOT_DIR, os.getenv("TEST_DATA_FOLD_2_CSV_FILE"))
-    TRAIN_DATA_FOLD_3_CSV_FILE = os.path.join(ROOT_DIR, os.getenv("TRAIN_DATA_FOLD_3_CSV_FILE"))
-    TEST_DATA_FOLD_3_CSV_FILE = os.path.join(ROOT_DIR, os.getenv("TEST_DATA_FOLD_3_CSV_FILE"))
-    TRAIN_DATA_FOLD_4_CSV_FILE = os.path.join(ROOT_DIR, os.getenv("TRAIN_DATA_FOLD_4_CSV_FILE"))
-    TEST_DATA_FOLD_4_CSV_FILE = os.path.join(ROOT_DIR, os.getenv("TEST_DATA_FOLD_4_CSV_FILE"))
-    TRAIN_DATA_FOLD_5_CSV_FILE = os.path.join(ROOT_DIR, os.getenv("TRAIN_DATA_FOLD_5_CSV_FILE"))
-    TEST_DATA_FOLD_5_CSV_FILE = os.path.join(ROOT_DIR, os.getenv("TEST_DATA_FOLD_5_CSV_FILE"))
 
     X_TRAIN_SMOTE = os.path.join(ROOT_DIR, os.getenv("X_TRAIN_SMOTE"))
     Y_TRAIN_SMOTE = os.path.join(ROOT_DIR, os.getenv("Y_TRAIN_SMOTE"))
