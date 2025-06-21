@@ -20,7 +20,6 @@ scikit-optimize==0.10.2
 umap-learn==0.5.7
 imbalanced-learn==0.13.0
 numpy~=1.26.4
-torch~=2.8.0.dev20250406+cu128
 cuml-cu12==25.2.1
 cudf-cu12==25.2.2
 tensorflow==2.14.0
