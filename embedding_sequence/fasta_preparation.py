@@ -43,25 +43,41 @@ def create_embedding(factory: EmbeddingAbstractFactory):
 
 if __name__ == '__main__':
     # create_embedding(factory=FCGREmbeddingAbstractFactory())
-    for i in range(5):
-        create_embedding(
-            factory=OneHotEmbeddingAbstractFactory(
-                embedding_type="onehot",
-                min_size=1200,
-                max_size=1800,
-                overlap_percent=30,
-                fold=i + 1,
-                is_train=True,
-            )
-        )
+    for j in range(4):
+        if j == 0:
+            min_length = 100
+            max_length = 400
+        elif j == 1:
+            min_length = 400
+            max_length = 800
+        elif j == 2:
+            min_length = 800
+            max_length = 1200
+        elif j == 3:
+            min_length = 1200
+            max_length = 1800
+        else:
+            raise ValueError
 
-        create_embedding(
-            factory=OneHotEmbeddingAbstractFactory(
-                embedding_type="onehot",
-                min_size=1200,
-                max_size=1800,
-                overlap_percent=30,
-                fold=i + 1,
-                is_train=False,
+        for i in range(5):
+            create_embedding(
+                factory=OneHotEmbeddingAbstractFactory(
+                    embedding_type="onehot",
+                    min_size=min_length,
+                    max_size=max_length,
+                    overlap_percent=30,
+                    fold=i + 1,
+                    is_train=True,
+                )
             )
-        )
+
+            create_embedding(
+                factory=OneHotEmbeddingAbstractFactory(
+                    embedding_type="onehot",
+                    min_size=min_length,
+                    max_size=max_length,
+                    overlap_percent=30,
+                    fold=i + 1,
+                    is_train=False,
+                )
+            )
