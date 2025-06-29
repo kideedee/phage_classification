@@ -6,8 +6,7 @@ from embedding_sequence.one_hot.one_hot_embedding import OneHotEmbedding
 
 
 class EmbeddingAbstractFactory(ABC):
-    def __init__(self, embedding_type, min_size, max_size, overlap_percent, fold, is_train):
-        self.embedding_type = embedding_type
+    def __init__(self, min_size, max_size, overlap_percent, fold, is_train):
         self.min_size = min_size
         self.max_size = max_size
         self.overlap_percent = overlap_percent
@@ -22,7 +21,6 @@ class EmbeddingAbstractFactory(ABC):
 class FCGREmbeddingAbstractFactory(EmbeddingAbstractFactory):
     def create_embedding(self, kmer=6, resolution=64) -> FCGREmbedding:
         return FCGREmbedding(
-            embedding_type=self.embedding_type,
             min_size=self.min_size,
             max_size=self.max_size,
             overlap_percent=self.overlap_percent,
@@ -36,7 +34,6 @@ class FCGREmbeddingAbstractFactory(EmbeddingAbstractFactory):
 class OneHotEmbeddingAbstractFactory(EmbeddingAbstractFactory):
     def create_embedding(self):
         return OneHotEmbedding(
-            embedding_type=self.embedding_type,
             min_size=self.min_size,
             max_size=self.max_size,
             overlap_percent=self.overlap_percent,
