@@ -19,9 +19,8 @@ load_dotenv()
 # Configuration
 class Config:
     DEBUGGING = int(os.getenv("DEBUGGING", 0))
-
-    PROJECT_DIR = os.getenv("PROJECT_DIR")
     DATA_DIR = os.getenv("DATA_DIR")
+    PROJECT_DIR = os.getenv("PROJECT_DIR")
 
     CACHE_FOLDER = os.path.join(PROJECT_DIR, os.getenv("CACHE_FOLDER", "cache"))
     TEMP_FOLDER = os.path.join(PROJECT_DIR, os.getenv("TEMP_FOLDER", "temp"))
@@ -29,12 +28,12 @@ class Config:
     RESULT_DIR = os.path.join(PROJECT_DIR, os.getenv("RESULT_DIR", "result"))
     MODEL_DIR = os.path.join(PROJECT_DIR, os.getenv("MODEL_DIR", "model"))
 
-
     MY_DATA_DIR = os.path.join(DATA_DIR, "my_data")
     GEN_BANK_DIR = os.path.join(DATA_DIR, "gen_bank")
     CUSTOM_DATA_DIR = os.path.join(MY_DATA_DIR, "custom")  # csv file sequence
     DNA_BERT_2_DATA_DIR = os.path.join(MY_DATA_DIR, "dna_bert_2")
     DNA_BERT_2_TOKENIZER_DATA_DIR = os.path.join(MY_DATA_DIR, "dna_bert_2_tokenizer")
+    PHATYP_FILTER_DNA_BERT_2_TOKENIZER_DATA_DIR = os.path.join(MY_DATA_DIR, "phatyp_filter_dna_bert_2_tokenizer")
     ONE_HOT_DATA_DIR = os.path.join(MY_DATA_DIR, "one_hot")
     RESAMPLE_DATA_DIR = os.path.join(MY_DATA_DIR, "resample")
     TRAIN_DATA_FOLD_1_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TRAIN_DATA_FOLD_1_CSV_FILE"))
@@ -47,6 +46,7 @@ class Config:
     TEST_DATA_FOLD_4_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TEST_DATA_FOLD_4_CSV_FILE"))
     TRAIN_DATA_FOLD_5_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TRAIN_DATA_FOLD_5_CSV_FILE"))
     TEST_DATA_FOLD_5_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TEST_DATA_FOLD_5_CSV_FILE"))
+    FILTER_FROM_PHATYP_DATA = os.path.join(MY_DATA_DIR, os.getenv("FILTER_FROM_PHATYP_DATA"))
 
     DNA2VEC_MODEL_PATH = os.path.join(MODEL_DIR, "dna2vec-20161219-0153-k3to8-100d-10c-29320Mbp-sliding-Xat.w2v")
 

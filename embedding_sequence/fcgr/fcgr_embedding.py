@@ -12,8 +12,8 @@ from embedding_sequence.abstract_embedding import AbstractEmbedding
 
 class FCGREmbedding(AbstractEmbedding):
 
-    def __init__(self, embedding_type, min_size, max_size, overlap_percent, kmer, resolution, fold, is_train):
-        super().__init__(embedding_type=embedding_type, min_size=min_size, max_size=max_size,
+    def __init__(self, min_size, max_size, overlap_percent, kmer, resolution, fold, is_train):
+        super().__init__(embedding_type="fcgr", min_size=min_size, max_size=max_size,
                          overlap_percent=overlap_percent, fold=fold, is_train=is_train)
         self.kmer = kmer
         self.resolution = resolution

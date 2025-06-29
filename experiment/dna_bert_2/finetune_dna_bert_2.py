@@ -166,26 +166,26 @@ def run():
         else:
             raise ValueError
 
-        if i != 2:
+        if i < 3:
             continue
 
         group = f"{min_size}_{max_size}"
         for j in range(5):
             fold = j + 1
             if fold == 1:
-                data_dir = os.path.join(config.DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
+                data_dir = os.path.join(config.PHATYP_FILTER_DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
             elif fold == 2:
-                data_dir = os.path.join(config.DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
+                data_dir = os.path.join(config.PHATYP_FILTER_DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
             elif fold == 3:
-                data_dir = os.path.join(config.DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
+                data_dir = os.path.join(config.PHATYP_FILTER_DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
             elif fold == 4:
-                data_dir = os.path.join(config.DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
+                data_dir = os.path.join(config.PHATYP_FILTER_DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
             elif fold == 5:
-                data_dir = os.path.join(config.DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
+                data_dir = os.path.join(config.PHATYP_FILTER_DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
             else:
                 raise ValueError
 
-            if fold < 2:
+            if i == 3 and fold < 4:
                 continue
 
             output_model_path = os.path.join(data_dir, f"finetune_dna_bert.pt")
@@ -208,7 +208,7 @@ def run():
                 num_labels=2,
                 trust_remote_code=True,
                 ignore_mismatched_sizes=True,
-                classifier_dropout=0.2,  # Try different dropout rates
+                # classifier_dropout=0.2,  # Try different dropout rates
                 # problem_type="single_label_classification"
             ).to(device)
 
