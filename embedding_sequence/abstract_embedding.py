@@ -35,18 +35,18 @@ class AbstractEmbedding(ABC):
         # Determine data source based on training/testing mode
         data_files = {
             True: {  # Training data files
-                1: config.TRAIN_DATA_FOLD_1_CSV_FILE,
-                2: config.TRAIN_DATA_FOLD_2_CSV_FILE,
-                3: config.TRAIN_DATA_FOLD_3_CSV_FILE,
-                4: config.TRAIN_DATA_FOLD_4_CSV_FILE,
-                5: config.TRAIN_DATA_FOLD_5_CSV_FILE,
+                1: os.path.join(config.FILTER_FROM_PHATYP_DATA, f"{self.min_size}_{self.max_size}/{self.fold}/train/data.csv"),
+                2: os.path.join(config.FILTER_FROM_PHATYP_DATA, f"{self.min_size}_{self.max_size}/{self.fold}/train/data.csv"),
+                3: os.path.join(config.FILTER_FROM_PHATYP_DATA, f"{self.min_size}_{self.max_size}/{self.fold}/train/data.csv"),
+                4: os.path.join(config.FILTER_FROM_PHATYP_DATA, f"{self.min_size}_{self.max_size}/{self.fold}/train/data.csv"),
+                5: os.path.join(config.FILTER_FROM_PHATYP_DATA, f"{self.min_size}_{self.max_size}/{self.fold}/train/data.csv"),
             },
             False: {  # Test data files
-                1: config.TEST_DATA_FOLD_1_CSV_FILE,
-                2: config.TEST_DATA_FOLD_2_CSV_FILE,
-                3: config.TEST_DATA_FOLD_3_CSV_FILE,
-                4: config.TEST_DATA_FOLD_4_CSV_FILE,
-                5: config.TEST_DATA_FOLD_5_CSV_FILE,
+                1: os.path.join(config.FILTER_FROM_PHATYP_DATA, f"{self.min_size}_{self.max_size}/{self.fold}/test/data.csv"),
+                2: os.path.join(config.FILTER_FROM_PHATYP_DATA, f"{self.min_size}_{self.max_size}/{self.fold}/test/data.csv"),
+                3: os.path.join(config.FILTER_FROM_PHATYP_DATA, f"{self.min_size}_{self.max_size}/{self.fold}/test/data.csv"),
+                4: os.path.join(config.FILTER_FROM_PHATYP_DATA, f"{self.min_size}_{self.max_size}/{self.fold}/test/data.csv"),
+                5: os.path.join(config.FILTER_FROM_PHATYP_DATA, f"{self.min_size}_{self.max_size}/{self.fold}/test/data.csv"),
             }
         }
 

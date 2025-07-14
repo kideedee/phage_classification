@@ -204,3 +204,4 @@ experiment/xgboost_model/smote_200_800
 
 /logs
 /model
+common/__pycache__/env_config.cpython-39.pyc

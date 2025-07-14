@@ -69,7 +69,7 @@ class FCGREmbedding(AbstractEmbedding):
 
         if len(clean_sequence) < self.kmer:
             # Nếu sequence quá ngắn, trả về ma trận zeros
-            return np.zeros((self.resolution, self.resolution))
+            return np.zeros((self.resolution, self.resolution)), label
 
         # Khởi tạo ma trận frequency
         fcgr_matrix = np.zeros((self.resolution, self.resolution))
@@ -227,7 +227,7 @@ class FCGREmbedding(AbstractEmbedding):
 
     # @staticmethod
     def experiment_with_parameters(self, sequences, targets, k_values: List[int] = [6, 8, 10],
-                                   resolutions: List[int] = [64, 128]):
+                                   resolutions: List[int] = [16, 32, 64, 128]):
         """
         Thử nghiệm với các tham số k và resolution khác nhau
         """
@@ -239,15 +239,16 @@ class FCGREmbedding(AbstractEmbedding):
             for resolution in resolutions:
                 print(f"\nTesting k={k}, resolution={resolution}")
 
-                # processor = PhageFCGRProcessor(k=k, resolution=resolution)
+                self.kmer = k
+                self.resolution = resolution
 
                 # Tạo embeddings cho subset nhỏ để test
                 test_sequences = sequences[:100]  # Test với 100 sequences đầu
-                embeddings = self.encode_sequences(test_sequences)
+                embeddings, targets = self.encode_sequences(test_sequences, targets)
 
                 # Tính một số metrics cơ bản
                 embedding_stats = {
-                    'shape': embeddings.shape,
+                    # 'shape': embeddings.shape,
                     'non_zero_ratio': np.mean(embeddings > 0),
                     'mean_intensity': np.mean(embeddings),
                     'std_intensity': np.std(embeddings)
