@@ -8,8 +8,16 @@ from embedding_sequence.abstract_embedding import AbstractEmbedding
 
 class OneHotEmbedding(AbstractEmbedding):
 
-    def __init__(self, min_size, max_size, overlap_percent, is_train, fold):
-        super().__init__("one_hot", min_size, max_size, overlap_percent, is_train, fold)
+    def __init__(self, data_dir, output_dir, min_size, max_size, overlap_percent, is_train, fold):
+        super().__init__(
+            embedding_type="one_hot",
+            data_dir=data_dir,
+            output_dir=output_dir,
+            min_size=min_size,
+            max_size=max_size,
+            overlap_percent=overlap_percent,
+            is_train=is_train,
+            fold=fold)
 
     def encode_sequences(self, sequences: List[str], labels: List[str]) -> tuple[
         np.ndarray[Any, np.dtype[Any]], np.ndarray[Any, np.dtype[Any]]
