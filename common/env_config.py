@@ -29,6 +29,7 @@ class Config:
     MODEL_DIR = os.path.join(PROJECT_DIR, os.getenv("MODEL_DIR", "model"))
 
     MY_DATA_DIR = os.path.join(DATA_DIR, "my_data")
+    START_HERE = os.path.join(MY_DATA_DIR, "start_here")
     GEN_BANK_DIR = os.path.join(DATA_DIR, "gen_bank")
     CUSTOM_DATA_DIR = os.path.join(MY_DATA_DIR, "custom")  # csv file sequence
     DNA_BERT_2_DATA_DIR = os.path.join(MY_DATA_DIR, "dna_bert_2")
@@ -39,6 +40,9 @@ class Config:
     FCGR_DATA_DIR = os.path.join(MY_DATA_DIR, "new_embedding_imp/fcgr")
     VIT_PREPARED_DATA_DIR = os.path.join(MY_DATA_DIR, "vit_prepared_data")
     RESAMPLE_DATA_DIR = os.path.join(MY_DATA_DIR, "resample")
+
+    CODON_EMBEDDING_OUTPUT_DIR = os.path.join(MY_DATA_DIR, "output/codon_embedding")
+
     TRAIN_DATA_FOLD_1_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TRAIN_DATA_FOLD_1_CSV_FILE"))
     TEST_DATA_FOLD_1_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TEST_DATA_FOLD_1_CSV_FILE"))
     TRAIN_DATA_FOLD_2_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TRAIN_DATA_FOLD_2_CSV_FILE"))

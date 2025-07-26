@@ -1,22 +1,36 @@
-from embedding_sequence.embedding_abstract_factory import EmbeddingAbstractFactory, FCGREmbeddingAbstractFactory
+import os
+
+from common.env_config import config
+from embedding_sequence.embedding_abstract_factory import EmbeddingAbstractFactory, FCGREmbeddingAbstractFactory, \
+    CodonEmbeddingAbstractFactory
 
 
 def create_embedding(factory: EmbeddingAbstractFactory):
     if isinstance(factory, FCGREmbeddingAbstractFactory):
-        train_embedding = factory.create_embedding(kmer=6, resolution=16)
+        embedder = factory.create_embedding(kmer=6, resolution=16)
+        df = embedder.load_data()
+        df = df.sample(frac=0.1).reset_index(drop=True)
+        df = embedder.clean_data(df)
+        x, y = embedder.window_data(df)
+        x_aug, y_aug = embedder.augment_data(x=x, y=y)
+        x_resampled, y_resampled = embedder.resample_data(x=x_aug, y=y_aug)
+        x_embedding, y_embedding = embedder.encode_sequences(x_resampled, y_resampled)
+        embedder.save_embedding(x_embedding, y_embedding)
+    elif isinstance(factory, CodonEmbeddingAbstractFactory):
+        embedder = factory.create_embedding(preprocessing_method="padding")
+
+        df = embedder.load_data()
+        df = df.sample(frac=0.1).reset_index(drop=True)
+        df = embedder.clean_data(df)
+        x, y = embedder.window_data(df)
+        x_aug, y_aug = embedder.augment_data(x=x, y=y)
+        x_resampled, y_resampled = embedder.resample_data(x=x_aug, y=y_aug)
+        codon_df = embedder.encode_sequences(x_resampled, y_resampled)
+        codon_df.to_csv(os.path.join(embedder.output_dir, "data.csv"), index=False)
     else:
         raise NotImplementedError()
 
-    train_df = train_embedding.load_data()
-    # train_df = train_df.sample(frac=0.1).reset_index(drop=True)
-    train_df = train_embedding.clean_data(train_df)
-    x_train, y_train = train_embedding.window_data(train_df)
-    x_train_aug, y_train_aug = train_embedding.augment_data(x=x_train, y=y_train)
-    x_train_resampled, y_train_resampled = train_embedding.resample_data(x=x_train_aug, y=y_train_aug)
-    x_embedding, y_embedding = train_embedding.encode_sequences(x_train_resampled, y_train_resampled)
-    train_embedding.save_embedding(x_embedding, y_embedding)
-
-    # train_embedding.experiment_with_parameters(x_train_resampled, y_train_resampled)
+    # embedder.experiment_with_parameters(x_resampled, y_resampled)
 
     # fcgr_matrix = x_embedding[0]
     # plt.figure(figsize=(8, 8))
@@ -45,7 +59,9 @@ if __name__ == '__main__':
         for j in range(5):
             fold = j + 1
             create_embedding(
-                factory=FCGREmbeddingAbstractFactory(
+                factory=CodonEmbeddingAbstractFactory(
+                    data_dir=config.START_HERE,
+                    output_dir=config.CODON_EMBEDDING_OUTPUT_DIR,
                     min_size=min_size,
                     max_size=max_size,
                     overlap_percent=30,
@@ -54,7 +70,9 @@ if __name__ == '__main__':
                 )
             )
             create_embedding(
-                factory=FCGREmbeddingAbstractFactory(
+                factory=CodonEmbeddingAbstractFactory(
+                    data_dir=config.START_HERE,
+                    output_dir=config.CODON_EMBEDDING_OUTPUT_DIR,
                     min_size=min_size,
                     max_size=max_size,
                     overlap_percent=30,
