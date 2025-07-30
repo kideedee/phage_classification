@@ -5,22 +5,22 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-# def get_project_root():
-#     # Tìm vị trí của file .git hoặc requirements.txt để xác định root
-#     current_dir = os.path.dirname(os.path.abspath(__file__))
-#     while current_dir != os.path.dirname(current_dir):  # Không phải root của ổ đĩa
-#         if os.path.exists(os.path.join(current_dir, '.git')) or \
-#                 os.path.exists(os.path.join(current_dir, 'requirements.txt')):
-#             return current_dir
-#         current_dir = os.path.dirname(current_dir)
-#     return current_dir  # Fallback
+def get_project_root():
+    # Tìm vị trí của file .git hoặc requirements.txt để xác định root
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    while current_dir != os.path.dirname(current_dir):  # Không phải root của ổ đĩa
+        if os.path.exists(os.path.join(current_dir, '.git')) or \
+                os.path.exists(os.path.join(current_dir, 'requirements.txt')):
+            return current_dir
+        current_dir = os.path.dirname(current_dir)
+    return current_dir  # Fallback
 
 
 # Configuration
 class Config:
     DEBUGGING = int(os.getenv("DEBUGGING", 0))
     DATA_DIR = os.getenv("DATA_DIR")
-    PROJECT_DIR = os.getenv("PROJECT_DIR")
+    PROJECT_DIR = get_project_root()
 
     CACHE_FOLDER = os.path.join(PROJECT_DIR, os.getenv("CACHE_FOLDER", "cache"))
     TEMP_FOLDER = os.path.join(PROJECT_DIR, os.getenv("TEMP_FOLDER", "temp"))
@@ -41,7 +41,11 @@ class Config:
     VIT_PREPARED_DATA_DIR = os.path.join(MY_DATA_DIR, "vit_prepared_data")
     RESAMPLE_DATA_DIR = os.path.join(MY_DATA_DIR, "resample")
 
-    CODON_EMBEDDING_OUTPUT_DIR = os.path.join(MY_DATA_DIR, "output/codon_embedding")
+    CONTIG_OUTPUT_DATA_DIR = os.path.join(MY_DATA_DIR, "contig")
+    EMBEDDING_OUTPUT_DATA_DIR = os.path.join(MY_DATA_DIR, "embedding_output_data")
+    CODON_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "codon_embedding")
+    FCGR_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "fcgr_embedding")
+    HDFS_FCGR_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "hdfs_fcgr_embedding")
 
     TRAIN_DATA_FOLD_1_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TRAIN_DATA_FOLD_1_CSV_FILE"))
     TEST_DATA_FOLD_1_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TEST_DATA_FOLD_1_CSV_FILE"))

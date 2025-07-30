@@ -28,5 +28,5 @@ def setup_logger(log_name="phg_cls_log"):
 
 
 log = setup_logger()
-experiment_log = setup_logger(log_name="experiment_log")
+experiment_log = setup_logger(log_name="fcgr_log")
 embedding_log = setup_logger(log_name="embedding_log")

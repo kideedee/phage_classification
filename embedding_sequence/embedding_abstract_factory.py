@@ -22,7 +22,7 @@ class EmbeddingAbstractFactory(ABC):
 
 
 class FCGREmbeddingAbstractFactory(EmbeddingAbstractFactory):
-    def create_embedding(self, kmer=6, resolution=64) -> FCGREmbedding:
+    def create_embedding(self, kmer=6) -> FCGREmbedding:
         return FCGREmbedding(
             data_dir=self.data_dir,
             output_dir=self.output_dir,
@@ -31,8 +31,7 @@ class FCGREmbeddingAbstractFactory(EmbeddingAbstractFactory):
             overlap_percent=self.overlap_percent,
             fold=self.fold,
             is_train=self.is_train,
-            kmer=kmer,
-            resolution=resolution
+            kmer=kmer
         )
 
 

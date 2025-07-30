@@ -91,7 +91,7 @@ class AbstractEmbedding(ABC):
         return x_resampled, y_resampled
 
     @abstractmethod
-    def encode_sequences(self, sequences: List[str], labels: List[str]):
+    def run(self, sequences: List[str], labels: List[str]):
         pass
 
     # @abstractmethod

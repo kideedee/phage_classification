@@ -22,7 +22,7 @@ class CodonEmbedding(AbstractEmbedding):
 
         self.preprocess_method = preprocess_method
 
-    def encode_sequences(self, sequences: List[str], labels: List[str]) -> pd.DataFrame:
+    def run(self, sequences: List[str], labels: List[str]) -> pd.DataFrame:
         proteins = []
         result_labels = []
         df = pd.DataFrame(zip(sequences, labels), columns=["sequence", "label"])

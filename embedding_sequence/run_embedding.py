@@ -14,7 +14,7 @@ def create_embedding(factory: EmbeddingAbstractFactory):
         x, y = embedder.window_data(df)
         x_aug, y_aug = embedder.augment_data(x=x, y=y)
         x_resampled, y_resampled = embedder.resample_data(x=x_aug, y=y_aug)
-        x_embedding, y_embedding = embedder.encode_sequences(x_resampled, y_resampled)
+        x_embedding, y_embedding = embedder.run(x_resampled, y_resampled)
         embedder.save_embedding(x_embedding, y_embedding)
     elif isinstance(factory, CodonEmbeddingAbstractFactory):
         embedder = factory.create_embedding(preprocessing_method="padding")
@@ -25,7 +25,7 @@ def create_embedding(factory: EmbeddingAbstractFactory):
         x, y = embedder.window_data(df)
         x_aug, y_aug = embedder.augment_data(x=x, y=y)
         x_resampled, y_resampled = embedder.resample_data(x=x_aug, y=y_aug)
-        codon_df = embedder.encode_sequences(x_resampled, y_resampled)
+        codon_df = embedder.run(x_resampled, y_resampled)
         codon_df.to_csv(os.path.join(embedder.output_dir, "data.csv"), index=False)
     else:
         raise NotImplementedError()

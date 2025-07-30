@@ -19,7 +19,7 @@ class OneHotEmbedding(AbstractEmbedding):
             is_train=is_train,
             fold=fold)
 
-    def encode_sequences(self, sequences: List[str], labels: List[str]) -> tuple[
+    def run(self, sequences: List[str], labels: List[str]) -> tuple[
         np.ndarray[Any, np.dtype[Any]], np.ndarray[Any, np.dtype[Any]]
     ]:
         x = np.array(
