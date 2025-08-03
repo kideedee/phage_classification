@@ -32,32 +32,18 @@ class Config:
     START_HERE = os.path.join(MY_DATA_DIR, "start_here")
     GEN_BANK_DIR = os.path.join(DATA_DIR, "gen_bank")
     CUSTOM_DATA_DIR = os.path.join(MY_DATA_DIR, "custom")  # csv file sequence
-    DNA_BERT_2_DATA_DIR = os.path.join(MY_DATA_DIR, "dna_bert_2")
-    DNA_BERT_2_TOKENIZER_DATA_DIR = os.path.join(MY_DATA_DIR, "dna_bert_2_tokenizer")
-    PHATYP_FILTER_DNA_BERT_2_TOKENIZER_DATA_DIR = os.path.join(MY_DATA_DIR, "phatyp_filter_dna_bert_2_tokenizer")
-    PHATYP_FILTER_DNA_BERT_S_TOKENIZER_DATA_DIR = os.path.join(MY_DATA_DIR, "phatyp_filter_dna_bert_s_tokenizer")
+
     ONE_HOT_DATA_DIR = os.path.join(MY_DATA_DIR, "one_hot")
-    FCGR_DATA_DIR = os.path.join(MY_DATA_DIR, "new_embedding_imp/fcgr")
     VIT_PREPARED_DATA_DIR = os.path.join(MY_DATA_DIR, "vit_prepared_data")
     RESAMPLE_DATA_DIR = os.path.join(MY_DATA_DIR, "resample")
 
     CONTIG_OUTPUT_DATA_DIR = os.path.join(MY_DATA_DIR, "contig")
     EMBEDDING_OUTPUT_DATA_DIR = os.path.join(MY_DATA_DIR, "embedding_output_data")
+
     CODON_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "codon_embedding")
     FCGR_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "fcgr_embedding")
     HDFS_FCGR_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "hdfs_fcgr_embedding")
-
-    TRAIN_DATA_FOLD_1_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TRAIN_DATA_FOLD_1_CSV_FILE"))
-    TEST_DATA_FOLD_1_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TEST_DATA_FOLD_1_CSV_FILE"))
-    TRAIN_DATA_FOLD_2_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TRAIN_DATA_FOLD_2_CSV_FILE"))
-    TEST_DATA_FOLD_2_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TEST_DATA_FOLD_2_CSV_FILE"))
-    TRAIN_DATA_FOLD_3_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TRAIN_DATA_FOLD_3_CSV_FILE"))
-    TEST_DATA_FOLD_3_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TEST_DATA_FOLD_3_CSV_FILE"))
-    TRAIN_DATA_FOLD_4_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TRAIN_DATA_FOLD_4_CSV_FILE"))
-    TEST_DATA_FOLD_4_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TEST_DATA_FOLD_4_CSV_FILE"))
-    TRAIN_DATA_FOLD_5_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TRAIN_DATA_FOLD_5_CSV_FILE"))
-    TEST_DATA_FOLD_5_CSV_FILE = os.path.join(CUSTOM_DATA_DIR, os.getenv("TEST_DATA_FOLD_5_CSV_FILE"))
-    FILTER_FROM_PHATYP_DATA = os.path.join(MY_DATA_DIR, os.getenv("FILTER_FROM_PHATYP_DATA"))
+    DNA_BERT_2_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "dna_bert_2_output")
 
     DNA2VEC_MODEL_PATH = os.path.join(MODEL_DIR, "dna2vec-20161219-0153-k3to8-100d-10c-29320Mbp-sliding-Xat.w2v")
 
@@ -93,11 +79,6 @@ class Config:
     Y_TRAIN_RUS_1200_1800 = os.path.join(DATA_DIR, os.getenv("Y_TRAIN_RUS_1200_1800"))
     X_VAL_RUS_1200_1800 = os.path.join(DATA_DIR, os.getenv("X_VAL_RUS_1200_1800"))
     Y_VAL_RUS_1200_1800 = os.path.join(DATA_DIR, os.getenv("Y_VAL_RUS_1200_1800"))
-
-    TRAIN_DNA_BERT_2_EMBEDDING = os.path.join(DATA_DIR, os.getenv("TRAIN_DNA_BERT_2_EMBEDDING"))
-    TRAIN_DNA_BERT_2_LABELS = os.path.join(DATA_DIR, os.getenv("TRAIN_DNA_BERT_2_LABELS"))
-    VAL_DNA_BERT_2_EMBEDDING = os.path.join(DATA_DIR, os.getenv("VAL_DNA_BERT_2_EMBEDDING"))
-    VAL_DNA_BERT_2_LABELS = os.path.join(DATA_DIR, os.getenv("VAL_DNA_BERT_2_LABELS"))
 
     INPUT_SIZE = int(os.getenv("INPUT_SIZE", 1024))
     HIDDEN_SIZE = int(os.getenv("HIDDEN_SIZE", 128))

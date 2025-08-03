@@ -172,25 +172,14 @@ def run():
         group = f"{min_size}_{max_size}"
         for j in range(5):
             fold = j + 1
-            if fold == 1:
-                data_dir = os.path.join(config.PHATYP_FILTER_DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
-            elif fold == 2:
-                data_dir = os.path.join(config.PHATYP_FILTER_DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
-            elif fold == 3:
-                data_dir = os.path.join(config.PHATYP_FILTER_DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
-            elif fold == 4:
-                data_dir = os.path.join(config.PHATYP_FILTER_DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
-            elif fold == 5:
-                data_dir = os.path.join(config.PHATYP_FILTER_DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
-            else:
-                raise ValueError
 
-            if i == 3 and fold < 4:
+            if fold < 2:
                 continue
 
-            output_model_path = os.path.join(data_dir, f"finetune_dna_bert.pt")
             utils.start_experiment(f"finetune_dna_bert_2_group_{group}_fold_{fold}", time.time())
 
+            data_dir = os.path.join(config.DNA_BERT_2_OUTPUT_DIR, f"{group}/fold_{fold}")
+            output_model_path = os.path.join(data_dir, f"finetune_dna_bert.pt")
             log.info(f"Data directory: {data_dir}")
 
             # Load datasets

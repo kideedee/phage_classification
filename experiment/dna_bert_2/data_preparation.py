@@ -68,13 +68,13 @@ if __name__ == '__main__':
             #     continue
 
             group = f"{min_size}_{max_size}"
-            train_file = f"{config.FILTER_FROM_PHATYP_DATA}/{group}/{fold}/train/data.csv"
-            valid_file = f"{config.FILTER_FROM_PHATYP_DATA}/{group}/{fold}/test/data.csv"
+            train_file = f"{config.CONTIG_OUTPUT_DATA_DIR}/{group}/fold_{fold}/train/data.csv"
+            valid_file = f"{config.CONTIG_OUTPUT_DATA_DIR}/{group}/fold_{fold}/test/data.csv"
             log.info(f"Fold: {fold}, group: {group}")
             log.info(f"train_file: {train_file}")
             log.info(f"valid_file: {valid_file}")
 
-            output_dir = os.path.join(config.PHATYP_FILTER_DNA_BERT_2_TOKENIZER_DATA_DIR, f"{group}/fold_{fold}")
+            output_dir = os.path.join(config.DNA_BERT_2_OUTPUT_DIR, f"{group}/fold_{fold}")
             os.makedirs(output_dir, exist_ok=True)
             output_prepared_train_dataset = os.path.join(output_dir, f"processed_train_dataset")
             output_prepared_val_dataset = os.path.join(output_dir, f"processed_val_dataset")
@@ -121,10 +121,10 @@ if __name__ == '__main__':
             # processed_train_df = processed_train_df.sample(frac=0.02, random_state=42).reset_index(drop=True)
             # processed_val_df = processed_val_df.sample(frac=0.02, random_state=42).reset_index(drop=True)
 
-            processed_train_df = pd.read_csv(train_file)[["sequence", "label_y"]]
-            processed_train_df.columns.values[1]="target"
-            processed_val_df = pd.read_csv(valid_file)[["sequence", "label_y"]]
-            processed_val_df.columns.values[1] = "target"
+            processed_train_df = pd.read_csv(train_file)[["sequence", "target"]]
+            # processed_train_df.columns.values[1]="target"
+            processed_val_df = pd.read_csv(valid_file)[["sequence", "target"]]
+            # processed_val_df.columns.values[1] = "target"
 
             # Convert dataframes to Hugging Face datasets
             train_dataset = Dataset.from_pandas(processed_train_df)
