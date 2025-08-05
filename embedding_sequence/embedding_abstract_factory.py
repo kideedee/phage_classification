@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from embedding_sequence.abstract_embedding import AbstractEmbedding
 from embedding_sequence.codon.codon_embedding import CodonEmbedding
 from embedding_sequence.fcgr.fcgr_embedding import FCGREmbedding
+from embedding_sequence.fcgr.pfcgr_embedding import PFCGREmbedding
 from embedding_sequence.one_hot.one_hot_embedding import OneHotEmbedding
 
 
@@ -59,4 +60,19 @@ class CodonEmbeddingAbstractFactory(EmbeddingAbstractFactory):
             fold=self.fold,
             is_train=self.is_train,
             preprocess_method=preprocessing_method
+        )
+
+
+class PFCGREmbeddingAbstractFactory(EmbeddingAbstractFactory):
+    def create_embedding(self, kmer=6) -> PFCGREmbedding:
+        print(f"Start creating PFCGREmbedding...")
+        return PFCGREmbedding(
+            data_dir=self.data_dir,
+            output_dir=self.output_dir,
+            min_size=self.min_size,
+            max_size=self.max_size,
+            overlap_percent=self.overlap_percent,
+            fold=self.fold,
+            is_train=self.is_train,
+            kmer=kmer
         )

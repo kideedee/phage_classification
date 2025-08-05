@@ -43,6 +43,8 @@ class Config:
     CODON_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "codon_embedding")
     FCGR_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "fcgr_embedding")
     HDFS_FCGR_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "hdfs_fcgr_embedding")
+    HDFS_PFCGR_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "hdfs_pfcgr_embedding")
+    NORMALIZED_HDFS_PFCGR_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "normalized_hdfs_pfcgr_embedding")
     DNA_BERT_2_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "dna_bert_2_output")
 
     DNA2VEC_MODEL_PATH = os.path.join(MODEL_DIR, "dna2vec-20161219-0153-k3to8-100d-10c-29320Mbp-sliding-Xat.w2v")
