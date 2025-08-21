@@ -11,7 +11,7 @@ def create_embedding(factory: EmbeddingAbstractFactory):
         train_embedding = factory.create_embedding()
 
     train_df = train_embedding.load_data()
-    train_df = train_df.sample(frac=0.1).reset_index(drop=True)
+    # train_df = train_df.sample(frac=0.1).reset_index(drop=True)
     train_df = train_embedding.clean_data(train_df)
     x_train, y_train = train_embedding.window_data(train_df)
     x_train_aug, y_train_aug = train_embedding.augment_data(x=x_train, y=y_train)

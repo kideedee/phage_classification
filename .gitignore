@@ -204,3 +204,5 @@ experiment/xgboost_model/smote_200_800
 
 /logs
 /model
+.env
+common/__pycache__/__init__.cpython-310.pyc

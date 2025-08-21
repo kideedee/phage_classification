@@ -46,10 +46,9 @@ if __name__ == '__main__':
     for i in range(5):
         create_embedding(
             factory=OneHotEmbeddingAbstractFactory(
-                embedding_type="onehot",
-                min_size=1200,
-                max_size=1800,
-                overlap_percent=30,
+                min_size=50,
+                max_size=100,
+                overlap_percent=10,
                 fold=i + 1,
                 is_train=True,
             )
@@ -57,10 +56,9 @@ if __name__ == '__main__':
 
         create_embedding(
             factory=OneHotEmbeddingAbstractFactory(
-                embedding_type="onehot",
-                min_size=1200,
-                max_size=1800,
-                overlap_percent=30,
+                min_size=50,
+                max_size=100,
+                overlap_percent=10,
                 fold=i + 1,
                 is_train=False,
             )
