@@ -5,7 +5,6 @@ from datasets import Dataset
 from transformers import AutoTokenizer
 
 from common.env_config import config
-from embedding_sequence.encoding_sequence import DNASequenceProcessor
 from logger.phg_cls_log import log
 
 
@@ -22,54 +21,49 @@ def tokenize_function(examples, tokenizer, max_length=512):
 if __name__ == '__main__':
     for i in range(5):
         fold = i + 1
-        # if fold == 1:
-        #     train_file = config.TRAIN_DATA_FOLD_1_CSV_FILE  # Update with your file path
-        #     valid_file = config.TEST_DATA_FOLD_1_CSV_FILE  # Update with your file path
-        # elif fold == 2:
-        #     train_file = config.TRAIN_DATA_FOLD_2_CSV_FILE
-        #     valid_file = config.TEST_DATA_FOLD_2_CSV_FILE
-        # elif fold == 3:
-        #     train_file = config.TRAIN_DATA_FOLD_3_CSV_FILE
-        #     valid_file = config.TEST_DATA_FOLD_3_CSV_FILE
-        # elif fold == 4:
-        #     train_file = config.TRAIN_DATA_FOLD_4_CSV_FILE
-        #     valid_file = config.TEST_DATA_FOLD_4_CSV_FILE
-        # elif fold == 5:
-        #     train_file = config.TRAIN_DATA_FOLD_5_CSV_FILE
-        #     valid_file = config.TEST_DATA_FOLD_5_CSV_FILE
-        # else:
-        #     raise ValueError
 
-        for j in range(4):
+        for j in range(8):
             if j == 0:
                 min_size = 100
                 max_size = 400
-                overlap = 30
                 max_length_tokenizer = int(max_size * 0.25)
             elif j == 1:
                 min_size = 400
                 max_size = 800
-                overlap = 30
                 max_length_tokenizer = int(max_size * 0.25)
             elif j == 2:
                 min_size = 800
                 max_size = 1200
-                overlap = 50
-                max_length_tokenizer = 512
+                max_length_tokenizer = int(max_size * 0.25)
             elif j == 3:
-                min_size = 1200
-                max_size = 1800
-                overlap = 70
+                min_size = 800
+                max_size = 1200
                 max_length_tokenizer = 512
+            elif j == 4:
+                min_size = 50
+                max_size = 100
+                max_length_tokenizer = int(max_size * 0.25)
+            elif j == 5:
+                min_size = 100
+                max_size = 200
+                max_length_tokenizer = int(max_size * 0.25)
+            elif j == 6:
+                min_size = 200
+                max_size = 300
+                max_length_tokenizer = int(max_size * 0.25)
+            elif j == 7:
+                min_size = 300
+                max_size = 400
+                max_length_tokenizer = int(max_size * 0.25)
             else:
                 raise ValueError
 
-            # if j < 2:
+            # if j != 4:
             #     continue
 
             group = f"{min_size}_{max_size}"
-            train_file = f"{config.CONTIG_OUTPUT_DATA_DIR}/{group}/fold_{fold}/train/data.csv"
-            valid_file = f"{config.CONTIG_OUTPUT_DATA_DIR}/{group}/fold_{fold}/test/data.csv"
+            train_file = f"{config.CONTIG_OUTPUT_DATA_DIR_FIX_BUG}/{group}/fold_{fold}/train/data.csv"
+            valid_file = f"{config.CONTIG_OUTPUT_DATA_DIR_FIX_BUG}/{group}/fold_{fold}/test/data.csv"
             log.info(f"Fold: {fold}, group: {group}")
             log.info(f"train_file: {train_file}")
             log.info(f"valid_file: {valid_file}")
@@ -122,9 +116,9 @@ if __name__ == '__main__':
             # processed_val_df = processed_val_df.sample(frac=0.02, random_state=42).reset_index(drop=True)
 
             processed_train_df = pd.read_csv(train_file)[["sequence", "target"]]
-            # processed_train_df.columns.values[1]="target"
             processed_val_df = pd.read_csv(valid_file)[["sequence", "target"]]
-            # processed_val_df.columns.values[1] = "target"
+            # processed_train_df = processed_train_df.sample(10000)
+            # processed_val_df = processed_val_df.sample(10000)
 
             # Convert dataframes to Hugging Face datasets
             train_dataset = Dataset.from_pandas(processed_train_df)

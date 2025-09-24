@@ -28,5 +28,8 @@ def setup_logger(log_name="phg_cls_log"):
 
 
 log = setup_logger()
-experiment_log = setup_logger(log_name="fcgr_log")
+experiment_log = setup_logger(log_name="dnabert_2_with_deephage_data")
+hybrid_dnabert_2_log = setup_logger(log_name="hybrid_dnabert_2_log")
+deephage_log = setup_logger(log_name="deephage_log")
+dnabert_2_log = setup_logger(log_name="dnabert_2_log")
 embedding_log = setup_logger(log_name="embedding_log")

@@ -33,19 +33,25 @@ class Config:
     GEN_BANK_DIR = os.path.join(DATA_DIR, "gen_bank")
     CUSTOM_DATA_DIR = os.path.join(MY_DATA_DIR, "custom")  # csv file sequence
 
-    ONE_HOT_DATA_DIR = os.path.join(MY_DATA_DIR, "one_hot")
     VIT_PREPARED_DATA_DIR = os.path.join(MY_DATA_DIR, "vit_prepared_data")
     RESAMPLE_DATA_DIR = os.path.join(MY_DATA_DIR, "resample")
 
     CONTIG_OUTPUT_DATA_DIR = os.path.join(MY_DATA_DIR, "contig")
+    CONTIG_OUTPUT_DATA_DIR_FIX_BUG = os.path.join(MY_DATA_DIR, "contig_fix_bug")
     EMBEDDING_OUTPUT_DATA_DIR = os.path.join(MY_DATA_DIR, "embedding_output_data")
 
     CODON_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "codon_embedding")
     FCGR_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "fcgr_embedding")
     HDFS_FCGR_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "hdfs_fcgr_embedding")
     HDFS_PFCGR_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "hdfs_pfcgr_embedding")
-    NORMALIZED_HDFS_PFCGR_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "normalized_hdfs_pfcgr_embedding")
+    NORMALIZED_HDFS_PFCGR_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR,
+                                                              "normalized_hdfs_pfcgr_embedding")
     DNA_BERT_2_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "dna_bert_2_output")
+    DNA_BERT_2_OUTPUT_DIR_DEEPHAGE_ORIGINAL = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "dna_bert_2_deephage_original_output")
+    ONE_HOT_EMBEDDING_OUT_PUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "one_hot_embedding")
+    ONE_HOT_EMBEDDING_OUT_PUT_DIR_AFTER_FIX_BUG_CONTIG = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "onehot_after_fix_bug_contig")
+    DNA_BERT_2_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "dna_bert_2_embedding")
+    CNN_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "cnn_embedding")
 
     DNA2VEC_MODEL_PATH = os.path.join(MODEL_DIR, "dna2vec-20161219-0153-k3to8-100d-10c-29320Mbp-sliding-Xat.w2v")
 

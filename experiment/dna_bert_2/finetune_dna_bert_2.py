@@ -6,7 +6,7 @@ import time
 import numpy as np
 import torch
 from datasets import load_from_disk
-from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix, roc_auc_score
 from transformers import (
     AutoModelForSequenceClassification,
     TrainingArguments,
@@ -16,10 +16,10 @@ from transformers import (
 
 from common import utils
 from common.env_config import config
-from logger.phg_cls_log import experiment_log as log
+from logger.phg_cls_log import dnabert_2_log as log
 
-os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
+# os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 class CustomLoggingCallback(TrainerCallback):
     def on_log(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, logs=None, **kwargs):
@@ -65,39 +65,30 @@ def compute_metrics(pred):
     acc = accuracy_score(labels, preds)
     specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
     sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
+    roc_auc = roc_auc_score(labels, torch.softmax(torch.from_numpy(logits), dim=1)[:, 1])
     gmean = np.sqrt(sensitivity * specificity) if (sensitivity > 0 and specificity > 0) else 0
 
-    # Safely compute ROC AUC with batching for large datasets
-    # try:
-    #     if isinstance(logits, np.ndarray) and logits.shape[0] > 1e6:
-    #         # Calculate ROC AUC in batches
-    #         batch_size = 1000
-    #         y_scores = []
-    #         for i in range(0, len(logits), batch_size):
-    #             y_scores.extend(logits[i:i + batch_size, 1])
-    #         roc_auc = roc_auc_score(labels, np.array(y_scores))
-    #     else:
-    #         roc_auc = roc_auc_score(labels, logits[:, 1])
-    # except:
-    #     roc_auc = 0
-
-    # Explicitly free memory
     del logits, preds
 
-    return {
+    result = {
         'accuracy': acc,
         'f1': f1,
         'precision': precision,
         'recall': recall,
         'specificity': specificity,
         'sensitivity': sensitivity,
-        # 'roc_auc': roc_auc,
+        'roc_auc': roc_auc,
         'g_mean': gmean,  # Thêm G-Mean metric
         'tn': float(tn),
         'fp': float(fp),
         'fn': float(fn),
         'tp': float(tp)
     }
+
+    # df = pd.DataFrame([result])
+    # df.to_csv(result_path, mode='a', header=False, index=False)
+
+    return result
 
 
 # Define a custom trainer class instead of monkey-patching
@@ -146,7 +137,7 @@ class MemoryEfficientTrainer(Trainer):
 
 
 def run():
-    for i in range(4):
+    for i in range(4, 5):
         if i == 0:
             min_size = 100
             max_size = 400
@@ -154,29 +145,48 @@ def run():
         elif i == 1:
             min_size = 400
             max_size = 800
-            batch_size = 32
+            batch_size = 48
         elif i == 2:
             min_size = 800
             max_size = 1200
-            batch_size = 16
+            batch_size = 32
         elif i == 3:
             min_size = 1200
             max_size = 1800
-            batch_size = 8
+            batch_size = 32
+        elif i == 4:
+            min_size = 50
+            max_size = 100
+            batch_size = 144
+        elif i == 5:
+            min_size = 100
+            max_size = 200
+            batch_size = 96
+        elif i == 6:
+            min_size = 200
+            max_size = 300
+            batch_size = 64
+        elif i == 7:
+            min_size = 300
+            max_size = 400
+            batch_size = 64
         else:
             raise ValueError
-
-        if i < 3:
-            continue
 
         group = f"{min_size}_{max_size}"
         for j in range(5):
             fold = j + 1
 
-            if fold < 2:
+            if i == 4 and fold == 1:
                 continue
 
-            utils.start_experiment(f"finetune_dna_bert_2_group_{group}_fold_{fold}", time.time())
+            # global result_path
+            # result_path = f"./{group}/fold_{fold}"
+            # if os.path.exists(result_path):
+            #     os.makedirs(result_path, exist_ok=True)
+            # result_path = os.path.join(result_path, "/results.csv")
+
+            utils.start_experiment(f"finetune_dna_bert_2_{group}_fold_{fold}", time.time())
 
             data_dir = os.path.join(config.DNA_BERT_2_OUTPUT_DIR, f"{group}/fold_{fold}")
             output_model_path = os.path.join(data_dir, f"finetune_dna_bert.pt")
@@ -197,7 +207,7 @@ def run():
                 num_labels=2,
                 trust_remote_code=True,
                 ignore_mismatched_sizes=True,
-                # classifier_dropout=0.2,  # Try different dropout rates
+                classifier_dropout=0.2,  # Try different dropout rates
                 # problem_type="single_label_classification"
             ).to(device)
 

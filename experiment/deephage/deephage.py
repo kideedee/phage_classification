@@ -20,7 +20,7 @@ from tqdm.auto import tqdm
 from common import utils
 from common.early_stopping import EarlyStopping
 from common.env_config import config
-from logger.phg_cls_log import log
+from logger.phg_cls_log import deephage_log as log
 
 
 def classification_report_csv(report, path_save, c):
@@ -65,13 +65,16 @@ def calculate_metrics(y_true, y_pred):
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0
     f1 = 2 * precision * sensitivity / (precision + sensitivity) if (precision + sensitivity) > 0 else 0
 
-    return {
+    result = {
         'sensitivity': sensitivity,
         'specificity': specificity,
         'accuracy': accuracy,
         'precision': precision,
+        'recall': sensitivity,
         'f1_score': f1
     }
+
+    return result
 
 
 # Define the model
@@ -348,6 +351,9 @@ def eval_step(model, test_loader, criterion, device):
     return {
         'loss': val_loss,
         'acc': val_acc,
+        'precision': val_metrics['precision'],
+        'recall': val_metrics['recall'],
+        'f1': val_metrics['f1_score'],
         'sensitivity': val_metrics['sensitivity'],
         'specificity': val_metrics['specificity'],
         'preds': val_preds,
@@ -417,6 +423,9 @@ def start_executing(device, model, train_loader, test_loader, num_epochs, optimi
         val_acc = val_results['acc']
         val_sensitivity = val_results['sensitivity']
         val_specificity = val_results['specificity']
+        val_f1 = val_results['f1']
+        val_precision = val_results['precision']
+        val_recall = val_results['recall']
         val_auc = val_results['auc']  # Get AUC value
 
         # Step scheduler if it's epoch-based like ReduceLROnPlateau
@@ -424,11 +433,11 @@ def start_executing(device, model, train_loader, test_loader, num_epochs, optimi
             scheduler.step(val_loss)
 
         # Calculate F1 score
-        val_precision = val_results.get('precision', 0.0)
-        if val_sensitivity > 0 and val_precision > 0:
-            val_f1 = 2 * (val_precision * val_sensitivity) / (val_precision + val_sensitivity)
-        else:
-            val_f1 = 0.0
+        # val_precision = val_results.get('precision', 0.0)
+        # if val_sensitivity > 0 and val_precision > 0:
+        #     val_f1 = 2 * (val_precision * val_sensitivity) / (val_precision + val_sensitivity)
+        # else:
+        #     val_f1 = 0.0
 
         # Update epoch statistics
         history.update_epoch(
@@ -456,6 +465,8 @@ def start_executing(device, model, train_loader, test_loader, num_epochs, optimi
             best_metrics['val_sensitivity'] = val_sensitivity
             best_metrics['val_specificity'] = val_specificity
             best_metrics['val_f1'] = val_f1
+            best_metrics['val_precision'] = val_precision
+            best_metrics['val_recall'] = val_recall
             best_metrics['epoch'] = epoch
 
             # Save best model
@@ -475,6 +486,8 @@ def start_executing(device, model, train_loader, test_loader, num_epochs, optimi
                 'train_accuracy': [train_acc],
                 'train_sensitivity': [train_sensitivity],
                 'train_specificity': [train_specificity],
+                'val_precision': [val_precision],
+                'val_recall': [val_recall],
                 'learning_rate': [current_lr]  # Add learning rate to metrics
             })
 
@@ -505,7 +518,7 @@ def start_executing(device, model, train_loader, test_loader, num_epochs, optimi
     return history
 
 
-def last_evaluation(device, model, test_loader, path_save, predict_save_path, model_save_path):
+def last_evaluation(device, model, test_loader, path_save, predict_save_path, model_save_path, group, fold):
     # Final evaluation
     model.eval()
     all_predictions = []
@@ -551,6 +564,18 @@ def last_evaluation(device, model, test_loader, path_save, predict_save_path, mo
 
     # Calculate final metrics
     test_metrics = calculate_metrics(true_labels, predict_binary)
+    test_metrics['group'] = group
+    test_metrics['fold'] = fold
+    df = pd.DataFrame([test_metrics])
+
+    csv_file = "./result_deephage_3.csv"
+    file_exists = os.path.exists(csv_file)
+
+    # Save to CSV with append mode
+    df.to_csv(csv_file,
+              mode='a',  # Append mode
+              header=not file_exists,  # Write header only if file doesn't exist
+              index=False)
 
     # Calculate ROC AUC
     test_auc = roc_auc_score(true_labels, scores)
@@ -600,17 +625,17 @@ def last_evaluation(device, model, test_loader, path_save, predict_save_path, mo
 
 
 def load_my_data(group, predict_save_path, model_save_path, fold, max_length, b_size):
-    data_dir = os.path.join(config.MY_DATA_DIR, f"one_hot/{group}")
+    data_dir = os.path.join(config.ONE_HOT_EMBEDDING_OUT_PUT_DIR_AFTER_FIX_BUG_CONTIG, f"{group}/fold_{fold}")
     log.info(f"Data dir: {data_dir}")
     log.info(f"Predict save path: {predict_save_path}")
     log.info(f"Model save path: {model_save_path}")
 
     # Load data from .mat files
     log.info('Loading data...')
-    x_train_path = os.path.join(data_dir, f'{fold}/one_hot_{group}_train_vector.npy')
-    y_train_path = os.path.join(data_dir, f'{fold}/y_train.npy')
-    x_val_path = os.path.join(data_dir, f'{fold}/one_hot_{group}_val_vector.npy')
-    y_val_path = os.path.join(data_dir, f'{fold}/y_val.npy')
+    x_train_path = os.path.join(data_dir, f'train/vectors.npy')
+    y_train_path = os.path.join(data_dir, f'train/labels.npy')
+    x_val_path = os.path.join(data_dir, f'test/vectors.npy')
+    y_val_path = os.path.join(data_dir, f'test/labels.npy')
     log.info(f"x_train_path: {x_train_path}")
     log.info(f"y_train_path: {y_train_path}")
     log.info(f"x_val_path: {x_val_path}")
@@ -710,11 +735,11 @@ def load_dee_phage_data(group, fold, max_length, b_size):
 def run(device):
     lr_rate = 0.01
     b_size = 6144
-    num_epochs = 1000
+    num_epochs = 100
     timestamp = time.strftime("%Y%m%d-%H%M%S")
-    exp_result_dir = "dee_phage_my_data_rerun"
+    exp_result_dir = "dee_phage_after_fix_bug_contig_" + timestamp
 
-    for i in range(4):
+    for i in range(4, 8):
 
         if i == 0:
             min_length = 100
@@ -728,6 +753,22 @@ def run(device):
         elif i == 3:
             min_length = 1200
             max_length = 1800
+        elif i == 4:
+            min_length = 50
+            max_length = 100
+            overlap = 10
+        elif i == 5:
+            min_length = 100
+            max_length = 200
+            overlap = 10
+        elif i == 6:
+            min_length = 200
+            max_length = 300
+            overlap = 10
+        elif i == 7:
+            min_length = 300
+            max_length = 400
+            overlap = 10
         else:
             raise ValueError(f"Invalid group: {i + 1}")
 
@@ -745,7 +786,8 @@ def run(device):
             predict_save_path = os.path.join(path_save, f"{max_length}_{lr_rate}_{b_size}_prediction.csv")
             model_save_path = os.path.join(path_save, f"{max_length}_{lr_rate}_{b_size}_model.pt")
 
-            train_loader, test_loader = load_my_data(group, predict_save_path, model_save_path, fold, max_length, b_size)
+            train_loader, test_loader = load_my_data(group, predict_save_path, model_save_path, fold, max_length,
+                                                     b_size)
             # train_loader, test_loader = load_dee_phage_data(group, fold, max_length, b_size)
 
             # Initialize model
@@ -776,7 +818,7 @@ def run(device):
 
             # Initialize history logger
             history = TrainingHistory()
-            early_stopping = EarlyStopping(patience=50, verbose=True, path=model_save_path.replace('.pt', '_best.pt'),
+            early_stopping = EarlyStopping(patience=20, verbose=True, path=model_save_path.replace('.pt', '_best.pt'),
                                            log=log)
             start_executing(device, model, train_loader, test_loader, num_epochs, optimizer, criterion, scaler,
                             model_save_path, history, early_stopping, scheduler, is_training=True)
@@ -784,7 +826,7 @@ def run(device):
             # start_executing(device, model, train_loader, test_loader, 1, optimizer, criterion, scaler,
             #                 model_save_path, history, is_training=False)
 
-            # last_evaluation(device, model, test_loader, path_save, predict_save_path, model_save_path)
+            last_evaluation(device, model, test_loader, path_save, predict_save_path, model_save_path, group, fold)
 
             # Plot and save results
             history.history_plot('epoch', path_save, max_length, lr_rate, b_size)

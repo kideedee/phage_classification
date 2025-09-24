@@ -20,17 +20,16 @@ def create_embedding(factory: EmbeddingAbstractFactory):
 
     df = pd.DataFrame(zip(x_train_resampled, y_train_resampled), columns=['sequence', 'label'])
 
-    data_dir = os.path.join(config.MY_DATA_DIR,
-                            f"fasta/{train_embedding.min_size}_{train_embedding.max_size}/{train_embedding.fold}")
+    output_dir = train_embedding.output_dir
     if train_embedding.is_train:
-        data_dir = data_dir + "/train"
+        output_dir = output_dir + "/train"
     else:
-        data_dir = data_dir + "/test"
+        output_dir = output_dir + "/test"
 
-    if not os.path.exists(data_dir):
-        os.makedirs(data_dir)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
-    with open(os.path.join(data_dir, f"data.fa"), "a") as f:
+    with open(os.path.join(output_dir, f"data.fa"), "a") as f:
         for idx, row in df.iterrows():
             if row['label'] == 0:
                 header = f"contig_{idx}_temperate"
@@ -42,30 +41,33 @@ def create_embedding(factory: EmbeddingAbstractFactory):
 
 
 if __name__ == '__main__':
-    # create_embedding(factory=FCGREmbeddingAbstractFactory())
-    for j in range(4):
+    for j in range(3):
         if j == 0:
             min_length = 100
-            max_length = 400
+            max_length = 200
         elif j == 1:
-            min_length = 400
-            max_length = 800
+            min_length = 200
+            max_length = 300
         elif j == 2:
-            min_length = 800
-            max_length = 1200
-        elif j == 3:
-            min_length = 1200
-            max_length = 1800
+            min_length = 300
+            max_length = 400
         else:
             raise ValueError
 
+
         for i in range(5):
+            fold = i + 1
+            data_dir = config.CONTIG_OUTPUT_DATA_DIR
+            output_dir = os.path.join(config.CONTIG_OUTPUT_DATA_DIR,
+                                    f"fasta/{min_length}_{max_length}/{fold}")
+
             create_embedding(
                 factory=OneHotEmbeddingAbstractFactory(
-                    embedding_type="onehot",
+                    data_dir=data_dir,
+                    output_dir=output_dir,
                     min_size=min_length,
                     max_size=max_length,
-                    overlap_percent=30,
+                    overlap_percent=10,
                     fold=i + 1,
                     is_train=True,
                 )
@@ -73,10 +75,11 @@ if __name__ == '__main__':
 
             create_embedding(
                 factory=OneHotEmbeddingAbstractFactory(
-                    embedding_type="onehot",
+                    data_dir=data_dir,
+                    output_dir=output_dir,
                     min_size=min_length,
                     max_size=max_length,
-                    overlap_percent=30,
+                    overlap_percent=10,
                     fold=i + 1,
                     is_train=False,
                 )

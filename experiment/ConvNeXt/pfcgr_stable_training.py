@@ -470,7 +470,9 @@ def init_model(CONFIG):
     model = timm.create_model(
         CONFIG['model_name'],
         pretrained=CONFIG['pretrained'],
-        num_classes=CONFIG['num_classes']
+        num_classes=CONFIG['num_classes'],
+        drop_rate=0.3,  # Thêm dropout rate cho classifier
+        drop_path_rate=0.2  # Thêm stochastic depth cho ConvNeXt
     )
 
     # Get the original first convolution layer
@@ -516,6 +518,23 @@ def init_model(CONFIG):
 
     # Replace the original conv layer
     model.stem[0] = new_conv
+
+    # Thêm regularization cho classifier head
+    if hasattr(model, 'head') and hasattr(model.head, 'fc'):
+        # Cho ConvNeXt với head.fc
+        original_fc = model.head.fc
+        model.head.fc = nn.Sequential(
+            nn.Dropout(0.4),  # Dropout cao hơn cho classifier
+            original_fc
+        )
+    elif hasattr(model, 'classifier'):
+        # Cho các model khác với classifier
+        original_classifier = model.classifier
+        model.classifier = nn.Sequential(
+            nn.Dropout(0.4),
+            original_classifier
+        )
+
     model = model.to(CONFIG['device'])
     return model
 
@@ -528,7 +547,7 @@ def run(data_dir, output_data_dir):
         'train_path': os.path.join(data_dir, "train/data.h5"),
         'test_path': os.path.join(data_dir, 'test/data.h5'),
         'batch_size': 128,
-        'num_epochs': 10,
+        'num_epochs': 20,
         'learning_rate': 1e-4,
         'weight_decay': 1e-4,
         'num_classes': 2,
@@ -629,9 +648,9 @@ if __name__ == "__main__":
         for j in range(5):
             fold = j + 1
 
-            if group == 1 and fold == 1:
+            if group == 1:
                 data_dir = os.path.join(root_data_dir, f"{min_size}_{max_size}/fold_{fold}")
-                output_data_dir = f"./normalized_pfcgr/{min_size}_{max_size}/fold_{fold}"
+                output_data_dir = f"./normalized_pfcgr_dropout/{min_size}_{max_size}/fold_{fold}"
                 run(data_dir, output_data_dir)
             else:
                 continue
