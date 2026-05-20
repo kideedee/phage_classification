@@ -22,7 +22,7 @@ if __name__ == '__main__':
     for i in range(5):
         fold = i + 1
 
-        for j in range(8):
+        for j in range(4):
             if j == 0:
                 min_size = 100
                 max_size = 400
@@ -36,8 +36,8 @@ if __name__ == '__main__':
                 max_size = 1200
                 max_length_tokenizer = int(max_size * 0.25)
             elif j == 3:
-                min_size = 800
-                max_size = 1200
+                min_size = 1200
+                max_size = 1800
                 max_length_tokenizer = 512
             elif j == 4:
                 min_size = 50
@@ -58,7 +58,7 @@ if __name__ == '__main__':
             else:
                 raise ValueError
 
-            # if j != 4:
+            # if j != 4 or (fold != 1 and fold != 2 and fold != 3):
             #     continue
 
             group = f"{min_size}_{max_size}"
@@ -69,6 +69,7 @@ if __name__ == '__main__':
             log.info(f"valid_file: {valid_file}")
 
             output_dir = os.path.join(config.DNA_BERT_2_OUTPUT_DIR, f"{group}/fold_{fold}")
+            # output_dir = os.path.join(config.DNA_BERT_2_OUTPUT_DIR, f"{group}/fold_{fold}")
             os.makedirs(output_dir, exist_ok=True)
             output_prepared_train_dataset = os.path.join(output_dir, f"processed_train_dataset")
             output_prepared_val_dataset = os.path.join(output_dir, f"processed_val_dataset")

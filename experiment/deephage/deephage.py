@@ -739,7 +739,7 @@ def run(device):
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     exp_result_dir = "dee_phage_after_fix_bug_contig_" + timestamp
 
-    for i in range(4, 8):
+    for i in range(8):
 
         if i == 0:
             min_length = 100
@@ -771,6 +771,9 @@ def run(device):
             overlap = 10
         else:
             raise ValueError(f"Invalid group: {i + 1}")
+
+        if i != 2:
+            continue
 
         group = f"{min_length}_{max_length}"
         for r in range(5):
@@ -818,7 +821,7 @@ def run(device):
 
             # Initialize history logger
             history = TrainingHistory()
-            early_stopping = EarlyStopping(patience=20, verbose=True, path=model_save_path.replace('.pt', '_best.pt'),
+            early_stopping = EarlyStopping(patience=100, verbose=True, path=model_save_path.replace('.pt', '_best.pt'),
                                            log=log)
             start_executing(device, model, train_loader, test_loader, num_epochs, optimizer, criterion, scaler,
                             model_save_path, history, early_stopping, scheduler, is_training=True)

@@ -205,3 +205,12 @@ experiment/xgboost_model/smote_200_800
 /logs
 /model
 common/__pycache__/env_config.cpython-39.pyc
+.claude/
+/experiment/transfer_learning/result/
+/experiment/hybrid/one_hot_dna_bert/
+/experiment/ConvNeXt/normalized_pfcgr_dropout/
+/experiment/ConvNeXt/fcgr/
+/experiment/ConvNeXt/pfcgr/
+/experiment/ConvNeXt/normalized_pfcgr/
+/experiment/ConvNeXt_v2/
+/experiment/transfer_learning/

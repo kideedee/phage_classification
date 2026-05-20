@@ -28,7 +28,7 @@ class Config:
     RESULT_DIR = os.path.join(PROJECT_DIR, os.getenv("RESULT_DIR", "result"))
     MODEL_DIR = os.path.join(PROJECT_DIR, os.getenv("MODEL_DIR", "model"))
 
-    MY_DATA_DIR = os.path.join(DATA_DIR, "my_data")
+    MY_DATA_DIR = os.path.join(DATA_DIR, "my_data_round_2")
     START_HERE = os.path.join(MY_DATA_DIR, "start_here")
     GEN_BANK_DIR = os.path.join(DATA_DIR, "gen_bank")
     CUSTOM_DATA_DIR = os.path.join(MY_DATA_DIR, "custom")  # csv file sequence
@@ -47,6 +47,7 @@ class Config:
     NORMALIZED_HDFS_PFCGR_EMBEDDING_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR,
                                                               "normalized_hdfs_pfcgr_embedding")
     DNA_BERT_2_OUTPUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "dna_bert_2_output")
+    DNA_BERT_2_OUTPUT_DIR_TEST = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "dna_bert_2_output_test")
     DNA_BERT_2_OUTPUT_DIR_DEEPHAGE_ORIGINAL = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "dna_bert_2_deephage_original_output")
     ONE_HOT_EMBEDDING_OUT_PUT_DIR = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "one_hot_embedding")
     ONE_HOT_EMBEDDING_OUT_PUT_DIR_AFTER_FIX_BUG_CONTIG = os.path.join(EMBEDDING_OUTPUT_DATA_DIR, "onehot_after_fix_bug_contig")

@@ -247,7 +247,7 @@ def create_embedding(factory: EmbeddingAbstractFactory):
 
 
 if __name__ == '__main__':
-    for i in range(4, 8):
+    for i in range(4):
         if i == 0:
             min_size = 100
             max_size = 400

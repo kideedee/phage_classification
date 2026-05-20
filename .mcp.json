@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "notebooklm": {
+      "command": "C:/Users/Admin/.local/bin/notebooklm-mcp",
+      "args": []
+    },
+    "paper-search": {
+      "command": "C:/Users/Admin/.local/bin/uv",
+      "args": [
+        "run",
+        "--directory",
+        "C:/tools/paper-search-mcp",
+        "-m",
+        "paper_search_mcp.server"
+      ]
+    }
+  }
+}

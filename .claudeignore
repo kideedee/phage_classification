@@ -1,0 +1,140 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*,cover
+.hypothesis/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff
+*.log
+local_settings.py
+
+# Flask stuff
+instance/
+.webassets-cache
+
+# Scrapy stuff
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# IPython Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# virtualenv
+venv/
+ENV/
+.venv
+
+# Spyder project settings
+.spyderproject
+.ropeproject
+
+# VirtualEnv
+[Bb]in
+[Ii]nclude
+[Ll]ib
+[Ll]ib64
+[Ll]ocal
+[Ss]cripts
+pyvenv.cfg
+pip-selfcheck.json
+
+# JetBrains / IDE
+.idea/
+*.iws
+out/
+.idea_modules/
+atlassian-ide-plugin.xml
+cmake-build-*/
+
+# Pre-trained models and data
+pre_trained_models
+data
+/result
+dnabert_2/dnabert2*
+dnabert_2/best*/
+dnabert_2/*_dataset/
+dnabert_2/logs/
+
+# Binary / large files
+*.csv
+*.npy
+*.npz
+*.pkl
+*.bin
+*.fasta
+
+# Temp and cache
+temp
+cache
+
+# Experiment outputs
+experiment/dna_bert_2/prepared_dataset/processed_train_dataset
+experiment/dna_bert_2/prepared_dataset/processed_val_dataset
+experiment/xgboost_model/smote_200_800
+/logs
+/model
+/experiment/transfer_learning/result/
+/experiment/hybrid/one_hot_dna_bert/
+/experiment/ConvNeXt/normalized_pfcgr_dropout/
+/experiment/ConvNeXt/fcgr/
+/experiment/ConvNeXt/pfcgr/
+/experiment/ConvNeXt/normalized_pfcgr/
+/experiment/ConvNeXt_v2/
+/experiment/transfer_learning/
+
+# Claude
+.claude/

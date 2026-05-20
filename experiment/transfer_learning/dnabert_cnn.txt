@@ -1,0 +1,134 @@
+class Dnabert2CnnModel(PreTrainedModel):
+    def __init__(self, config, dropout_rate=0.1, num_classes=2):
+        super(Dnabert2CnnModel, self).__init__(config)
+
+        # Load DNABERT-2 pre-trained model
+        self.dnabert = AutoModel.from_pretrained(
+            "zhihan1996/DNABERT-2-117M",
+            trust_remote_code=True,
+            add_pooling_layer=False
+        )
+
+        for param in self.dnabert.parameters():
+            param.requires_grad = False
+
+        self.cnn_branches = nn.ModuleList([
+            # Branch 1: Small receptive field for local motifs
+            nn.Sequential(
+                nn.Conv1d(768, 256, kernel_size=3, padding=1),
+                nn.BatchNorm1d(256),
+                nn.ReLU(),
+                nn.Conv1d(256, 128, kernel_size=3, padding=1),
+                nn.BatchNorm1d(128),
+                nn.ReLU(),
+                nn.AdaptiveMaxPool1d(1)
+            ),
+            # Branch 2: Medium receptive field
+            nn.Sequential(
+                nn.Conv1d(768, 256, kernel_size=5, padding=2),
+                nn.BatchNorm1d(256),
+                nn.ReLU(),
+                nn.Conv1d(256, 128, kernel_size=5, padding=2),
+                nn.BatchNorm1d(128),
+                nn.ReLU(),
+                nn.AdaptiveMaxPool1d(1)
+            ),
+            # Branch 3: Large receptive field for longer patterns
+            nn.Sequential(
+                nn.Conv1d(768, 256, kernel_size=7, padding=3),
+                nn.BatchNorm1d(256),
+                nn.ReLU(),
+                nn.Conv1d(256, 128, kernel_size=7, padding=3),
+                nn.BatchNorm1d(128),
+                nn.ReLU(),
+                nn.AdaptiveMaxPool1d(1)
+            )
+        ])
+
+        # Global pooling for transformer features
+        self.global_pooling = nn.Sequential(
+            nn.Linear(768, 128),
+            nn.ReLU(),
+            nn.Dropout(0.1)
+        )
+
+        # Attention-based pooling for sequence representation
+        self.attention_pooling = nn.Sequential(
+            nn.Linear(768, 64),
+            nn.Tanh(),
+            nn.Linear(64, 1),
+            nn.Softmax(dim=1)
+        )
+
+        # Final classifier
+        total_features = 128 * 3 + 128  # CNN features + global features
+        classifier_dropout = getattr(config, 'classifier_dropout', 0.1)
+
+        self.classifier = nn.Sequential(
+            nn.Linear(total_features, 256),
+            nn.LayerNorm(256),
+            nn.ReLU(),
+            nn.Dropout(classifier_dropout),
+            nn.Linear(256, 64),
+            nn.ReLU(),
+            nn.Dropout(classifier_dropout),
+            nn.Linear(64, config.num_labels)
+        )
+
+    def freeze_dnabert(self):
+        for param in self.dnabert.parameters():
+            param.requires_grad = False
+
+    def unfreeze_dnabert(self):
+        for param in self.dnabert.parameters():
+            param.requires_grad = True
+
+    def forward(self, input_ids, attention_mask=None, labels=None):
+        # Extract features từ DNABERT-2
+        with torch.set_grad_enabled(self.dnabert.training and any(p.requires_grad for p in self.dnabert.parameters())):
+            outputs = self.dnabert(input_ids=input_ids, attention_mask=attention_mask)
+            # Shape: [batch_size, seq_len, 768]
+            # hidden_states = dnabert_outputs.last_hidden_state
+            if hasattr(outputs, 'last_hidden_state'):
+                hidden_states = outputs.last_hidden_state
+            elif isinstance(outputs, tuple):
+                hidden_states = outputs[0]  # Usually the first element
+            else:
+                hidden_states = outputs['last_hidden_state']
+
+        # # Transpose cho Conv1D: [batch_size, seq_len, 768] -> [batch_size, 768, seq_len]
+        # hidden_states = hidden_states.transpose(1, 2)
+        #
+        # # Pass qua CNN layers
+        # conv_output = self.conv_layers(hidden_states)  # [batch_size, 64, seq_len]
+        #
+        # # Global pooling
+        # avg_pool = self.global_avg_pool(conv_output).squeeze(-1)  # [batch_size, 64]
+        # max_pool = self.global_max_pool(conv_output).squeeze(-1)  # [batch_size, 64]
+        #
+        # # Concatenate pooled features
+        # pooled_features = torch.cat([avg_pool, max_pool], dim=1)  # [batch_size, 128]
+        #
+        # # Classification
+        # logits = self.classifier(pooled_features)
+
+        # Global transformer features with attention-based pooling
+        attention_weights = self.attention_pooling(hidden_states)  # [batch_size, seq_len, 1]
+        global_features = torch.sum(hidden_states * attention_weights, dim=1)  # [batch_size, 768]
+        global_features = self.global_pooling(global_features)
+
+        # CNN features (transpose for Conv1d: [batch_size, channels, seq_len])
+        cnn_input = hidden_states.transpose(1, 2)  # [batch_size, 768, seq_len]
+
+        cnn_features = []
+        for branch in self.cnn_branches:
+            branch_output = branch(cnn_input)  # [batch_size, 128, 1]
+            cnn_features.append(branch_output.squeeze(2))  # [batch_size, 128]
+
+        # Combine all features
+        combined_features = torch.cat([global_features] + cnn_features, dim=1)
+
+        # Classification
+        logits = self.classifier(combined_features)
+
+        return logits
